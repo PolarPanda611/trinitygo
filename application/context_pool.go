@@ -28,10 +28,13 @@ func (c *ContextPool) Attach(newFunc func() Context) {
 
 // Acquire returns a Context from pool.
 // See Release.
-func (c *ContextPool) Acquire(runtime map[string]string, db *gorm.DB) Context {
+func (c *ContextPool) Acquire(app Application, runtime map[string]string, db *gorm.DB) Context {
 	ctx := c.pool.Get().(Context)
 	ctx.setRuntime(runtime)
-	ctx.setDB(db)
+	newDB := db.New()
+
+	newDB.SetLogger(NewDBLogger(app, runtime))
+	ctx.setDB(newDB)
 	return ctx
 }
 

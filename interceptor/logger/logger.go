@@ -63,13 +63,14 @@ func (l *interceptorLogger) Interceptor() func(ctx context.Context, req interfac
 		// 	return
 		// }
 
-		line := fmt.Sprintf("%v %4v ", method, latency)
+		line := ""
 		if l.config.Runtime {
 			for _, v := range l.app.RuntimeKeys() {
 				md, _ := metadata.FromIncomingContext(ctx)
 				line += fmt.Sprintf("%v %v ", v.GetKeyName(), md[v.GetKeyName()][0])
 			}
 		}
+		line += fmt.Sprintf("%4v %v ", latency, method)
 		if l.config.Request {
 			line += fmt.Sprintf("%v %v ", "Request", req)
 		}

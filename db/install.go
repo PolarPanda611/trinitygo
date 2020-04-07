@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+
 	"github.com/PolarPanda611/trinitygo/utils"
 
 	"github.com/jinzhu/gorm"
-	_ "github.com/lib/pq"
+
+	_ "github.com/lib/pq" // pg
 	uuid "github.com/satori/go.uuid"
 )
 

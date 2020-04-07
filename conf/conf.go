@@ -451,7 +451,7 @@ func (s *DefaultConf) GetDBTablePrefix() string {
 }
 
 // NewSetting new setting
-func NewSetting(runMode string, configFilePath string) Conf {
+func NewSetting(configFilePath string) Conf {
 	return LoadConfigFile(configFilePath)
 }
 

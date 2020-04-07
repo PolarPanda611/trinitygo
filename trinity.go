@@ -35,7 +35,6 @@ import (
 )
 
 var (
-	runmode        string = "Local"
 	configpath     string = "./config/"
 	controllerPool *application.ControllerPool
 	servicePool    *application.ServicePool
@@ -68,11 +67,6 @@ type Application struct {
 	grpcServer *grpc.Server
 }
 
-// SetRunmode set config path
-func SetRunmode(mode string) {
-	runmode = mode
-}
-
 // SetConfigPath set config path
 func SetConfigPath(path string) {
 	configpath = path
@@ -83,7 +77,7 @@ func New() application.Application {
 	app := &Application{
 		logger: golog.Default,
 	}
-	app.config = conf.NewSetting(runmode, configpath)
+	app.config = conf.NewSetting(configpath)
 
 	appPrefix := fmt.Sprintf("[%v@%v]", utils.GetServiceName(app.config.GetProjectName()), app.config.GetProjectVersion())
 	app.logger.SetPrefix(appPrefix)
@@ -220,6 +214,14 @@ func (app *Application) initPool() {
 	}
 	// service pool checking
 	line = fmt.Sprintf("booting detected %v service pool (%v)...installed", len(app.servicePool.GetServiceType()), poolKey)
+	app.Logger().Info(line)
+
+	poolKey = ""
+	for _, v := range app.repositoryPool.GetRepositoryType() {
+		poolKey += fmt.Sprintf("%v,", v)
+	}
+	// service pool checking
+	line = fmt.Sprintf("booting detected %v repository pool (%v)...installed", len(app.repositoryPool.GetRepositoryType()), poolKey)
 	app.Logger().Info(line)
 }
 

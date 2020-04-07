@@ -14,7 +14,7 @@ import (
 func New(app application.Application) func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		runtimeKeyMap := application.DecodeRuntimeKey(ctx, app)
-		tContext := app.ContextPool().Acquire(runtimeKeyMap, app.DB())
+		tContext := app.ContextPool().Acquire(app, runtimeKeyMap, app.DB())
 		method := strings.Split(info.FullMethod, "/") // /user.UserService/GetUserByID
 		defer func() {
 			//release tcontext obj
