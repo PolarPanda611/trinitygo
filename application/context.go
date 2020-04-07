@@ -39,12 +39,13 @@ func (c *ContextImpl) setRuntime(runtime map[string]string) {
 
 // GetDB get db instance
 func (c *ContextImpl) GetDB() *gorm.DB {
-	return c.db.New()
+	return c.db
 }
 
 // GetTXDB get db instance
 func (c *ContextImpl) GetTXDB() *gorm.DB {
-	return c.db.New().Begin()
+	c.db = c.db.Begin()
+	return c.db
 }
 
 // GetRuntime get runtime info
