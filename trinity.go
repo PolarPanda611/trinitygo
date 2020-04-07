@@ -322,7 +322,10 @@ func (app *Application) ServeGRPC() {
 			); err != nil {
 				gErr <- err
 			}
+			line := fmt.Sprintf("boooting grpc service registered successfully !")
+			app.Logger().Info(line)
 		}
+
 		line := fmt.Sprintf("booted grpc service listen at %v started", addr)
 		app.Logger().Info(line)
 		gErr <- app.grpcServer.Serve(lis)
@@ -337,11 +340,20 @@ func (app *Application) ServeGRPC() {
 	line := fmt.Sprintf("booted grpc service listen at %v ,terminated err: %v ", addr, <-gErr)
 	app.Logger().Info(line)
 	if app.config.GetServiceDiscoveryAutoRegister() {
-		app.serviceMesh.DeRegService(
+		err := app.serviceMesh.DeRegService(
 			app.config.GetProjectName(),
 			app.config.GetProjectVersion(),
 			app.config.GetAppAddress(),
 			app.config.GetAppPort(),
 		)
+		if err != nil {
+			line = fmt.Sprintf("boooting grpc service deregistered failed !")
+			app.Logger().Info(line)
+		} else {
+			line = fmt.Sprintf("boooting grpc service deregistered successfully !")
+			app.Logger().Info(line)
+		}
+
 	}
+
 }

@@ -10,6 +10,7 @@ type Context interface {
 	setRuntime(map[string]string)
 	GetRuntime() map[string]string
 	GetDB() *gorm.DB
+	GetTXDB() *gorm.DB
 	setDB(*gorm.DB)
 	CleanRuntime()
 }
@@ -39,6 +40,11 @@ func (c *ContextImpl) setRuntime(runtime map[string]string) {
 // GetDB get db instance
 func (c *ContextImpl) GetDB() *gorm.DB {
 	return c.db.New()
+}
+
+// GetTXDB get db instance
+func (c *ContextImpl) GetTXDB() *gorm.DB {
+	return c.db.New().Begin()
 }
 
 // GetRuntime get runtime info
