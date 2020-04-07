@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"reflect"
 	"sync"
-	"trinitygo"
-	"trinitygo/application"
+
+	"github.com/PolarPanda611/trinitygo"
+
+	"github.com/PolarPanda611/trinitygo/application"
 )
 
 func init() {

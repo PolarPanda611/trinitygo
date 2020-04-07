@@ -3,7 +3,8 @@ package runtime
 import (
 	"context"
 	"fmt"
-	"trinitygo/application"
+
+	"github.com/PolarPanda611/trinitygo/application"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"

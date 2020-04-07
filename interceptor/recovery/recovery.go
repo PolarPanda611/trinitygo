@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 	"runtime/debug"
-	"trinitygo/application"
+
+	"github.com/PolarPanda611/trinitygo/application"
 
 	"google.golang.org/grpc"
 )

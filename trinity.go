@@ -9,16 +9,24 @@ import (
 	"reflect"
 	"sync"
 	"syscall"
-	"trinitygo/application"
-	"trinitygo/conf"
-	"trinitygo/db"
-	"trinitygo/interceptor/di"
-	"trinitygo/interceptor/logger"
-	"trinitygo/interceptor/recovery"
-	"trinitygo/interceptor/runtime"
-	truntime "trinitygo/runtime"
-	"trinitygo/sd"
-	"trinitygo/utils"
+
+	truntime "github.com/PolarPanda611/trinitygo/runtime"
+
+	"github.com/PolarPanda611/trinitygo/interceptor/logger"
+
+	"github.com/PolarPanda611/trinitygo/interceptor/di"
+
+	"github.com/PolarPanda611/trinitygo/db"
+
+	"github.com/PolarPanda611/trinitygo/conf"
+
+	"github.com/PolarPanda611/trinitygo/interceptor/recovery"
+	"github.com/PolarPanda611/trinitygo/sd"
+	"github.com/PolarPanda611/trinitygo/utils"
+
+	"github.com/PolarPanda611/trinitygo/interceptor/runtime"
+
+	"github.com/PolarPanda611/trinitygo/application"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/jinzhu/gorm"

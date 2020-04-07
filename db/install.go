@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	"trinitygo/utils"
+	"github.com/PolarPanda611/trinitygo/utils"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"

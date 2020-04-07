@@ -1,9 +1,11 @@
 package main
 
 import (
-	"trinitygo"
-	helloworldpb "trinitygo/example/pb/helloworld"
-	"trinitygo/example/server/domain/controller/grpc"
+	helloworldpb "github.com/PolarPanda611/trinitygo/example/pb/helloworld"
+
+	"github.com/PolarPanda611/trinitygo/example/server/domain/controller/grpc"
+
+	"github.com/PolarPanda611/trinitygo"
 )
 
 func main() {

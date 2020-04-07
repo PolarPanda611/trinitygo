@@ -3,9 +3,10 @@ package service
 import (
 	"reflect"
 	"sync"
-	"trinitygo"
-	"trinitygo/application"
-	"trinitygo/example/server/domain/repository"
+
+	"github.com/PolarPanda611/trinitygo"
+	"github.com/PolarPanda611/trinitygo/application"
+	"github.com/PolarPanda611/trinitygo/example/server/domain/repository"
 )
 
 func init() {

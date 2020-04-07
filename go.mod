@@ -1,4 +1,4 @@
-module trinitygo
+module github.com/PolarPanda611/trinitygo
 
 go 1.13
 

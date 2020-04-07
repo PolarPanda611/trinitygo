@@ -2,8 +2,10 @@ package application
 
 import (
 	"context"
-	"trinitygo/conf"
-	truntime "trinitygo/runtime"
+
+	truntime "github.com/PolarPanda611/trinitygo/runtime"
+
+	"github.com/PolarPanda611/trinitygo/conf"
 
 	"github.com/jinzhu/gorm"
 	"github.com/kataras/golog"

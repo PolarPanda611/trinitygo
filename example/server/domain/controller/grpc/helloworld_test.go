@@ -6,9 +6,10 @@ import (
 	"log"
 	"net"
 	"testing"
-	"trinitygo"
 
-	helloworldpb "trinitygo/example/pb/helloworld"
+	"github.com/PolarPanda611/trinitygo"
+
+	helloworldpb "github.com/PolarPanda611/trinitygo/example/pb/helloworld"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"

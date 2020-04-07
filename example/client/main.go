@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	helloworldpb "trinitygo/example/pb/helloworld"
+	helloworldpb "github.com/PolarPanda611/trinitygo/example/pb/helloworld"
 
 	"github.com/google/uuid"
 	"google.golang.org/grpc"

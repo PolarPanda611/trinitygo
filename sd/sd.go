@@ -3,7 +3,8 @@ package sd
 import (
 	"context"
 	"fmt"
-	"trinitygo/utils"
+
+	"github.com/PolarPanda611/trinitygo/utils"
 
 	"github.com/coreos/etcd/clientv3"
 	etcdnaming "github.com/coreos/etcd/clientv3/naming"

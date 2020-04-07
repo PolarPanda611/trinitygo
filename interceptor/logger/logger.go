@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"time"
-	"trinitygo/application"
-	"trinitygo/logger"
+
+	"github.com/PolarPanda611/trinitygo/logger"
+
+	"github.com/PolarPanda611/trinitygo/application"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"

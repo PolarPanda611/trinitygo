@@ -3,9 +3,12 @@ package grpc
 import (
 	"context"
 	"sync"
-	"trinitygo"
-	helloworldpb "trinitygo/example/pb/helloworld"
-	"trinitygo/example/server/domain/service"
+
+	helloworldpb "github.com/PolarPanda611/trinitygo/example/pb/helloworld"
+
+	"github.com/PolarPanda611/trinitygo/example/server/domain/service"
+
+	"github.com/PolarPanda611/trinitygo"
 )
 
 func init() {

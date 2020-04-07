@@ -1,8 +1,9 @@
 package db
 
 import (
-	"trinitygo/application"
-	"trinitygo/logger"
+	"github.com/PolarPanda611/trinitygo/logger"
+
+	"github.com/PolarPanda611/trinitygo/application"
 )
 
 type dbLogger struct {
