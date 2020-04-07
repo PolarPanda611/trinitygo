@@ -113,9 +113,9 @@ func DefaultGRPC() application.Application {
 	app.UseInterceptor(runtime.New(app))
 	app.UseInterceptor(logger.New(app))
 	app.UseInterceptor(di.New(app))
-	app.RegRuntimeKey(truntime.NewRuntimeKey("trace_id", true, ""))
-	app.RegRuntimeKey(truntime.NewRuntimeKey("user_id", true, ""))
-	app.RegRuntimeKey(truntime.NewRuntimeKey("user_name", true, ""))
+	// app.RegRuntimeKey(truntime.NewRuntimeKey("trace_id", true, ""))
+	// app.RegRuntimeKey(truntime.NewRuntimeKey("user_id", true, ""))
+	// app.RegRuntimeKey(truntime.NewRuntimeKey("user_name", true, ""))
 	return app
 }
 
