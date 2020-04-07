@@ -34,6 +34,10 @@ func (c *ContextPool) Acquire(app Application, runtime map[string]string, db *go
 	newDB := db.New()
 
 	newDB.SetLogger(NewDBLogger(app, runtime))
+
+	if v, ok := runtime["user_id"]; ok {
+		newDB.Set("user_id", v)
+	}
 	ctx.setDB(newDB)
 	return ctx
 }

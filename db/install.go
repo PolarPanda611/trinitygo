@@ -44,7 +44,7 @@ func DefaultInstallGORM(
 // updateTimeStampForCreateCallback will set `CreatedOn`, `ModifiedOn` when creating
 func updateTimeStampAndUUIDForCreateCallback(scope *gorm.Scope) {
 	if !scope.HasError() {
-		userIDInterface, _ := scope.Get("UserID")
+		userIDInterface, _ := scope.Get("user_id")
 		userID, _ := userIDInterface.(int64)
 		nowTime := utils.GetCurrentTime()
 		if createTimeField, ok := scope.FieldByName("CreatedTime"); ok {
@@ -82,7 +82,7 @@ func updateTimeStampAndUUIDForCreateCallback(scope *gorm.Scope) {
 // updateTimeStampForUpdateCallback will set `ModifiedOn` when updating
 func updateTimeStampForUpdateCallback(scope *gorm.Scope) {
 	if !scope.HasError() {
-		userID, _ := scope.Get("UserID")
+		userID, _ := scope.Get("user_id")
 		var updateAttrs = map[string]interface{}{}
 		if attrs, ok := scope.InstanceGet("gorm:update_attrs"); ok {
 			updateAttrs = attrs.(map[string]interface{})
@@ -98,7 +98,7 @@ func updateTimeStampForUpdateCallback(scope *gorm.Scope) {
 // deleteCallback will set `DeletedOn` where deleting
 func deleteCallback(scope *gorm.Scope) {
 	if !scope.HasError() {
-		userID, ok := scope.Get("UserID")
+		userID, ok := scope.Get("user_id")
 		if !ok {
 			userID = nil
 		}
