@@ -184,6 +184,8 @@ func (app *Application) UseInterceptor(interceptor ...grpc.UnaryServerIntercepto
 }
 
 // RegRuntimeKey register runtime key
+// the runtime key should be lower case , because when the metadata transfer , it will all transform
+// to lower case
 func (app *Application) RegRuntimeKey(runtime ...truntime.RuntimeKey) application.Application {
 	app.runtimeKeys = append(app.runtimeKeys, runtime...)
 	return app
