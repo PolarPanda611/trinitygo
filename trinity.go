@@ -11,11 +11,13 @@ import (
 	"syscall"
 	"trinitygo/application"
 	"trinitygo/conf"
+	"trinitygo/db"
 	"trinitygo/interceptor/di"
 	"trinitygo/interceptor/logger"
 	"trinitygo/interceptor/recovery"
 	"trinitygo/interceptor/runtime"
 	truntime "trinitygo/runtime"
+	"trinitygo/sd"
 	"trinitygo/utils"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -25,6 +27,8 @@ import (
 )
 
 var (
+	runmode        string = "Local"
+	configpath     string = "./config/"
 	controllerPool *application.ControllerPool
 	servicePool    *application.ServicePool
 	repositoryPool *application.RepositoryPool
@@ -38,7 +42,7 @@ func init() {
 
 // Application core of trinity
 type Application struct {
-	config      *conf.Conf
+	config      conf.Conf
 	logger      *golog.Logger
 	contextPool *application.ContextPool
 
@@ -51,26 +55,36 @@ type Application struct {
 	repositoryPool *application.RepositoryPool
 	interceptors   []grpc.UnaryServerInterceptor
 	runtimeKeys    []truntime.RuntimeKey
+	serviceMesh    sd.ServiceMesh
 
 	grpcServer *grpc.Server
 }
 
+// SetRunmode set config path
+func SetRunmode(mode string) {
+	runmode = mode
+}
+
+// SetConfigPath set config path
+func SetConfigPath(path string) {
+	configpath = path
+}
+
 // New new application
 func New() application.Application {
-	c := conf.DefaultConf()
-
 	app := &Application{
-		config: c,
 		logger: golog.Default,
 	}
+	app.config = conf.NewSetting(runmode, configpath)
 
-	appPrefix := fmt.Sprintf("[%v@%v]", utils.GetServiceName(app.Conf().ProjectName), app.Conf().ProjectVersion)
+	appPrefix := fmt.Sprintf("[%v@%v]", utils.GetServiceName(app.config.GetProjectName()), app.config.GetProjectVersion())
 	app.logger.SetPrefix(appPrefix)
 	app.logger.SetTimeFormat("2006-01-02 15:04:05.000")
 
 	app.contextPool = application.New(func() application.Context {
 		return application.NewContext(app)
 	})
+
 	app.controllerPool = controllerPool
 	app.servicePool = servicePool
 	app.repositoryPool = repositoryPool
@@ -100,6 +114,8 @@ func DefaultGRPC() application.Application {
 	app.UseInterceptor(logger.New(app))
 	app.UseInterceptor(di.New(app))
 	app.RegRuntimeKey(truntime.NewRuntimeKey("trace_id", true, ""))
+	app.RegRuntimeKey(truntime.NewRuntimeKey("user_id", true, ""))
+	app.RegRuntimeKey(truntime.NewRuntimeKey("user_name", true, ""))
 	return app
 }
 
@@ -118,7 +134,7 @@ func (app *Application) RuntimeKeys() []truntime.RuntimeKey {
 }
 
 // Conf get conf
-func (app *Application) Conf() *conf.Conf {
+func (app *Application) Conf() conf.Conf {
 	app.mu.RLock()
 	defer app.mu.RUnlock()
 	return app.config
@@ -173,17 +189,12 @@ func (app *Application) RegRuntimeKey(runtime ...truntime.RuntimeKey) applicatio
 
 // InstallDB install db
 func (app *Application) InstallDB(f func() *gorm.DB) {
-	if f != nil {
-		app.db = f()
-		err := app.db.DB().Ping()
-		if err != nil {
-			app.Logger().Fatal("booting detected db initializer ...install failed ,err : %v", err)
-		}
-		app.Logger().Info("booting detected db initializer ...install successfully , test passed ! ")
-	} else {
-		line := fmt.Sprintf("booting db install func not found , db releated func will err")
-		app.Logger().Info(line)
+	app.db = f()
+	err := app.db.DB().Ping()
+	if err != nil {
+		app.Logger().Fatal("booting detected db initializer ...install failed ,err : %v", err)
 	}
+	app.Logger().Info("booting detected db initializer ...install successfully , test passed ! ")
 }
 
 func (app *Application) initPool() {
@@ -204,9 +215,7 @@ func (app *Application) initPool() {
 	app.Logger().Info(line)
 }
 
-// InitTrinity serve grpc
-func (app *Application) InitTrinity() {
-
+func (app *Application) initRuntime() {
 	runtimeKey := ""
 	for _, v := range app.runtimeKeys {
 		runtimeKey += fmt.Sprintf("%v,", v.GetKeyName())
@@ -214,14 +223,51 @@ func (app *Application) InitTrinity() {
 	// runtime checking
 	line := fmt.Sprintf("booting detected %v runtime([%v]) ...installed", len(app.runtimeKeys), runtimeKey)
 	app.Logger().Info(line)
-
+}
+func (app *Application) initDB() {
 	if app.db == nil {
-		line := fmt.Sprintf("booting db instance is null , db releated func will err")
+		f := func() *gorm.DB {
+			return db.DefaultInstallGORM(
+				app.config.GetDebug(),
+				true,
+				app.config.GetDBType(),
+				app.config.GetDBTablePrefix(),
+				app.config.GetDBServer(),
+				app.config.GetDbMaxIdleConn(),
+				app.config.GetDbMaxOpenConn(),
+			)
+		}
+		app.db = f()
+		line := fmt.Sprintf("booting db instance with default install")
 		app.Logger().Info(line)
 	}
+}
 
+func (app *Application) initSD() {
+	if app.config.GetServiceDiscoveryAutoRegister() {
+		switch app.config.GetServiceDiscoveryType() {
+		case "etcd":
+			c, err := sd.NewEtcdRegister(
+				app.config.GetServiceDiscoveryAddress(),
+				app.config.GetServiceDiscoveryPort(),
+			)
+			if err != nil {
+				app.logger.Fatal("get service mesh client err")
+			}
+			app.serviceMesh = c
+			break
+		default:
+			app.logger.Fatal("wrong service mash type")
+		}
+	}
+}
+
+// InitTrinity serve grpc
+func (app *Application) InitTrinity() {
+	app.initRuntime()
+	app.initDB()
 	app.initPool()
-
+	app.initSD()
 }
 
 // InitGRPC serve grpc
@@ -248,13 +294,25 @@ func (app *Application) GetGRPCServer() *grpc.Server {
 }
 
 // ServeGRPC serve grpc server
-func (app *Application) ServeGRPC(addr string) {
+func (app *Application) ServeGRPC() {
+	addr := fmt.Sprintf("%v:%v", app.config.GetAppAddress(), app.config.GetAppPort())
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		log.Fatalf("tcp port : %v  listen err: %v", addr, err)
 	}
 	gErr := make(chan error)
 	go func() {
+		if app.config.GetServiceDiscoveryAutoRegister() {
+			if err := app.serviceMesh.RegService(
+				app.config.GetProjectName(),
+				app.config.GetProjectVersion(),
+				app.config.GetAppAddress(),
+				app.config.GetAppPort(),
+				app.config.GetProjectTags(),
+			); err != nil {
+				gErr <- err
+			}
+		}
 		line := fmt.Sprintf("booted grpc service listen at %v started", addr)
 		app.Logger().Info(line)
 		gErr <- app.grpcServer.Serve(lis)
@@ -268,4 +326,12 @@ func (app *Application) ServeGRPC(addr string) {
 
 	line := fmt.Sprintf("booted grpc service listen at %v ,terminated err: %v ", addr, <-gErr)
 	app.Logger().Info(line)
+	if app.config.GetServiceDiscoveryAutoRegister() {
+		app.serviceMesh.DeRegService(
+			app.config.GetProjectName(),
+			app.config.GetProjectVersion(),
+			app.config.GetAppAddress(),
+			app.config.GetAppPort(),
+		)
+	}
 }

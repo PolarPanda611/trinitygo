@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	address     = "localhost:50051"
+	address     = "localhost:9000"
 	defaultName = "test trinity go "
 )
 
@@ -33,9 +33,9 @@ func main() {
 	if len(os.Args) > 1 {
 		name = os.Args[1]
 	}
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 10; i++ {
 		go func() {
-			md := metadata.Pairs("trace_id", uuid.New().String())
+			md := metadata.Pairs("trace_id", uuid.New().String(), "user_id", "1245555", "user_name", "dtan11")
 			ctx := metadata.NewOutgoingContext(context.Background(), md)
 			r, err := c.SayHello(ctx, &helloworldpb.HelloRequest{Name: name})
 			if err != nil {
@@ -48,5 +48,4 @@ func main() {
 
 	}
 	time.Sleep(time.Second * 1)
-
 }

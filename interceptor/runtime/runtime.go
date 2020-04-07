@@ -21,7 +21,7 @@ func New(app application.Application) func(ctx context.Context, req interface{},
 		for _, v := range app.RuntimeKeys() {
 			if _, ok := md[v.GetKeyName()]; !ok {
 				if v.GetRequired() {
-					line := fmt.Sprintf("%v %v %v ", app.Conf().ProjectName, app.Conf().ProjectVersion, info.FullMethod)
+					line := fmt.Sprintf("%v %v %v ", app.Conf().GetProjectName(), app.Conf().GetProjectVersion(), info.FullMethod)
 					errMessage := fmt.Sprintf("%v required but not found", v.GetKeyName())
 					line += fmt.Sprintf("%v %v ", "Error", errMessage)
 					app.Logger().Error(line)

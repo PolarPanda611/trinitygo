@@ -15,7 +15,7 @@ import (
 type Application interface {
 	Logger() *golog.Logger
 	RuntimeKeys() []truntime.RuntimeKey
-	Conf() *conf.Conf
+	Conf() conf.Conf
 	ContextPool() *ContextPool
 	DB() *gorm.DB
 	InstallDB(f func() *gorm.DB)
@@ -26,7 +26,7 @@ type Application interface {
 	RegRuntimeKey(runtime ...truntime.RuntimeKey) Application
 	InitGRPC()
 	GetGRPCServer() *grpc.Server
-	ServeGRPC(addr string)
+	ServeGRPC()
 }
 
 // DecodeRuntimeKey  decode runtime key from ctx
