@@ -28,14 +28,11 @@ func New(app application.Application) gin.HandlerFunc {
 			//release tcontext obj
 			app.ContextPool().Release(tContext)
 		}()
-		controller, toFreeService, toFreeRepo := app.GetControllerPool().GetController(method, tContext, app)
+		controller, toFreeContainer := app.GetControllerPool().GetController(method, tContext, app, c)
 		defer func() {
 			app.GetControllerPool().Release(method, controller)
-			for _, v := range toFreeService {
-				app.GetServicePool().Release(v)
-			}
-			for _, v := range toFreeRepo {
-				app.GetRepositoryPool().Release(v)
+			for _, v := range toFreeContainer {
+				app.GetContainerPool().Release(v)
 			}
 		}()
 		controllerValue := reflect.ValueOf(controller) // new transport value

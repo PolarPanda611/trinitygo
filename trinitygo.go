@@ -48,15 +48,11 @@ var (
 	configpath     string = "./config/"
 	controllerPool *application.ControllerPool
 	containerPool  *application.ContainerPool
-	servicePool    *application.ServicePool
-	repositoryPool *application.RepositoryPool
 )
 
 func init() {
 	controllerPool = application.NewControllerPool()
 	containerPool = application.NewContainerPool()
-	servicePool = application.NewServicePool()
-	repositoryPool = application.NewRepositoryPool()
 }
 
 // Application core of trinity
@@ -71,8 +67,6 @@ type Application struct {
 	db             *gorm.DB
 	controllerPool *application.ControllerPool
 	containerPool  *application.ContainerPool
-	servicePool    *application.ServicePool
-	repositoryPool *application.RepositoryPool
 
 	//grpc
 	interceptors []grpc.UnaryServerInterceptor
@@ -107,8 +101,6 @@ func New() application.Application {
 
 	app.controllerPool = controllerPool
 	app.containerPool = containerPool
-	app.servicePool = servicePool
-	app.repositoryPool = repositoryPool
 	return app
 }
 
@@ -120,16 +112,6 @@ func BindController(controllerName string, Pool *sync.Pool) {
 // BindContainer bind container
 func BindContainer(container reflect.Type, Pool *sync.Pool) {
 	containerPool.NewContainer(container, Pool)
-}
-
-// BindService bind service
-func BindService(serviceName reflect.Type, Pool *sync.Pool) {
-	servicePool.NewService(serviceName, Pool)
-}
-
-// BindRepository bind service
-func BindRepository(repoName reflect.Type, Pool *sync.Pool) {
-	repositoryPool.NewRepository(repoName, Pool)
 }
 
 // DefaultGRPC default grpc server
@@ -204,20 +186,6 @@ func (app *Application) GetContainerPool() *application.ContainerPool {
 	return app.containerPool
 }
 
-// GetServicePool get all serviice pool
-func (app *Application) GetServicePool() *application.ServicePool {
-	app.mu.RLock()
-	defer app.mu.RUnlock()
-	return app.servicePool
-}
-
-// GetRepositoryPool get all serviice pool
-func (app *Application) GetRepositoryPool() *application.RepositoryPool {
-	app.mu.RLock()
-	defer app.mu.RUnlock()
-	return app.repositoryPool
-}
-
 // UseInterceptor application use interceptor, only impact on http server
 func (app *Application) UseInterceptor(interceptor ...grpc.UnaryServerInterceptor) application.Application {
 	app.interceptors = append(app.interceptors, interceptor...)
@@ -266,21 +234,6 @@ func (app *Application) initPool() {
 	line = fmt.Sprintf("booting detected %v container pool (%v)...installed", len(containerPool.GetContainerType()), poolKey)
 	app.Logger().Info(line)
 
-	poolKey = ""
-	for _, v := range app.servicePool.GetServiceType() {
-		poolKey += fmt.Sprintf("%v,", v)
-	}
-	// service pool checking
-	line = fmt.Sprintf("booting detected %v service pool (%v)...installed", len(app.servicePool.GetServiceType()), poolKey)
-	app.Logger().Info(line)
-
-	poolKey = ""
-	for _, v := range app.repositoryPool.GetRepositoryType() {
-		poolKey += fmt.Sprintf("%v,", v)
-	}
-	// service pool checking
-	line = fmt.Sprintf("booting detected %v repository pool (%v)...installed", len(app.repositoryPool.GetRepositoryType()), poolKey)
-	app.Logger().Info(line)
 }
 
 func (app *Application) initRuntime() {

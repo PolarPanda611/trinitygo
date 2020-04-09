@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	trinitygo.BindRepository(reflect.TypeOf(&UserRepoImpl{}), &sync.Pool{
+	trinitygo.BindContainer(reflect.TypeOf(&UserRepoImpl{}), &sync.Pool{
 		New: func() interface{} {
 			service := new(UserRepoImpl)
 			return service

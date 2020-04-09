@@ -24,14 +24,11 @@ func New(app application.Application) func(ctx context.Context, req interface{},
 			app.ContextPool().Release(tContext)
 		}()
 
-		controller, toFreeService, toFreeRepo := app.GetControllerPool().GetController(method[1], tContext, app)
+		controller, toFreeContainer := app.GetControllerPool().GetController(method[1], tContext, app, nil)
 		defer func() {
 			app.GetControllerPool().Release(method[1], controller)
-			for _, v := range toFreeService {
-				app.GetServicePool().Release(v)
-			}
-			for _, v := range toFreeRepo {
-				app.GetRepositoryPool().Release(v)
+			for _, v := range toFreeContainer {
+				app.GetContainerPool().Release(v)
 			}
 		}()
 		controllerValue := reflect.ValueOf(controller) // new transport value

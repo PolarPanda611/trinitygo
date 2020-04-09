@@ -2,6 +2,8 @@ package application
 
 import (
 	"sync"
+
+	"github.com/gin-gonic/gin"
 )
 
 // ControllerPool service pool
@@ -30,14 +32,14 @@ func (s *ControllerPool) GetControllerMap() []string {
 }
 
 // GetController from pool
-func (s *ControllerPool) GetController(controllerName string, tctx Context, app Application) (interface{}, []interface{}, []interface{}) {
+func (s *ControllerPool) GetController(controllerName string, tctx Context, app Application, c *gin.Context) (interface{}, []interface{}) {
 	pool, ok := s.poolMap[controllerName]
 	if !ok {
 		panic("unknown controller name")
 	}
 	controller := pool.Get()
-	toFreeService, toFreeRepository := DiController(controller, tctx, app)
-	return controller, toFreeService, toFreeRepository
+	toFreeContainer := DiFields(controller, tctx, app, c)
+	return controller, toFreeContainer
 }
 
 // Release release controller to pool

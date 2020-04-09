@@ -10,7 +10,7 @@ import (
 )
 
 func init() {
-	trinitygo.BindService(reflect.TypeOf(&UserServiceImpl{}), &sync.Pool{
+	trinitygo.BindContainer(reflect.TypeOf(&UserServiceImpl{}), &sync.Pool{
 		New: func() interface{} {
 			service := new(UserServiceImpl)
 			return service
