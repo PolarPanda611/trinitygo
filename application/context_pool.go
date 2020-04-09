@@ -47,7 +47,7 @@ func (c *ContextPool) Acquire(app Application, runtime map[string]string, db *go
 // Release puts a Context back to its pull, this function releases its resources.
 // See Acquire.
 func (c *ContextPool) Release(ctx Context) {
-	ctx.CleanRuntime()
+	ctx.cleanRuntime()
 	c.pool.Put(ctx)
 }
 

@@ -8,6 +8,7 @@ require (
 	github.com/PolarPanda611/trinity v1.13.1
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/coreos/etcd v3.3.19+incompatible
+	github.com/gin-gonic/gin v1.5.0
 	github.com/golang/protobuf v1.3.3
 	github.com/google/uuid v1.1.1
 	github.com/grpc-ecosystem/go-grpc-middleware v1.2.0

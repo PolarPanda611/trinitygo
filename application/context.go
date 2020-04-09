@@ -12,7 +12,7 @@ type Context interface {
 	GetDB() *gorm.DB
 	GetTXDB() *gorm.DB
 	setDB(*gorm.DB)
-	CleanRuntime()
+	cleanRuntime()
 }
 
 // ContextImpl Context impl
@@ -54,7 +54,7 @@ func (c *ContextImpl) setDB(db *gorm.DB) {
 }
 
 // CleanRuntime  clean runtime info
-func (c *ContextImpl) CleanRuntime() {
+func (c *ContextImpl) cleanRuntime() {
 	c.runtime = nil
 	c.db = nil
 }
