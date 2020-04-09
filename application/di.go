@@ -3,7 +3,37 @@ package application
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/gin-gonic/gin"
 )
+
+// DiContainerPool di service pool
+func DiContainerPool(dest interface{}, tctx Context, app Application, c *gin.Context) []interface{} {
+	var toFreeContainer []interface{}
+	DiTCtx(dest, tctx)
+	destVal := reflect.Indirect(reflect.ValueOf(dest))
+	for index := 0; index < destVal.NumField(); index++ {
+		val := destVal.Field(index)
+		if val.Kind() == reflect.Interface && val.IsZero() {
+
+			for _, v := range app.GetContainerPool().GetContainerType() {
+				if !v.Implements(val.Type()) {
+					continue
+				}
+				if !val.CanSet() {
+					// not the public param , cannot inject
+					continue
+				}
+				repo, subToFreeContainer := app.GetContainerPool().GetContainer(v, tctx, app, c)
+				toFreeContainer = append(toFreeContainer, repo)
+				toFreeContainer = append(toFreeContainer, subToFreeContainer...)
+				val.Set(reflect.ValueOf(repo))
+				continue
+			}
+		}
+	}
+	return toFreeContainer
+}
 
 // DiServicePool di service pool
 func DiServicePool(dest interface{}, tctx Context, app Application) []interface{} {

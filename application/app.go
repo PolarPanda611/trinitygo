@@ -4,6 +4,7 @@ import (
 	"context"
 
 	truntime "github.com/PolarPanda611/trinitygo/runtime"
+	"github.com/gin-gonic/gin"
 
 	"github.com/PolarPanda611/trinitygo/conf"
 
@@ -22,17 +23,21 @@ type Application interface {
 	DB() *gorm.DB
 	InstallDB(f func() *gorm.DB)
 	GetControllerPool() *ControllerPool
+	GetContainerPool() *ContainerPool
 	GetServicePool() *ServicePool
 	GetRepositoryPool() *RepositoryPool
 	UseInterceptor(interceptor ...grpc.UnaryServerInterceptor) Application
+	UseMiddleware(middleware ...gin.HandlerFunc) Application
 	RegRuntimeKey(runtime ...truntime.RuntimeKey) Application
 	InitGRPC()
+	InitHTTP()
 	GetGRPCServer() *grpc.Server
 	ServeGRPC()
+	ServeHTTP()
 }
 
-// DecodeRuntimeKey  decode runtime key from ctx
-func DecodeRuntimeKey(ctx context.Context, app Application) map[string]string {
+// DecodeGRPCRuntimeKey  decode runtime key from ctx
+func DecodeGRPCRuntimeKey(ctx context.Context, app Application) map[string]string {
 	runtimeKeyMap := make(map[string]string)
 	if ctx != nil {
 		md, ok := metadata.FromIncomingContext(ctx)
@@ -41,6 +46,17 @@ func DecodeRuntimeKey(ctx context.Context, app Application) map[string]string {
 			for _, v := range app.RuntimeKeys() {
 				runtimeKeyMap[v.GetKeyName()] = md[v.GetKeyName()][0]
 			}
+		}
+	}
+	return runtimeKeyMap
+}
+
+// DecodeHTTPRuntimeKey decode http runtime
+func DecodeHTTPRuntimeKey(c *gin.Context, app Application) map[string]string {
+	runtimeKeyMap := make(map[string]string)
+	if c != nil {
+		for _, v := range app.RuntimeKeys() {
+			runtimeKeyMap[v.GetKeyName()] = c.GetString(v.GetKeyName())
 		}
 	}
 	return runtimeKeyMap

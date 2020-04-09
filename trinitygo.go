@@ -2,17 +2,24 @@ package trinitygo
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"reflect"
+	"strings"
 	"sync"
 	"syscall"
+	"time"
 
 	truntime "github.com/PolarPanda611/trinitygo/runtime"
+	"github.com/gin-gonic/gin"
 
 	"github.com/PolarPanda611/trinitygo/interceptor/logger"
+
+	mlogger "github.com/PolarPanda611/trinitygo/middleware/logger"
 
 	"github.com/PolarPanda611/trinitygo/interceptor/di"
 
@@ -25,6 +32,9 @@ import (
 	"github.com/PolarPanda611/trinitygo/utils"
 
 	"github.com/PolarPanda611/trinitygo/interceptor/runtime"
+	mdi "github.com/PolarPanda611/trinitygo/middleware/di"
+	httprecovery "github.com/PolarPanda611/trinitygo/middleware/recovery"
+	mruntime "github.com/PolarPanda611/trinitygo/middleware/runtime"
 
 	"github.com/PolarPanda611/trinitygo/application"
 
@@ -37,12 +47,14 @@ import (
 var (
 	configpath     string = "./config/"
 	controllerPool *application.ControllerPool
+	containerPool  *application.ContainerPool
 	servicePool    *application.ServicePool
 	repositoryPool *application.RepositoryPool
 )
 
 func init() {
 	controllerPool = application.NewControllerPool()
+	containerPool = application.NewContainerPool()
 	servicePool = application.NewServicePool()
 	repositoryPool = application.NewRepositoryPool()
 }
@@ -58,13 +70,19 @@ type Application struct {
 	mu             sync.RWMutex
 	db             *gorm.DB
 	controllerPool *application.ControllerPool
+	containerPool  *application.ContainerPool
 	servicePool    *application.ServicePool
 	repositoryPool *application.RepositoryPool
-	interceptors   []grpc.UnaryServerInterceptor
-	runtimeKeys    []truntime.RuntimeKey
-	serviceMesh    sd.ServiceMesh
 
-	grpcServer *grpc.Server
+	//grpc
+	interceptors []grpc.UnaryServerInterceptor
+	runtimeKeys  []truntime.RuntimeKey
+	serviceMesh  sd.ServiceMesh
+	grpcServer   *grpc.Server
+
+	//http
+	middlewares []gin.HandlerFunc
+	router      *gin.Engine
 }
 
 // SetConfigPath set config path
@@ -88,6 +106,7 @@ func New() application.Application {
 	})
 
 	app.controllerPool = controllerPool
+	app.containerPool = containerPool
 	app.servicePool = servicePool
 	app.repositoryPool = repositoryPool
 	return app
@@ -96,6 +115,11 @@ func New() application.Application {
 // BindController bind service
 func BindController(controllerName string, Pool *sync.Pool) {
 	controllerPool.NewController(controllerName, Pool)
+}
+
+// BindContainer bind container
+func BindContainer(container reflect.Type, Pool *sync.Pool) {
+	containerPool.NewContainer(container, Pool)
 }
 
 // BindService bind service
@@ -115,9 +139,19 @@ func DefaultGRPC() application.Application {
 	app.UseInterceptor(runtime.New(app))
 	app.UseInterceptor(logger.New(app))
 	app.UseInterceptor(di.New(app))
-	// app.RegRuntimeKey(truntime.NewRuntimeKey("trace_id", true, ""))
-	// app.RegRuntimeKey(truntime.NewRuntimeKey("user_id", true, ""))
-	// app.RegRuntimeKey(truntime.NewRuntimeKey("user_name", true, ""))
+	// app.RegRuntimeKey(truntime.NewRuntimeKey("trace_id", true,  func() string { return "" })
+	// app.RegRuntimeKey(truntime.NewRuntimeKey("user_id", true,  func() string { return "" })
+	// app.RegRuntimeKey(truntime.NewRuntimeKey("user_name", true,  func() string { return "" } )
+	return app
+}
+
+// DefaultHTTP default http server
+func DefaultHTTP() application.Application {
+	app := New()
+	app.UseMiddleware(mlogger.New(app))
+	app.UseMiddleware(httprecovery.New(app))
+	app.UseMiddleware(mruntime.New(app))
+
 	return app
 }
 
@@ -163,6 +197,13 @@ func (app *Application) GetControllerPool() *application.ControllerPool {
 	return app.controllerPool
 }
 
+// GetContainerPool get all serviice pool
+func (app *Application) GetContainerPool() *application.ContainerPool {
+	app.mu.RLock()
+	defer app.mu.RUnlock()
+	return app.containerPool
+}
+
 // GetServicePool get all serviice pool
 func (app *Application) GetServicePool() *application.ServicePool {
 	app.mu.RLock()
@@ -177,10 +218,17 @@ func (app *Application) GetRepositoryPool() *application.RepositoryPool {
 	return app.repositoryPool
 }
 
-// UseInterceptor application use interceptor
+// UseInterceptor application use interceptor, only impact on http server
 func (app *Application) UseInterceptor(interceptor ...grpc.UnaryServerInterceptor) application.Application {
 	app.interceptors = append(app.interceptors, interceptor...)
 	return app
+}
+
+// UseMiddleware application use middleware , only impact on http server
+func (app *Application) UseMiddleware(middleware ...gin.HandlerFunc) application.Application {
+	app.middlewares = append(app.middlewares, middleware...)
+	return app
+
 }
 
 // RegRuntimeKey register runtime key
@@ -196,7 +244,7 @@ func (app *Application) InstallDB(f func() *gorm.DB) {
 	app.db = f()
 	err := app.db.DB().Ping()
 	if err != nil {
-		app.Logger().Fatal("booting detected db initializer ...install failed ,err : %v", err)
+		app.Logger().Fatal("booting detected db initializer ...install failed ,err : ", err)
 	}
 	app.Logger().Info("booting detected db initializer ...install successfully , test passed ! ")
 }
@@ -208,6 +256,14 @@ func (app *Application) initPool() {
 	}
 	// service pool checking
 	line := fmt.Sprintf("booting detected %v controller pool (%v)...installed", len(app.controllerPool.GetControllerMap()), poolKey)
+	app.Logger().Info(line)
+
+	poolKey = ""
+	for _, v := range app.containerPool.GetContainerType() {
+		poolKey += fmt.Sprintf("%v,", v)
+	}
+	// service pool checking
+	line = fmt.Sprintf("booting detected %v container pool (%v)...installed", len(containerPool.GetContainerType()), poolKey)
 	app.Logger().Info(line)
 
 	poolKey = ""
@@ -236,6 +292,7 @@ func (app *Application) initRuntime() {
 	line := fmt.Sprintf("booting detected %v runtime([%v]) ...installed", len(app.runtimeKeys), runtimeKey)
 	app.Logger().Info(line)
 }
+
 func (app *Application) initDB() {
 	if app.db == nil {
 		f := func() *gorm.DB {
@@ -298,6 +355,97 @@ func (app *Application) InitGRPC() {
 	app.grpcServer = grpc.NewServer(opts...)
 }
 
+// InitHTTP serve grpc
+func (app *Application) InitHTTP() {
+	app.InitTrinity()
+	gin.DefaultWriter = ioutil.Discard
+	app.router = gin.New()
+	for _, v := range app.middlewares {
+		app.router.Use(v)
+	}
+	for _, controllerName := range app.GetControllerPool().GetControllerMap() {
+		controllerNameList := strings.Split(controllerName, "@")
+		method := controllerNameList[0]
+		path := controllerNameList[1]
+		switch method {
+		case "GET":
+			app.router.GET(path, mdi.New(app))
+			break
+		case "PATCH":
+			app.router.PATCH(path, mdi.New(app))
+			break
+		case "POST":
+			app.router.POST(path, mdi.New(app))
+			break
+		case "DELETE":
+			app.router.DELETE(path, mdi.New(app))
+			break
+		default:
+			app.logger.Fatal("booting err : wrong method ", method, " when binding controller ", controllerName)
+		}
+	}
+	// app.router
+}
+
+// InitHTTP serve grpc
+func (app *Application) ServeHTTP() {
+	addr := fmt.Sprintf(":%v", app.config.GetAppPort())
+	gErr := make(chan error)
+	go func() {
+		if app.config.GetServiceDiscoveryAutoRegister() {
+			if err := app.serviceMesh.RegService(
+				app.config.GetProjectName(),
+				app.config.GetProjectVersion(),
+				app.config.GetAppAddress(),
+				app.config.GetAppPort(),
+				app.config.GetProjectTags(),
+			); err != nil {
+				gErr <- err
+			}
+			line := fmt.Sprintf("boooting http service registered successfully !")
+			app.Logger().Info(line)
+		}
+		s := &http.Server{
+			Addr:              addr,
+			Handler:           app.router,
+			ReadTimeout:       time.Duration(app.config.GetAppReadTimeout()) * time.Second,
+			ReadHeaderTimeout: time.Duration(app.config.GetAppReadHeaderTimeout()) * time.Second,
+			WriteTimeout:      time.Duration(app.config.GetAppWriteTimeout()) * time.Second,
+			IdleTimeout:       time.Duration(app.config.GetAppIdleTimeout()) * time.Second,
+			MaxHeaderBytes:    app.config.GetAppMaxHeaderBytes(),
+		}
+		line := fmt.Sprintf("booted http service listen at %v started ", addr)
+		app.Logger().Info(line)
+		gErr <- s.ListenAndServe()
+	}()
+
+	go func() {
+		c := make(chan os.Signal)
+		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
+		gErr <- fmt.Errorf("%s", <-c)
+	}()
+
+	line := fmt.Sprintf("booted http service listen at %v ,terminated err: %v ", addr, <-gErr)
+	app.Logger().Error(line)
+	app.db.Close()
+	if app.config.GetServiceDiscoveryAutoRegister() {
+		err := app.serviceMesh.DeRegService(
+			app.config.GetProjectName(),
+			app.config.GetProjectVersion(),
+			app.config.GetAppAddress(),
+			app.config.GetAppPort(),
+		)
+		if err != nil {
+			line = fmt.Sprintf("boooting http service deregistered failed !")
+			app.Logger().Error(line)
+		} else {
+			line = fmt.Sprintf("boooting http service deregistered successfully !")
+			app.Logger().Info(line)
+		}
+
+	}
+}
+
 // GetGRPCServer get grpc server instance
 func (app *Application) GetGRPCServer() *grpc.Server {
 	app.mu.RLock()
@@ -340,7 +488,8 @@ func (app *Application) ServeGRPC() {
 	}()
 
 	line := fmt.Sprintf("booted grpc service listen at %v ,terminated err: %v ", addr, <-gErr)
-	app.Logger().Info(line)
+	app.Logger().Error(line)
+	app.db.Close()
 	if app.config.GetServiceDiscoveryAutoRegister() {
 		err := app.serviceMesh.DeRegService(
 			app.config.GetProjectName(),
@@ -350,7 +499,7 @@ func (app *Application) ServeGRPC() {
 		)
 		if err != nil {
 			line = fmt.Sprintf("boooting grpc service deregistered failed !")
-			app.Logger().Info(line)
+			app.Logger().Error(line)
 		} else {
 			line = fmt.Sprintf("boooting grpc service deregistered successfully !")
 			app.Logger().Info(line)

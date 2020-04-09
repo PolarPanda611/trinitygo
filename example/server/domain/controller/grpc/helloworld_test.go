@@ -11,6 +11,7 @@ import (
 
 	helloworldpb "github.com/PolarPanda611/trinitygo/example/pb/helloworld"
 
+	truntime "github.com/PolarPanda611/trinitygo/runtime"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
@@ -25,7 +26,11 @@ var lis *bufconn.Listener
 func init() {
 	const bufSize = 1024 * 1024
 	lis = bufconn.Listen(bufSize)
+	trinitygo.SetConfigPath("/Users/daniel/Documents/workspace/trinitygo/example/config/example.toml")
 	t := trinitygo.DefaultGRPC()
+	t.RegRuntimeKey(truntime.NewRuntimeKey("trace_id", true, func() string { return "" }))
+	t.RegRuntimeKey(truntime.NewRuntimeKey("user_id", true,  func() string { return "" }))
+	t.RegRuntimeKey(truntime.NewRuntimeKey("user_name", true,  func() string { return "" }))
 	t.InitGRPC()
 	helloworldpb.RegisterGreeterServer(t.GetGRPCServer(), &Server{})
 	go func() {

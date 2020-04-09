@@ -13,14 +13,16 @@ func New(app application.Application) gin.HandlerFunc {
 		for _, v := range app.RuntimeKeys() {
 			fmt.Println(v)
 			keyValue := c.GetString(v.GetKeyName())
-			if v.GetRequired() {
-				if keyValue == "" {
+			if keyValue == "" {
+				if v.GetRequired() {
+					c.AbortWithStatusJSON(400, gin.H{"msg": "wrong"})
+					return
+
 				}
-
+				c.Set(v.GetKeyName(), v.GetDefaultValue())
 			}
-
 		}
-
+		fmt.Println(application.DecodeHTTPRuntimeKey(c, app))
 		c.Next()
 	}
 }

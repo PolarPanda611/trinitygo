@@ -13,8 +13,11 @@ import (
 // New new DI interceptor
 func New(app application.Application) func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		runtimeKeyMap := application.DecodeRuntimeKey(ctx, app)
+		runtimeKeyMap := application.DecodeGRPCRuntimeKey(ctx, app)
 		tContext := app.ContextPool().Acquire(app, runtimeKeyMap, app.DB())
+		if app.Conf().GetAtomicRequest() {
+			tContext.GetTXDB()
+		}
 		method := strings.Split(info.FullMethod, "/") // /user.UserService/GetUserByID
 		defer func() {
 			//release tcontext obj
@@ -33,12 +36,9 @@ func New(app application.Application) func(ctx context.Context, req interface{},
 		}()
 		controllerValue := reflect.ValueOf(controller) // new transport value
 		controllerType := reflect.TypeOf(controller)   // transport type
-		var currentMethod reflect.Method
-		for i := 0; i < controllerType.NumMethod(); i++ { // 遍历transport all method
-			m := controllerType.Method(i) //   get method
-			if m.Name == method[2] {      // m.Name method name ,
-				currentMethod = m
-			}
+		currentMethod, ok := controllerType.MethodByName(method[2])
+		if !ok {
+			panic("controller has no method ")
 		}
 		var inParam []reflect.Value                     // 构造函数入参 ， 入参1 ， transport指针对象 ， 入参2 ， context ， 入参3 ，pb  request
 		inParam = append(inParam, controllerValue)      // 传入transport对象
@@ -48,12 +48,13 @@ func New(app application.Application) func(ctx context.Context, req interface{},
 		if len(res) != 2 {                              // 出参应该为2， 1为pb的response对象，2为error对象
 			panic("wrong res type")
 		}
-		var resErr error
 		if res[1].Interface() != nil {
-			resErr = res[1].Interface().(error)
-		} else {
-			resErr = nil
+			tContext.GetDB().Rollback()
+			return nil, res[1].Interface().(error)
 		}
-		return res[0].Interface(), resErr
+		if app.Conf().GetAtomicRequest() {
+			tContext.GetDB().Commit()
+		}
+		return res[0].Interface(), nil
 	}
 }
