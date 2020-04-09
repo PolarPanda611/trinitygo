@@ -9,7 +9,6 @@ import (
 type ServicePool struct {
 	poolMap     map[reflect.Type]*sync.Pool
 	serviceType []reflect.Type
-	serviceMap  sync.Map
 }
 
 // NewServicePool new pool with init map
