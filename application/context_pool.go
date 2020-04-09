@@ -1,6 +1,7 @@
 package application
 
 import (
+	"strconv"
 	"sync"
 
 	"github.com/jinzhu/gorm"
@@ -36,7 +37,8 @@ func (c *ContextPool) Acquire(app Application, runtime map[string]string, db *go
 	newDB.SetLogger(NewDBLogger(app, runtime))
 
 	if v, ok := runtime["user_id"]; ok {
-		newDB.Set("user_id", v)
+		userIDInt64, _ := strconv.ParseInt(v, 10, 64)
+		newDB = newDB.Set("user_id", userIDInt64)
 	}
 	ctx.setDB(newDB)
 	return ctx
