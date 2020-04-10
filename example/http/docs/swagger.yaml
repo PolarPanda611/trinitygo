@@ -1,0 +1,37 @@
+basePath: /
+host: 127.00.1:9000
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a sample trinity http server
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Trinity HTTP Example API
+  version: "1.0"
+paths:
+  /ping/{id}:
+    get:
+      description: get user by id test
+      parameters:
+      - description: user id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      summary: get user by id
+swagger: "2.0"

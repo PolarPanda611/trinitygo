@@ -1,6 +1,8 @@
 package application
 
 import (
+	"github.com/PolarPanda611/trinitygo/httputils"
+	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 )
 
@@ -16,6 +18,8 @@ type Context interface {
 	DBTxIsOpen() bool
 	setDB(*gorm.DB)
 	cleanRuntime()
+	Response(int, interface{}, error)
+	HandleResponse(c *gin.Context)
 }
 
 // ContextImpl Context impl
@@ -24,6 +28,10 @@ type ContextImpl struct {
 	runtime  map[string]string
 	db       *gorm.DB
 	dbTxOpen bool
+	// http
+	status int
+	res    interface{}
+	err    error
 }
 
 // GetApplication get app
@@ -60,6 +68,7 @@ func (c *ContextImpl) GetTXDB() *gorm.DB {
 func (c *ContextImpl) SafeCommit() {
 	if c.dbTxOpen {
 		c.db.Commit()
+		c.dbTxOpen = true
 	}
 }
 
@@ -67,6 +76,7 @@ func (c *ContextImpl) SafeCommit() {
 func (c *ContextImpl) SafeRollback() {
 	if c.dbTxOpen {
 		c.db.Rollback()
+		c.dbTxOpen = false
 	}
 }
 
@@ -84,6 +94,37 @@ func (c *ContextImpl) setDB(db *gorm.DB) {
 func (c *ContextImpl) cleanRuntime() {
 	c.runtime = nil
 	c.db = nil
+}
+
+// Response handle response
+func (c *ContextImpl) Response(status int, res interface{}, err error) {
+	c.status = status
+	c.res = res
+	c.err = err
+}
+
+func (c *ContextImpl) HandleResponse(context *gin.Context) {
+	if c.err != nil {
+		if c.app.Conf().GetAtomicRequest() {
+			c.SafeRollback()
+		}
+		context.AbortWithStatusJSON(c.status, httputils.ResponseData{
+			Status:  c.status,
+			Result:  c.err,
+			Runtime: c.runtime,
+		})
+		return
+	}
+	if c.app.Conf().GetAtomicRequest() {
+		c.SafeCommit()
+	}
+	context.JSON(c.status, httputils.ResponseData{
+		Status:  c.status,
+		Result:  c.res,
+		Runtime: c.runtime,
+	})
+	return
+
 }
 
 // NewContext new contedt

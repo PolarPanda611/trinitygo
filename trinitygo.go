@@ -16,13 +16,15 @@ import (
 
 	"github.com/PolarPanda611/trinitygo/httputils"
 	truntime "github.com/PolarPanda611/trinitygo/runtime"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/swaggo/gin-swagger/swaggerFiles"
 
 	"github.com/PolarPanda611/trinitygo/interceptor/logger"
 
-	mlogger "github.com/PolarPanda611/trinitygo/middleware/logger"
-
 	"github.com/PolarPanda611/trinitygo/interceptor/di"
+	mlogger "github.com/PolarPanda611/trinitygo/middleware/logger"
+	ginSwagger "github.com/swaggo/gin-swagger"
 
 	"github.com/PolarPanda611/trinitygo/db"
 
@@ -240,10 +242,11 @@ func (app *Application) InstallDB(f func() *gorm.DB) {
 func (app *Application) initPool() {
 	poolKey := ""
 	for _, v := range app.controllerPool.GetControllerMap() {
-		poolKey += fmt.Sprintf("%v,", v)
+		controllerName := strings.Replace(v, "@", " ==> ", -1)
+		app.Logger().Info(fmt.Sprintf("booting controller mapping : %v ", controllerName))
 	}
 	// service pool checking
-	line := fmt.Sprintf("booting detected %v controller pool (%v)...installed", len(app.controllerPool.GetControllerMap()), poolKey)
+	line := fmt.Sprintf("booting detected %v controller pool ...installed", len(app.controllerPool.GetControllerMap()))
 	app.Logger().Info(line)
 
 	poolKey = ""
@@ -333,10 +336,23 @@ func (app *Application) InitGRPC() {
 func (app *Application) InitRouter() {
 	gin.DefaultWriter = ioutil.Discard
 	app.router = gin.New()
+	if app.Conf().GetCorsEnable() {
+		app.router.Use(cors.New(cors.Config{
+			AllowOrigins:     app.Conf().GetAllowOrigins(),
+			AllowMethods:     app.Conf().GetAllowMethods(),
+			AllowHeaders:     app.Conf().GetAllowHeaders(),
+			ExposeHeaders:    app.Conf().GetExposeHeaders(),
+			AllowCredentials: app.Conf().GetAllowCredentials(),
+			MaxAge:           time.Duration(app.Conf().GetMaxAgeHour()) * time.Hour,
+		}))
+
+	}
 	app.router.RedirectTrailingSlash = false
 	for _, v := range app.middlewares {
 		app.router.Use(v)
 	}
+	// url := ginSwagger.URL("http://localhost:9000/swagger/doc.json")
+	app.router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	for _, controllerName := range app.GetControllerPool().GetControllerMap() {
 		controllerNameList := strings.Split(controllerName, "@")
 		app.router.Handle(controllerNameList[0], controllerNameList[1], mdi.New(app))
@@ -365,7 +381,7 @@ func (app *Application) ServeHTTP() {
 			); err != nil {
 				gErr <- err
 			}
-			line := fmt.Sprintf("boooting http service registered successfully !")
+			line := fmt.Sprintf("booting http service registered successfully !")
 			app.Logger().Info(line)
 		}
 		s := &http.Server{

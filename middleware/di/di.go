@@ -5,7 +5,6 @@ import (
 	"reflect"
 
 	"github.com/PolarPanda611/trinitygo/application"
-	"github.com/PolarPanda611/trinitygo/httputils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -41,9 +40,12 @@ func New(app application.Application) gin.HandlerFunc {
 		if !ok {
 			panic("controller has no method ")
 		}
-		var inParam []reflect.Value                   // 构造函数入参 ， 入参1 ， transport指针对象 ， 入参2 ， context ， 入参3 ，pb  request
-		inParam = append(inParam, controllerValue)    // 传入transport对象
-		inParam = append(inParam, reflect.ValueOf(c)) // 传入ctx value
+		// check if has validation func
+
+		// validation passed , run handler
+		var inParam []reflect.Value                // 构造函数入参 ， 入参1 ， transport指针对象
+		inParam = append(inParam, controllerValue) // 传入transport对象
+		// inParam = append(inParam, reflect.ValueOf(c)) // 传入ctx value
 		// fmt.Println(currentMethod.Func.Type().NumIn())
 		// to register controller in params
 		// for i := 0; i < currentMethod.Func.Type().NumIn(); i++ {
@@ -51,33 +53,34 @@ func New(app application.Application) gin.HandlerFunc {
 		// 	fmt.Println(t.Kind())
 		// 	fmt.Println(t)
 		// }
-		res := currentMethod.Func.Call(inParam) // 调用transport函数，传入参数
-		if len(res) != 3 {                      // 出参应该为2， 1为pb的response对象，2为error对象
-			panic("wrong res type")
-		}
-		code, ok := res[0].Interface().(int)
-		if !ok {
-			panic("wrong code type")
-		}
-		if res[2].Interface() != nil {
-			if app.Conf().GetAtomicRequest() {
-				tContext.SafeRollback()
-			}
+		currentMethod.Func.Call(inParam) // 调用transport函数，传入参数
+		tContext.HandleResponse(c)
+		// if len(res) != 3 {                      // 出参应该为2， 1为pb的response对象，2为error对象
+		// 	panic("wrong res type")
+		// }
+		// code, ok := res[0].Interface().(int)
+		// if !ok {
+		// 	panic("wrong code type")
+		// }
+		// if res[2].Interface() != nil {
+		// 	if app.Conf().GetAtomicRequest() {
+		// 		tContext.SafeRollback()
+		// 	}
 
-			c.AbortWithStatusJSON(code, httputils.ResponseData{
-				Status:  code,
-				Result:  res[2].Interface().(error).Error(),
-				Runtime: runtimeKeyMap,
-			})
-		} else {
-			if app.Conf().GetAtomicRequest() {
-				tContext.SafeCommit()
-			}
-			c.JSON(code, httputils.ResponseData{
-				Status:  code,
-				Result:  res[1].Interface(),
-				Runtime: runtimeKeyMap,
-			})
-		}
+		// 	c.AbortWithStatusJSON(code, httputils.ResponseData{
+		// 		Status:  code,
+		// 		Result:  res[2].Interface().(error).Error(),
+		// 		Runtime: runtimeKeyMap,
+		// 	})
+		// } else {
+		// 	if app.Conf().GetAtomicRequest() {
+		// 		tContext.SafeCommit()
+		// 	}
+		// 	c.JSON(code, httputils.ResponseData{
+		// 		Status:  code,
+		// 		Result:  res[1].Interface(),
+		// 		Runtime: runtimeKeyMap,
+		// 	})
+		// }
 	}
 }

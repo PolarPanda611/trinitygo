@@ -55,10 +55,9 @@ func DiFree(dest interface{}) {
 	destVal := reflect.Indirect(reflect.ValueOf(dest))
 	for index := 0; index < destVal.NumField(); index++ {
 		val := destVal.Field(index)
-		if val.Kind() == reflect.Interface {
-			if !val.IsZero() {
-				val.Set(reflect.Zero(val.Type()))
-			}
+		if !val.IsZero() {
+			// fmt.Println(val.Type(), "set null")
+			val.Set(reflect.Zero(val.Type()))
 		}
 	}
 }

@@ -16,7 +16,7 @@ debug = true
     verify_expire_hour = false
     [security.cors]
     enable = true
-    allow_origins = []
+    allow_origins = ["http://localhost:9000"]
     allow_methods = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"]
     allow_headers = ["Origin", "Content-Length", "Content-Type", "authorization", "x-api-key"]
     expose_Headers = ["Content-Length"]
