@@ -1,6 +1,7 @@
 package application
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/gin-gonic/gin"
@@ -12,6 +13,16 @@ func DiAllFields(dest interface{}, tctx Context, app Application, c *gin.Context
 	destVal := reflect.Indirect(reflect.ValueOf(dest))
 	for index := 0; index < destVal.NumField(); index++ {
 		val := destVal.Field(index)
+		if val.Kind() == reflect.Ptr && val.IsZero() {
+			if !val.CanSet() {
+				fmt.Println("skip")
+			}
+
+			if reflect.TypeOf(c) == val.Type() {
+				val.Set(reflect.ValueOf(c))
+			}
+
+		}
 		if val.Kind() == reflect.Interface && val.IsZero() {
 			if !val.CanSet() {
 				// not the public param , cannot inject
@@ -22,13 +33,6 @@ func DiAllFields(dest interface{}, tctx Context, app Application, c *gin.Context
 			if reflect.TypeOf(tctx).Implements(val.Type()) {
 				// if  implemented
 				val.Set(reflect.ValueOf(tctx))
-				continue
-			}
-
-			// check if implement gin.context
-			if reflect.TypeOf(c).Implements(val.Type()) {
-				// if  implemented
-				val.Set(reflect.ValueOf(c))
 				continue
 			}
 

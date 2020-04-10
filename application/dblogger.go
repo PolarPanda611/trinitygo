@@ -3,24 +3,22 @@ package application
 import (
 	"fmt"
 	"time"
-
-	"github.com/PolarPanda611/trinitygo/logger"
 )
 
-// Logger db logger
-type Logger struct {
+// DBLogger db logger
+type DBLogger struct {
 	app     Application
-	config  *logger.Config
+	config  *LogConfig
 	runtime map[string]string
 }
 
 // NewDBLogger new db logger
-func NewDBLogger(app Application, runtime map[string]string, config ...*logger.Config) *Logger {
-	c := logger.DefaultConfig()
+func NewDBLogger(app Application, runtime map[string]string, config ...*LogConfig) *DBLogger {
+	c := DefaultLogConfig()
 	if len(config) > 0 {
 		c = config[0]
 	}
-	return &Logger{
+	return &DBLogger{
 		app:     app,
 		config:  c,
 		runtime: runtime,
@@ -29,7 +27,7 @@ func NewDBLogger(app Application, runtime map[string]string, config ...*logger.C
 }
 
 // Print db logger func
-func (l *Logger) Print(v ...interface{}) {
+func (l *DBLogger) Print(v ...interface{}) {
 	dblogLevel, _ := v[0].(string)
 	if dblogLevel == "sql" {
 		// logInterface = append(logInterface, "DBRunningFile=")

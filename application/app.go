@@ -29,6 +29,7 @@ type Application interface {
 	RegRuntimeKey(runtime ...truntime.RuntimeKey) Application
 	InitGRPC()
 	InitHTTP()
+	InitRouter()
 	GetGRPCServer() *grpc.Server
 	ServeGRPC()
 	ServeHTTP()

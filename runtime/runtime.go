@@ -23,10 +23,18 @@ func (r *runtimeKey) GetDefaultValue() string {
 }
 
 // NewRuntimeKey Register new runtime key
-func NewRuntimeKey(key string, required bool, defaultValue func() string) RuntimeKey {
+// when the required is false , the runtime key will use the
+// newValueFunc to generate a new value
+// usage : trace_id
+// newValueFunc : func() string { return uuid.New().String() })
+// to generate new trace_id
+// p.s : the key should be lower case , because the grpc meta data will
+// transfer all the key too lower case , if you use the upcase you will not
+// find your runtime key in metadata
+func NewRuntimeKey(key string, required bool, newValueFunc func() string) RuntimeKey {
 	return &runtimeKey{
 		Key:          key,
 		Required:     required,
-		DefaultValue: defaultValue,
+		DefaultValue: newValueFunc,
 	}
 }

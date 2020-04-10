@@ -14,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/PolarPanda611/trinitygo/httputils"
 	truntime "github.com/PolarPanda611/trinitygo/runtime"
 	"github.com/gin-gonic/gin"
 
@@ -105,8 +106,17 @@ func New() application.Application {
 }
 
 // BindController bind service
-func BindController(controllerName string, Pool *sync.Pool) {
-	controllerPool.NewController(controllerName, Pool)
+func BindController(controllerName string, Pool *sync.Pool, RequestMaps ...*httputils.RequestMap) {
+	newController := controllerName
+	if len(RequestMaps) == 0 {
+		controllerPool.NewController(Pool, newController)
+		return
+	}
+	for _, v := range RequestMaps {
+		newController := fmt.Sprintf("%v@%v%v", v.Method, controllerName, v.SubPath)
+		controllerPool.NewController(Pool, newController)
+		controllerPool.NewControllerFunc(newController, v.FuncName)
+	}
 }
 
 // BindContainer bind container
@@ -308,9 +318,9 @@ func (app *Application) InitGRPC() {
 	app.grpcServer = grpc.NewServer(opts...)
 }
 
-// InitHTTP serve grpc
-func (app *Application) InitHTTP() {
-	app.InitTrinity()
+// InitRouter init router
+// use gin framework by default
+func (app *Application) InitRouter() {
 	gin.DefaultWriter = ioutil.Discard
 	app.router = gin.New()
 	app.router.RedirectTrailingSlash = false
@@ -338,6 +348,12 @@ func (app *Application) InitHTTP() {
 			app.logger.Fatal("booting err : wrong method ", method, " when binding controller ", controllerName)
 		}
 	}
+}
+
+// InitHTTP serve grpc
+func (app *Application) InitHTTP() {
+	app.InitTrinity()
+	app.InitRouter()
 	// app.router
 }
 

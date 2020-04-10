@@ -12,6 +12,7 @@ import (
 // New DI middleware
 func New(app application.Application) gin.HandlerFunc {
 	return func(c *gin.Context) {
+
 		method := fmt.Sprintf("%v@%v", c.Request.Method, c.FullPath())
 		runtimeKeyMap := application.DecodeHTTPRuntimeKey(c, app)
 		tContext := app.ContextPool().Acquire(app, runtimeKeyMap, app.DB())
@@ -31,15 +32,27 @@ func New(app application.Application) gin.HandlerFunc {
 		}()
 		controllerValue := reflect.ValueOf(controller) // new transport value
 		controllerType := reflect.TypeOf(controller)   // transport type
-		currentMethod, ok := controllerType.MethodByName(c.Request.Method)
+		funcName, ok := app.GetControllerPool().GetControllerFuncName(method)
+		if !ok {
+			// if func not register , using the default method
+			funcName = c.Request.Method
+		}
+		currentMethod, ok := controllerType.MethodByName(funcName)
 		if !ok {
 			panic("controller has no method ")
 		}
 		var inParam []reflect.Value                   // 构造函数入参 ， 入参1 ， transport指针对象 ， 入参2 ， context ， 入参3 ，pb  request
 		inParam = append(inParam, controllerValue)    // 传入transport对象
 		inParam = append(inParam, reflect.ValueOf(c)) // 传入ctx value
-		res := currentMethod.Func.Call(inParam)       // 调用transport函数，传入参数
-		if len(res) != 3 {                            // 出参应该为2， 1为pb的response对象，2为error对象
+		// fmt.Println(currentMethod.Func.Type().NumIn())
+		for i := 0; i < currentMethod.Func.Type().NumIn(); i++ {
+			t := currentMethod.Func.Type().In(i)
+			fmt.Println(t.Kind())
+			fmt.Println(t)
+		}
+
+		res := currentMethod.Func.Call(inParam) // 调用transport函数，传入参数
+		if len(res) != 3 {                      // 出参应该为2， 1为pb的response对象，2为error对象
 			panic("wrong res type")
 		}
 		code, ok := res[0].Interface().(int)
