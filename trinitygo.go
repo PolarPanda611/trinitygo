@@ -85,6 +85,16 @@ func SetConfigPath(path string) {
 	configpath = path
 }
 
+// SetDefaultHeaderPrefix set default header prefix
+func SetDefaultHeaderPrefix(newPrefix string) {
+	mruntime.DefaultHeaderPrefix = newPrefix
+}
+
+// GetDefaultHeaderPrefix set default header prefix
+func GetDefaultHeaderPrefix() string {
+	return mruntime.DefaultHeaderPrefix
+}
+
 // New new application
 func New() application.Application {
 	app := &Application{
