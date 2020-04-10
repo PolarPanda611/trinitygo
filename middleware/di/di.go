@@ -45,12 +45,12 @@ func New(app application.Application) gin.HandlerFunc {
 		inParam = append(inParam, controllerValue)    // 传入transport对象
 		inParam = append(inParam, reflect.ValueOf(c)) // 传入ctx value
 		// fmt.Println(currentMethod.Func.Type().NumIn())
-		for i := 0; i < currentMethod.Func.Type().NumIn(); i++ {
-			t := currentMethod.Func.Type().In(i)
-			fmt.Println(t.Kind())
-			fmt.Println(t)
-		}
-
+		// to register controller in params
+		// for i := 0; i < currentMethod.Func.Type().NumIn(); i++ {
+		// 	t := currentMethod.Func.Type().In(i)
+		// 	fmt.Println(t.Kind())
+		// 	fmt.Println(t)
+		// }
 		res := currentMethod.Func.Call(inParam) // 调用transport函数，传入参数
 		if len(res) != 3 {                      // 出参应该为2， 1为pb的response对象，2为error对象
 			panic("wrong res type")
