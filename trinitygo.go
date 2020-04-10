@@ -339,24 +339,7 @@ func (app *Application) InitRouter() {
 	}
 	for _, controllerName := range app.GetControllerPool().GetControllerMap() {
 		controllerNameList := strings.Split(controllerName, "@")
-		method := controllerNameList[0]
-		path := controllerNameList[1]
-		switch method {
-		case "GET":
-			app.router.GET(path, mdi.New(app))
-			break
-		case "PATCH":
-			app.router.PATCH(path, mdi.New(app))
-			break
-		case "POST":
-			app.router.POST(path, mdi.New(app))
-			break
-		case "DELETE":
-			app.router.DELETE(path, mdi.New(app))
-			break
-		default:
-			app.logger.Fatal("booting err : wrong method ", method, " when binding controller ", controllerName)
-		}
+		app.router.Handle(controllerNameList[0], controllerNameList[1], mdi.New(app))
 	}
 }
 
