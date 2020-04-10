@@ -38,7 +38,7 @@ func (s *ControllerPool) GetController(controllerName string, tctx Context, app 
 		panic("unknown controller name")
 	}
 	controller := pool.Get()
-	toFreeContainer := DiFields(controller, tctx, app, c)
+	toFreeContainer := DiAllFields(controller, tctx, app, c)
 	return controller, toFreeContainer
 }
 

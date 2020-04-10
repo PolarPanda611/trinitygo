@@ -39,7 +39,7 @@ func (s *ContainerPool) GetContainer(containerType reflect.Type, tctx Context, a
 		panic("unknown service name")
 	}
 	service := pool.Get()
-	toFreeContainer := DiFields(service, tctx, app, c)
+	toFreeContainer := DiAllFields(service, tctx, app, c)
 	return service, toFreeContainer
 }
 

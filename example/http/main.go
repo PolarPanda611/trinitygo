@@ -20,7 +20,7 @@ func main() {
 	// t.RegRuntimeKey(truntime.NewRuntimeKey("trace_id", true, func() string { return "" }))
 	// t.RegRuntimeKey(truntime.NewRuntimeKey("user_id", true, func() string { return "" }))
 	// t.RegRuntimeKey(truntime.NewRuntimeKey("user_name", true, func() string { return "" }))
-	t.RegRuntimeKey(truntime.NewRuntimeKey("trace_id", false, func() string { return uuid.New().String() }))
+	t.RegRuntimeKey(truntime.NewRuntimeKey("trace_id", true, func() string { return uuid.New().String() }))
 	t.RegRuntimeKey(truntime.NewRuntimeKey("user_id", false, func() string { return "124" }))
 	t.RegRuntimeKey(truntime.NewRuntimeKey("user_name", false, func() string { return "dtan11" }))
 	t.InitHTTP()

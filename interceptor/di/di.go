@@ -46,11 +46,11 @@ func New(app application.Application) func(ctx context.Context, req interface{},
 			panic("wrong res type")
 		}
 		if res[1].Interface() != nil {
-			tContext.GetDB().Rollback()
+			tContext.SafeRollback()
 			return nil, res[1].Interface().(error)
 		}
 		if app.Conf().GetAtomicRequest() {
-			tContext.GetDB().Commit()
+			tContext.SafeCommit()
 		}
 		return res[0].Interface(), nil
 	}

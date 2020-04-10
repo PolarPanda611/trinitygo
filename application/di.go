@@ -6,8 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// DiFields di service pool
-func DiFields(dest interface{}, tctx Context, app Application, c *gin.Context) []interface{} {
+// DiAllFields di service pool
+func DiAllFields(dest interface{}, tctx Context, app Application, c *gin.Context) []interface{} {
 	var toFreeContainer []interface{}
 	destVal := reflect.Indirect(reflect.ValueOf(dest))
 	for index := 0; index < destVal.NumField(); index++ {

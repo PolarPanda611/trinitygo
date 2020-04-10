@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	trinitygo.BindController("GET@/ping/:id/*dd", &sync.Pool{
+	trinitygo.BindController("GET@/ping/:id", &sync.Pool{
 		New: func() interface{} {
 			service := new(Server)
 			return service

@@ -313,6 +313,7 @@ func (app *Application) InitHTTP() {
 	app.InitTrinity()
 	gin.DefaultWriter = ioutil.Discard
 	app.router = gin.New()
+	app.router.RedirectTrailingSlash = false
 	for _, v := range app.middlewares {
 		app.router.Use(v)
 	}

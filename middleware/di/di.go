@@ -5,14 +5,9 @@ import (
 	"reflect"
 
 	"github.com/PolarPanda611/trinitygo/application"
+	"github.com/PolarPanda611/trinitygo/httputils"
 	"github.com/gin-gonic/gin"
 )
-
-type ResponseData struct {
-	Status  int         // the http response status  to return
-	Result  interface{} // the response data  if req success
-	Runtime map[string]string
-}
 
 // New DI middleware
 func New(app application.Application) gin.HandlerFunc {
@@ -23,7 +18,6 @@ func New(app application.Application) gin.HandlerFunc {
 		if app.Conf().GetAtomicRequest() {
 			tContext.GetTXDB()
 		}
-
 		defer func() {
 			//release tcontext obj
 			app.ContextPool().Release(tContext)
@@ -54,19 +48,19 @@ func New(app application.Application) gin.HandlerFunc {
 		}
 		if res[2].Interface() != nil {
 			if app.Conf().GetAtomicRequest() {
-				tContext.GetDB().Rollback()
+				tContext.SafeRollback()
 			}
 
-			c.AbortWithStatusJSON(code, ResponseData{
+			c.AbortWithStatusJSON(code, httputils.ResponseData{
 				Status:  code,
 				Result:  res[2].Interface().(error).Error(),
 				Runtime: runtimeKeyMap,
 			})
 		} else {
 			if app.Conf().GetAtomicRequest() {
-				tContext.GetDB().Commit()
+				tContext.SafeCommit()
 			}
-			c.JSON(code, ResponseData{
+			c.JSON(code, httputils.ResponseData{
 				Status:  code,
 				Result:  res[1].Interface(),
 				Runtime: runtimeKeyMap,
