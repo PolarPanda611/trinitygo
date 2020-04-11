@@ -21,6 +21,9 @@
         "/ping/{id}": {
             "get": {
                 "description": "get user by id test",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],

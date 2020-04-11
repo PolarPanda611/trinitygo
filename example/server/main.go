@@ -12,9 +12,9 @@ import (
 func main() {
 	trinitygo.SetConfigPath("/Users/daniel/Documents/workspace/trinitygo/example/config/example.toml")
 	t := trinitygo.DefaultGRPC()
-	t.RegRuntimeKey(truntime.NewRuntimeKey("trace_id", true,  func() string { return "" }))
-	t.RegRuntimeKey(truntime.NewRuntimeKey("user_id", true,  func() string { return "" }))
-	t.RegRuntimeKey(truntime.NewRuntimeKey("user_name", true,  func() string { return "" }))
+	t.RegRuntimeKey(truntime.NewRuntimeKey("trace_id", true, func() string { return "" }, true))
+	t.RegRuntimeKey(truntime.NewRuntimeKey("user_id", true, func() string { return "" }, true))
+	t.RegRuntimeKey(truntime.NewRuntimeKey("user_name", true, func() string { return "" }, true))
 	t.InitGRPC()
 	{
 		helloworldpb.RegisterGreeterServer(t.GetGRPCServer(), &grpc.Server{})

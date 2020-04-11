@@ -9,6 +9,7 @@ import (
 	"github.com/PolarPanda611/trinitygo/httputils"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"google.golang.org/grpc/codes"
 )
 
 var (
@@ -100,7 +101,10 @@ func (m *JWTVerifierImpl) Middleware() gin.HandlerFunc {
 		if err != nil {
 			c.AbortWithStatusJSON(401, httputils.ResponseData{
 				Status: 401,
-				Result: fmt.Sprintf("runtime key %v is required ", err),
+				Error: map[string]string{
+					"code":    codes.Unauthenticated.String(),
+					"message": fmt.Sprintf("Unauthenticated header"),
+				},
 			})
 			return
 		}

@@ -14,7 +14,7 @@ import (
 func New(app application.Application) func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		runtimeKeyMap := application.DecodeGRPCRuntimeKey(ctx, app)
-		tContext := app.ContextPool().Acquire(app, runtimeKeyMap, app.DB())
+		tContext := app.ContextPool().Acquire(app, runtimeKeyMap, app.DB(), nil)
 		if app.Conf().GetAtomicRequest() {
 			tContext.GetTXDB()
 		}
@@ -31,18 +31,16 @@ func New(app application.Application) func(ctx context.Context, req interface{},
 				app.GetContainerPool().Release(v)
 			}
 		}()
-		controllerValue := reflect.ValueOf(controller) // new transport value
-		controllerType := reflect.TypeOf(controller)   // transport type
-		currentMethod, ok := controllerType.MethodByName(method[2])
+		currentMethod, ok := reflect.TypeOf(controller).MethodByName(method[2])
 		if !ok {
 			panic("controller has no method ")
 		}
-		var inParam []reflect.Value                     // 构造函数入参 ， 入参1 ， transport指针对象 ， 入参2 ， context ， 入参3 ，pb  request
-		inParam = append(inParam, controllerValue)      // 传入transport对象
-		inParam = append(inParam, reflect.ValueOf(ctx)) // 传入ctx value
-		inParam = append(inParam, reflect.ValueOf(req)) // 传入pb request
-		res := currentMethod.Func.Call(inParam)         // 调用transport函数，传入参数
-		if len(res) != 2 {                              // 出参应该为2， 1为pb的response对象，2为error对象
+		var inParam []reflect.Value
+		inParam = append(inParam, reflect.ValueOf(controller))
+		inParam = append(inParam, reflect.ValueOf(ctx))
+		inParam = append(inParam, reflect.ValueOf(req))
+		res := currentMethod.Func.Call(inParam)
+		if len(res) != 2 {
 			panic("wrong res type")
 		}
 		if res[1].Interface() != nil {

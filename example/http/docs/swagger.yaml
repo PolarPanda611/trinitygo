@@ -15,6 +15,8 @@ info:
 paths:
   /ping/{id}:
     get:
+      consumes:
+      - application/json
       description: get user by id test
       parameters:
       - description: user id

@@ -6,6 +6,7 @@ import (
 	"github.com/PolarPanda611/trinitygo/application"
 	"github.com/PolarPanda611/trinitygo/httputils"
 	"github.com/gin-gonic/gin"
+	"google.golang.org/grpc/codes"
 )
 
 // DefaultHeaderPrefix will be used in set header as prefix
@@ -20,13 +21,17 @@ func New(app application.Application) gin.HandlerFunc {
 				if v.GetRequired() {
 					c.AbortWithStatusJSON(400, httputils.ResponseData{
 						Status: 400,
-						Result: fmt.Sprintf("runtime key %v is required ", v.GetKeyName()),
+						Error: map[string]string{
+							"code":    codes.Internal.String(),
+							"message": fmt.Sprintf("runtime key %v is required ", v.GetKeyName()),
+						},
 					})
 					return
 				}
 				c.Set(v.GetKeyName(), v.GetDefaultValue())
-
-				c.Header(fmt.Sprintf("%v%v", DefaultHeaderPrefix, v.GetKeyName()), v.GetDefaultValue())
+				if v.IsLog() {
+					c.Header(fmt.Sprintf("%v%v", DefaultHeaderPrefix, v.GetKeyName()), v.GetDefaultValue())
+				}
 			}
 		}
 		c.Next()

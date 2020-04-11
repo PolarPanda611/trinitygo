@@ -33,9 +33,9 @@ func main() {
 	configPath := fmt.Sprintf(projectRootPath + "/config/example.toml")
 	trinitygo.SetConfigPath(configPath)
 	t := trinitygo.DefaultHTTP()
-	t.RegRuntimeKey(truntime.NewRuntimeKey("trace_id", false, func() string { return uuid.New().String() }))
-	t.RegRuntimeKey(truntime.NewRuntimeKey("user_id", false, func() string { return "124" }))
-	t.RegRuntimeKey(truntime.NewRuntimeKey("user_name", false, func() string { return "dtan11" }))
+	t.RegRuntimeKey(truntime.NewRuntimeKey("trace_id", false, func() string { return uuid.New().String() }, true))
+	t.RegRuntimeKey(truntime.NewRuntimeKey("user_id", false, func() string { return "" }, false))
+	t.RegRuntimeKey(truntime.NewRuntimeKey("user_name", false, func() string { return "" }, true))
 	t.InitHTTP()
 	t.ServeHTTP()
 }

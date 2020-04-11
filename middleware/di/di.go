@@ -11,10 +11,9 @@ import (
 // New DI middleware
 func New(app application.Application) gin.HandlerFunc {
 	return func(c *gin.Context) {
-
 		method := fmt.Sprintf("%v@%v", c.Request.Method, c.FullPath())
 		runtimeKeyMap := application.DecodeHTTPRuntimeKey(c, app)
-		tContext := app.ContextPool().Acquire(app, runtimeKeyMap, app.DB())
+		tContext := app.ContextPool().Acquire(app, runtimeKeyMap, app.DB(), c)
 		if app.Conf().GetAtomicRequest() {
 			tContext.GetTXDB()
 		}
@@ -29,22 +28,27 @@ func New(app application.Application) gin.HandlerFunc {
 				app.GetContainerPool().Release(v)
 			}
 		}()
-		controllerValue := reflect.ValueOf(controller) // new transport value
-		controllerType := reflect.TypeOf(controller)   // transport type
+
+		validators := app.GetControllerPool().GetControllerValidators(method)
+		for _, v := range validators {
+			v(tContext)
+			if c.IsAborted() {
+				return
+			}
+		}
 		funcName, ok := app.GetControllerPool().GetControllerFuncName(method)
-		if !ok {
-			// if func not register , using the default method
+		if ok && funcName == "" || !ok {
 			funcName = c.Request.Method
 		}
-		currentMethod, ok := controllerType.MethodByName(funcName)
+		currentMethod, ok := reflect.TypeOf(controller).MethodByName(funcName)
 		if !ok {
 			panic("controller has no method ")
 		}
 		// check if has validation func
 
 		// validation passed , run handler
-		var inParam []reflect.Value                // 构造函数入参 ， 入参1 ， transport指针对象
-		inParam = append(inParam, controllerValue) // 传入transport对象
+		var inParam []reflect.Value                            // 构造函数入参 ， 入参1 ， transport指针对象
+		inParam = append(inParam, reflect.ValueOf(controller)) // 传入transport对象
 		// inParam = append(inParam, reflect.ValueOf(c)) // 传入ctx value
 		// fmt.Println(currentMethod.Func.Type().NumIn())
 		// to register controller in params
@@ -54,7 +58,6 @@ func New(app application.Application) gin.HandlerFunc {
 		// 	fmt.Println(t)
 		// }
 		currentMethod.Func.Call(inParam) // 调用transport函数，传入参数
-		tContext.HandleResponse(c)
 		// if len(res) != 3 {                      // 出参应该为2， 1为pb的response对象，2为error对象
 		// 	panic("wrong res type")
 		// }

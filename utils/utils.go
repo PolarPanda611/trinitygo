@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/bwmarrin/snowflake"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // RFC3339FullDate for rfc full date
@@ -42,16 +44,6 @@ func CheckFileIsExist(filename string) bool {
 		exist = false
 	}
 	return exist
-}
-
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-
 }
 
 //InSlice if value in stringlist
@@ -164,4 +156,49 @@ func AddExtraSpaceIfExist(str string) string {
 		return " " + str
 	}
 	return ""
+}
+
+// GRPCErrIsUnknownWrapper unknown err wrapper
+// only will wrapper the error which is not be encoded
+// P.S :this wrapper is used in grpc
+func GRPCErrIsUnknownWrapper(err error) error {
+	if err == nil {
+		return nil
+	}
+	_, ok := status.FromError(err)
+	if ok {
+		return err
+	}
+	newErr := status.Error(codes.Internal, err.Error())
+	return newErr
+}
+
+// HTTPErrEncoder  encode http err
+// only will wrapper the error which is not be encoded
+// P.S :this wrapper is used in grpc
+func HTTPErrEncoder(err error) error {
+	if err == nil {
+		return nil
+	}
+	_, ok := status.FromError(err)
+	if ok {
+		return err
+	}
+	newErr := status.Error(codes.Unknown, err.Error())
+	return newErr
+}
+
+// HTTPErrDecoder decode
+func HTTPErrDecoder(err error) (bool, map[string]string) {
+	if err == nil {
+		return false, nil
+	}
+	status, ok := status.FromError(err)
+	if ok {
+		newErr := make(map[string]string)
+		newErr["code"] = status.Code().String()
+		newErr["message"] = status.Message()
+		return true, newErr
+	}
+	return false, nil
 }

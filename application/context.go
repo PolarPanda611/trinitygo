@@ -1,7 +1,10 @@
 package application
 
 import (
+	"net/http"
+
 	"github.com/PolarPanda611/trinitygo/httputils"
+	"github.com/PolarPanda611/trinitygo/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 )
@@ -16,10 +19,16 @@ type Context interface {
 	SafeCommit()
 	SafeRollback()
 	DBTxIsOpen() bool
+	setGinCTX(c *gin.Context)
+	GinCtx() *gin.Context
 	setDB(*gorm.DB)
 	cleanRuntime()
-	Response(int, interface{}, error)
-	HandleResponse(c *gin.Context)
+	HTTPResponseUnauthorizedErr(error)
+	HTTPResponseInternalErr(error)
+	HTTPResponseErr(int, error)
+	HTTPResponseOk(interface{}, error)
+	HTTPResponseCreated(interface{}, error)
+	HTTPResponse(int, interface{}, error)
 }
 
 // ContextImpl Context impl
@@ -29,9 +38,7 @@ type ContextImpl struct {
 	db       *gorm.DB
 	dbTxOpen bool
 	// http
-	status int
-	res    interface{}
-	err    error
+	c *gin.Context
 }
 
 // GetApplication get app
@@ -47,6 +54,16 @@ func (c *ContextImpl) GetRuntime() map[string]string {
 // setRuntime set runtime info
 func (c *ContextImpl) setRuntime(runtime map[string]string) {
 	c.runtime = runtime
+}
+
+// setRuntime set runtime info
+func (c *ContextImpl) setGinCTX(ginCtx *gin.Context) {
+	c.c = ginCtx
+}
+
+// GinCtx get gin ctx
+func (c *ContextImpl) GinCtx() *gin.Context {
+	return c.c
 }
 
 // GetDB get db instance
@@ -92,39 +109,69 @@ func (c *ContextImpl) setDB(db *gorm.DB) {
 
 // CleanRuntime  clean runtime info
 func (c *ContextImpl) cleanRuntime() {
+	c.c = nil
 	c.runtime = nil
 	c.db = nil
 }
 
-// Response handle response
-func (c *ContextImpl) Response(status int, res interface{}, err error) {
-	c.status = status
-	c.res = res
-	c.err = err
+// HTTPResponseUnauthorizedErr handle http 400 response
+func (c *ContextImpl) HTTPResponseUnauthorizedErr(err error) {
+	c.HTTPResponseErr(401, err)
 }
 
-func (c *ContextImpl) HandleResponse(context *gin.Context) {
-	if c.err != nil {
+// HTTPResponseInternalErr handle http 400 response
+func (c *ContextImpl) HTTPResponseInternalErr(err error) {
+	c.HTTPResponseErr(400, err)
+}
+
+// HTTPResponseErr handle http 400 response
+func (c *ContextImpl) HTTPResponseErr(status int, err error) {
+	if c.c == nil {
+		panic("gin context not set , please if the func is used in http request handle")
+	}
+	err = utils.HTTPErrEncoder(err)
+	if err != nil {
 		if c.app.Conf().GetAtomicRequest() {
 			c.SafeRollback()
 		}
-		context.AbortWithStatusJSON(c.status, httputils.ResponseData{
-			Status:  c.status,
-			Result:  c.err,
+		_, resErr := utils.HTTPErrDecoder(err)
+		c.c.AbortWithStatusJSON(status, httputils.ResponseData{
+			Status:  status,
+			Error:   resErr,
 			Runtime: c.runtime,
 		})
+		return
+	}
+}
+
+// HTTPResponseOk handle http http.StatusOK 200 response
+func (c *ContextImpl) HTTPResponseOk(res interface{}, err error) {
+	c.HTTPResponse(http.StatusOK, res, err)
+}
+
+// HTTPResponseCreated handle http http.StatusCreated 201 response
+func (c *ContextImpl) HTTPResponseCreated(res interface{}, err error) {
+	c.HTTPResponse(http.StatusCreated, res, err)
+}
+
+// HTTPResponse handle respoonse
+func (c *ContextImpl) HTTPResponse(status int, res interface{}, err error) {
+	if c.c == nil {
+		panic("gin context not set , please if the func is used in http request handle")
+	}
+	if err != nil {
+		c.HTTPResponseInternalErr(err)
 		return
 	}
 	if c.app.Conf().GetAtomicRequest() {
 		c.SafeCommit()
 	}
-	context.JSON(c.status, httputils.ResponseData{
-		Status:  c.status,
-		Result:  c.res,
+	c.c.JSON(status, httputils.ResponseData{
+		Status:  status,
+		Result:  res,
 		Runtime: c.runtime,
 	})
 	return
-
 }
 
 // NewContext new contedt

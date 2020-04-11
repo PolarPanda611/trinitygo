@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 )
 
@@ -29,8 +30,9 @@ func (c *ContextPool) Attach(newFunc func() Context) {
 
 // Acquire returns a Context from pool.
 // See Release.
-func (c *ContextPool) Acquire(app Application, runtime map[string]string, db *gorm.DB) Context {
+func (c *ContextPool) Acquire(app Application, runtime map[string]string, db *gorm.DB, ginCtx *gin.Context) Context {
 	ctx := c.pool.Get().(Context)
+	ctx.setGinCTX(ginCtx)
 	ctx.setRuntime(runtime)
 	newDB := db.New()
 

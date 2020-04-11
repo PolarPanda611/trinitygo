@@ -128,9 +128,11 @@ func (l *loggerImpl) Interceptor() func(ctx context.Context, req interface{}, in
 		}
 
 		if l.config.Runtime {
+			md, _ := metadata.FromIncomingContext(ctx)
 			for _, v := range l.app.RuntimeKeys() {
-				md, _ := metadata.FromIncomingContext(ctx)
-				line += fmt.Sprintf("%v %v ", v.GetKeyName(), md[v.GetKeyName()][0])
+				if v.IsLog() {
+					line += fmt.Sprintf("%v:%v ", v.GetKeyName(), md[v.GetKeyName()][0])
+				}
 			}
 		}
 
@@ -210,9 +212,11 @@ func (l *loggerImpl) Middleware() gin.HandlerFunc {
 		}
 
 		if l.config.Runtime {
+			runtimeKey := DecodeHTTPRuntimeKey(c, l.app)
 			for _, v := range l.app.RuntimeKeys() {
-				runtimeKey := DecodeHTTPRuntimeKey(c, l.app)
-				line += fmt.Sprintf("%v %v ", v.GetKeyName(), runtimeKey[v.GetKeyName()])
+				if v.IsLog() {
+					line += fmt.Sprintf("%v:%v ", v.GetKeyName(), runtimeKey[v.GetKeyName()])
+				}
 			}
 		}
 

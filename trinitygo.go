@@ -14,7 +14,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/PolarPanda611/trinitygo/httputils"
 	truntime "github.com/PolarPanda611/trinitygo/runtime"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -47,16 +46,22 @@ import (
 	"google.golang.org/grpc"
 )
 
-var (
-	configpath     string = "./config/"
-	controllerPool *application.ControllerPool
-	containerPool  *application.ContainerPool
-)
-
-func init() {
-	controllerPool = application.NewControllerPool()
-	containerPool = application.NewContainerPool()
+type bootingController struct {
+	controllerName string
+	controllerPool *sync.Pool
+	requestMaps    []*application.RequestMap
 }
+
+type bootingContainer struct {
+	containerName reflect.Type
+	containerPool *sync.Pool
+}
+
+var (
+	configpath         string = "./config/"
+	bootingControllers []bootingController
+	bootingContainers  []bootingContainer
+)
 
 // Application core of trinity
 type Application struct {
@@ -112,28 +117,9 @@ func New() application.Application {
 		return application.NewContext(app)
 	})
 
-	app.controllerPool = controllerPool
-	app.containerPool = containerPool
+	app.controllerPool = application.NewControllerPool()
+	app.containerPool = application.NewContainerPool()
 	return app
-}
-
-// BindController bind service
-func BindController(controllerName string, Pool *sync.Pool, RequestMaps ...*httputils.RequestMap) {
-	newController := controllerName
-	if len(RequestMaps) == 0 {
-		controllerPool.NewController(Pool, newController)
-		return
-	}
-	for _, v := range RequestMaps {
-		newController := fmt.Sprintf("%v@%v%v", v.Method, controllerName, v.SubPath)
-		controllerPool.NewController(Pool, newController)
-		controllerPool.NewControllerFunc(newController, v.FuncName)
-	}
-}
-
-// BindContainer bind container
-func BindContainer(container reflect.Type, Pool *sync.Pool) {
-	containerPool.NewContainer(container, Pool)
 }
 
 // DefaultGRPC default grpc server
@@ -239,24 +225,64 @@ func (app *Application) InstallDB(f func() *gorm.DB) {
 	app.Logger().Info("booting detected db initializer ...install successfully , test passed ! ")
 }
 
+// BindContainer bind container
+func BindContainer(containerName reflect.Type, containerPool *sync.Pool) {
+	newContainer := bootingContainer{
+		containerName: containerName,
+		containerPool: containerPool,
+	}
+	bootingContainers = append(bootingContainers, newContainer)
+}
+
+func (app *Application) initContainerPool() {
+
+	app.Logger().Info(fmt.Sprintf("booting installing container start"))
+	for _, container := range bootingContainers {
+		app.containerPool.NewContainer(container.containerName, container.containerPool)
+		app.Logger().Info(fmt.Sprintf("booting installing container : %v ...installed", container.containerName))
+	}
+	line := fmt.Sprintf("booting installed %v container pool successfully", len(app.containerPool.GetContainerType()))
+	app.Logger().Info(line)
+}
+
+// BindController bind service
+func BindController(controllerName string, controllerPool *sync.Pool, requestMaps ...*application.RequestMap) {
+	newController := bootingController{
+		controllerName: controllerName,
+		controllerPool: controllerPool,
+		requestMaps:    requestMaps,
+	}
+	bootingControllers = append(bootingControllers, newController)
+}
+
+func (app *Application) initControllerPool() {
+	app.Logger().Info(fmt.Sprintf("booting installing controller start"))
+	for _, controller := range bootingControllers {
+		if len(controller.requestMaps) == 0 {
+			app.controllerPool.NewController(controller.controllerName, controller.controllerPool)
+			app.Logger().Info(fmt.Sprintf("booting installing controller : %v ...installed", controller.controllerName))
+			continue
+		}
+		for _, request := range controller.requestMaps {
+			newControllerName := fmt.Sprintf("%v@%v%v%v", request.Method, app.Conf().GetAppBaseURL(), controller.controllerName, request.SubPath)
+			app.controllerPool.NewController(newControllerName, controller.controllerPool)
+			app.controllerPool.NewControllerFunc(newControllerName, request.FuncName)
+			app.controllerPool.NewControllerValidators(newControllerName, request.Validators...)
+			realControllerName := strings.Replace(newControllerName, "@", " ==> ", -1)
+			if app.controllerPool.ControllSelfCheck(newControllerName) {
+				app.Logger().Info(fmt.Sprintf("booting installing controller : %v  -> %v ...installed", realControllerName, request.FuncName))
+			} else {
+				app.Logger().Info(fmt.Sprintf("booting installing controller : %v  -> no func registered, will use %v as default ...installed", realControllerName, request.Method))
+			}
+		}
+	}
+	line := fmt.Sprintf("booting installed %v controller pool successfully", len(app.controllerPool.GetControllerMap()))
+	app.Logger().Info(line)
+}
+
 func (app *Application) initPool() {
-	poolKey := ""
-	for _, v := range app.controllerPool.GetControllerMap() {
-		controllerName := strings.Replace(v, "@", " ==> ", -1)
-		app.Logger().Info(fmt.Sprintf("booting controller mapping : %v ", controllerName))
-	}
-	// service pool checking
-	line := fmt.Sprintf("booting detected %v controller pool ...installed", len(app.controllerPool.GetControllerMap()))
-	app.Logger().Info(line)
-
-	poolKey = ""
-	for _, v := range app.containerPool.GetContainerType() {
-		poolKey += fmt.Sprintf("%v,", v)
-	}
-	// service pool checking
-	line = fmt.Sprintf("booting detected %v container pool (%v)...installed", len(containerPool.GetContainerType()), poolKey)
-	app.Logger().Info(line)
-
+	app.initControllerPool()
+	app.initContainerPool()
 }
 
 func (app *Application) initRuntime() {
@@ -345,14 +371,12 @@ func (app *Application) InitRouter() {
 			AllowCredentials: app.Conf().GetAllowCredentials(),
 			MaxAge:           time.Duration(app.Conf().GetMaxAgeHour()) * time.Hour,
 		}))
-
 	}
 	app.router.RedirectTrailingSlash = false
+	app.router.GET(app.Conf().GetAppBaseURL()+"/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	for _, v := range app.middlewares {
 		app.router.Use(v)
 	}
-	// url := ginSwagger.URL("http://localhost:9000/swagger/doc.json")
-	app.router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	for _, controllerName := range app.GetControllerPool().GetControllerMap() {
 		controllerNameList := strings.Split(controllerName, "@")
 		app.router.Handle(controllerNameList[0], controllerNameList[1], mdi.New(app))

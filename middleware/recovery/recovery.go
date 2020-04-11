@@ -5,7 +5,9 @@ import (
 	"runtime/debug"
 
 	"github.com/PolarPanda611/trinitygo/application"
+	"github.com/PolarPanda611/trinitygo/httputils"
 	"github.com/gin-gonic/gin"
+	"google.golang.org/grpc/codes"
 )
 
 // New runtime middleware
@@ -18,7 +20,16 @@ func New(app application.Application) gin.HandlerFunc {
 				logMessage += fmt.Sprintf("Trace: %s\n", err)
 				logMessage += fmt.Sprintf("\n%s", debug.Stack())
 				app.Logger().Warn(logMessage)
+				c.AbortWithStatusJSON(400, httputils.ResponseData{
+					Status: 400,
+					Error: map[string]string{
+						"code":    codes.Internal.String(),
+						"message": fmt.Sprintf("Internal err : %v", err),
+					},
+				})
+				return
 			}
+
 		}()
 		c.Next()
 	}
