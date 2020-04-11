@@ -22,8 +22,8 @@ type Application interface {
 	ContextPool() *ContextPool
 	DB() *gorm.DB
 	InstallDB(f func() *gorm.DB)
-	GetControllerPool() *ControllerPool
-	GetContainerPool() *ContainerPool
+	ControllerPool() *ControllerPool
+	ContainerPool() *ContainerPool
 	UseInterceptor(interceptor ...grpc.UnaryServerInterceptor) Application
 	UseMiddleware(middleware ...gin.HandlerFunc) Application
 	RegRuntimeKey(runtime ...truntime.RuntimeKey) Application

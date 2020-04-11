@@ -16,7 +16,7 @@ func New(app application.Application) func(ctx context.Context, req interface{},
 		runtimeKeyMap := application.DecodeGRPCRuntimeKey(ctx, app)
 		tContext := app.ContextPool().Acquire(app, runtimeKeyMap, app.DB(), nil)
 		if app.Conf().GetAtomicRequest() {
-			tContext.GetTXDB()
+			tContext.DBTx()
 		}
 		method := strings.Split(info.FullMethod, "/") // /user.UserService/GetUserByID
 		defer func() {
@@ -24,11 +24,11 @@ func New(app application.Application) func(ctx context.Context, req interface{},
 			app.ContextPool().Release(tContext)
 		}()
 
-		controller, toFreeContainer := app.GetControllerPool().GetController(method[1], tContext, app, nil)
+		controller, toFreeContainer := app.ControllerPool().GetController(method[1], tContext, app, nil)
 		defer func() {
-			app.GetControllerPool().Release(method[1], controller)
+			app.ControllerPool().Release(method[1], controller)
 			for _, v := range toFreeContainer {
-				app.GetContainerPool().Release(v)
+				app.ContainerPool().Release(v)
 			}
 		}()
 		currentMethod, ok := reflect.TypeOf(controller).MethodByName(method[2])

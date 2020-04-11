@@ -31,6 +31,6 @@ type UserServiceImpl struct {
 
 // GetUserNameByID method
 func (s *UserServiceImpl) GetUserNameByID(name string) string {
-	// fmt.Println("service runtime : ", s.TContext.GetRuntime())
+	// fmt.Println("service runtime : ", s.TContext.Runtime())
 	return s.UserRepo.Print()
 }

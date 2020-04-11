@@ -15,28 +15,28 @@ func New(app application.Application) gin.HandlerFunc {
 		runtimeKeyMap := application.DecodeHTTPRuntimeKey(c, app)
 		tContext := app.ContextPool().Acquire(app, runtimeKeyMap, app.DB(), c)
 		if app.Conf().GetAtomicRequest() {
-			tContext.GetTXDB()
+			tContext.DBTx()
 		}
 		defer func() {
 			//release tcontext obj
 			app.ContextPool().Release(tContext)
 		}()
-		controller, toFreeContainer := app.GetControllerPool().GetController(method, tContext, app, c)
+		controller, toFreeContainer := app.ControllerPool().GetController(method, tContext, app, c)
 		defer func() {
-			app.GetControllerPool().Release(method, controller)
+			app.ControllerPool().Release(method, controller)
 			for _, v := range toFreeContainer {
-				app.GetContainerPool().Release(v)
+				app.ContainerPool().Release(v)
 			}
 		}()
 
-		validators := app.GetControllerPool().GetControllerValidators(method)
+		validators := app.ControllerPool().GetControllerValidators(method)
 		for _, v := range validators {
 			v(tContext)
 			if c.IsAborted() {
 				return
 			}
 		}
-		funcName, ok := app.GetControllerPool().GetControllerFuncName(method)
+		funcName, ok := app.ControllerPool().GetControllerFuncName(method)
 		if ok && funcName == "" || !ok {
 			funcName = c.Request.Method
 		}

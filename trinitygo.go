@@ -129,9 +129,6 @@ func DefaultGRPC() application.Application {
 	app.UseInterceptor(runtime.New(app))
 	app.UseInterceptor(logger.New(app))
 	app.UseInterceptor(di.New(app))
-	// app.RegRuntimeKey(truntime.NewRuntimeKey("trace_id", true,  func() string { return "" })
-	// app.RegRuntimeKey(truntime.NewRuntimeKey("user_id", true,  func() string { return "" })
-	// app.RegRuntimeKey(truntime.NewRuntimeKey("user_name", true,  func() string { return "" } )
 	return app
 }
 
@@ -141,7 +138,6 @@ func DefaultHTTP() application.Application {
 	app.UseMiddleware(mlogger.New(app))
 	app.UseMiddleware(httprecovery.New(app))
 	app.UseMiddleware(mruntime.New(app))
-
 	return app
 }
 
@@ -180,15 +176,15 @@ func (app *Application) ContextPool() *application.ContextPool {
 	return app.contextPool
 }
 
-// GetControllerPool get all serviice pool
-func (app *Application) GetControllerPool() *application.ControllerPool {
+// ControllerPool get all serviice pool
+func (app *Application) ControllerPool() *application.ControllerPool {
 	app.mu.RLock()
 	defer app.mu.RUnlock()
 	return app.controllerPool
 }
 
-// GetContainerPool get all serviice pool
-func (app *Application) GetContainerPool() *application.ContainerPool {
+// ContainerPool get all serviice pool
+func (app *Application) ContainerPool() *application.ContainerPool {
 	app.mu.RLock()
 	defer app.mu.RUnlock()
 	return app.containerPool
@@ -377,10 +373,17 @@ func (app *Application) InitRouter() {
 	for _, v := range app.middlewares {
 		app.router.Use(v)
 	}
-	for _, controllerName := range app.GetControllerPool().GetControllerMap() {
+	for _, controllerName := range app.ControllerPool().GetControllerMap() {
 		controllerNameList := strings.Split(controllerName, "@")
 		app.router.Handle(controllerNameList[0], controllerNameList[1], mdi.New(app))
 	}
+}
+
+// Router get router
+func (app *Application) Router() *gin.Engine {
+	app.mu.RLock()
+	defer app.mu.RUnlock()
+	return app.router
 }
 
 // InitHTTP serve grpc

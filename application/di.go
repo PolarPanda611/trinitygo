@@ -36,9 +36,9 @@ func DiAllFields(dest interface{}, tctx Context, app Application, c *gin.Context
 				continue
 			}
 
-			for _, v := range app.GetContainerPool().GetContainerType() {
+			for _, v := range app.ContainerPool().GetContainerType() {
 				if v.Implements(val.Type()) {
-					repo, subToFreeContainer := app.GetContainerPool().GetContainer(v, tctx, app, c)
+					repo, subToFreeContainer := app.ContainerPool().GetContainer(v, tctx, app, c)
 					toFreeContainer = append(toFreeContainer, repo)
 					toFreeContainer = append(toFreeContainer, subToFreeContainer...)
 					val.Set(reflect.ValueOf(repo))

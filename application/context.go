@@ -11,11 +11,11 @@ import (
 
 // Context record all thing inside one request
 type Context interface {
-	GetApplication() Application
+	Application() Application
 	setRuntime(map[string]string)
-	GetRuntime() map[string]string
-	GetDB() *gorm.DB
-	GetTXDB() *gorm.DB
+	Runtime() map[string]string
+	DB() *gorm.DB
+	DBTx() *gorm.DB
 	SafeCommit()
 	SafeRollback()
 	DBTxIsOpen() bool
@@ -41,13 +41,13 @@ type ContextImpl struct {
 	c *gin.Context
 }
 
-// GetApplication get app
-func (c *ContextImpl) GetApplication() Application {
+// Application get app
+func (c *ContextImpl) Application() Application {
 	return c.app
 }
 
-// GetRuntime get runtime info
-func (c *ContextImpl) GetRuntime() map[string]string {
+// Runtime get runtime info
+func (c *ContextImpl) Runtime() map[string]string {
 	return c.runtime
 }
 
@@ -66,13 +66,13 @@ func (c *ContextImpl) GinCtx() *gin.Context {
 	return c.c
 }
 
-// GetDB get db instance
-func (c *ContextImpl) GetDB() *gorm.DB {
+// DB get db instance
+func (c *ContextImpl) DB() *gorm.DB {
 	return c.db
 }
 
-// GetTXDB get db instance
-func (c *ContextImpl) GetTXDB() *gorm.DB {
+// DBTx get db instance
+func (c *ContextImpl) DBTx() *gorm.DB {
 	if c.dbTxOpen {
 		return c.db
 	}
@@ -102,7 +102,7 @@ func (c *ContextImpl) DBTxIsOpen() bool {
 	return c.dbTxOpen
 }
 
-// GetRuntime get runtime info
+// setDB set db
 func (c *ContextImpl) setDB(db *gorm.DB) {
 	c.db = db
 }

@@ -31,5 +31,5 @@ type UserRepoImpl struct {
 
 // Print user repo impl print method
 func (r *UserRepoImpl) Print() string {
-	return "userrepo" + fmt.Sprintf("%v", r.TContext.GetRuntime())
+	return "userrepo" + fmt.Sprintf("%v", r.TContext.Runtime())
 }
