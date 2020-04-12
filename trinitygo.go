@@ -461,7 +461,7 @@ func (app *Application) GetGRPCServer() *grpc.Server {
 
 // ServeGRPC serve grpc server
 func (app *Application) ServeGRPC() {
-	addr := fmt.Sprintf("%v:%v", app.config.GetAppAddress(), app.config.GetAppPort())
+	addr := fmt.Sprintf(":%v", app.config.GetAppPort())
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		log.Fatalf("tcp port : %v  listen err: %v", addr, err)
