@@ -181,3 +181,14 @@ func NewContext(app Application) Context {
 		dbTxOpen: false,
 	}
 }
+
+// MockContext used for unittest , don't use in production
+func MockContext(app Application, db *gorm.DB, c *gin.Context, runtime map[string]string) Context {
+	return &ContextImpl{
+		app:     app,
+		db:      db,
+		c:       c,
+		runtime: runtime,
+	}
+
+}
