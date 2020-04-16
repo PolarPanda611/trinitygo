@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/PolarPanda611/trinitygo/utils"
-
+	"github.com/PolarPanda611/trinitygo/util"
 	"github.com/coreos/etcd/clientv3"
 	etcdnaming "github.com/coreos/etcd/clientv3/naming"
 	"google.golang.org/grpc"
@@ -54,7 +53,7 @@ func (s *ServiceMeshEtcdImpl) GetClient() interface{} {
 // RegService register etcd service
 func (s *ServiceMeshEtcdImpl) RegService(projectName string, projectVersion string, serviceIP string, servicePort int, Tags []string) error {
 	r := &etcdnaming.GRPCResolver{Client: s.client}
-	err := r.Update(context.TODO(), utils.GetServiceName(projectName), naming.Update{Op: naming.Add, Addr: fmt.Sprintf("%v:%v", serviceIP, servicePort), Metadata: fmt.Sprintf("%v", Tags)})
+	err := r.Update(context.TODO(), util.GetServiceName(projectName), naming.Update{Op: naming.Add, Addr: fmt.Sprintf("%v:%v", serviceIP, servicePort), Metadata: fmt.Sprintf("%v", Tags)})
 	if err != nil {
 		return err
 	}
@@ -64,7 +63,7 @@ func (s *ServiceMeshEtcdImpl) RegService(projectName string, projectVersion stri
 // DeRegService deregister service
 func (s *ServiceMeshEtcdImpl) DeRegService(projectName string, projectVersion string, serviceIP string, servicePort int) error {
 	r := &etcdnaming.GRPCResolver{Client: s.client}
-	err := r.Update(context.TODO(), utils.GetServiceName(projectName), naming.Update{Op: naming.Delete, Addr: fmt.Sprintf("%v:%v", serviceIP, servicePort)})
+	err := r.Update(context.TODO(), util.GetServiceName(projectName), naming.Update{Op: naming.Delete, Addr: fmt.Sprintf("%v:%v", serviceIP, servicePort)})
 	if err != nil {
 		return err
 	}

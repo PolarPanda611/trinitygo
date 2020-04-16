@@ -10,6 +10,8 @@ import (
 	"github.com/PolarPanda611/trinitygo/application"
 )
 
+var _ UserRepo = new(UserRepoImpl)
+
 func init() {
 	trinitygo.BindContainer(reflect.TypeOf(&UserRepoImpl{}), &sync.Pool{
 		New: func() interface{} {

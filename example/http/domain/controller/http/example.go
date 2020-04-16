@@ -8,8 +8,8 @@ import (
 	"github.com/PolarPanda611/trinitygo"
 	"github.com/PolarPanda611/trinitygo/application"
 	"github.com/PolarPanda611/trinitygo/example/http/domain/service"
-	"github.com/PolarPanda611/trinitygo/httputils"
-	"github.com/PolarPanda611/trinitygo/utils"
+	"github.com/PolarPanda611/trinitygo/httputil"
+	"github.com/PolarPanda611/trinitygo/util"
 )
 
 func init() {
@@ -20,8 +20,8 @@ func init() {
 				return service
 			},
 		},
-		application.NewRequestMapping(httputils.GET, "/:id", "", PermissionValidator([]string{"manager"}), gValidator),
-		application.NewRequestMapping(httputils.GET, "", "Getsssss"),
+		application.NewRequestMapping(httputil.GET, "/:id", "", PermissionValidator([]string{"manager"}), gValidator),
+		application.NewRequestMapping(httputil.GET, "", "Getsssss"),
 	)
 
 }
@@ -32,7 +32,7 @@ type Server struct {
 	Tctx    application.Context
 }
 
-// Get get func
+// GET get func
 // @Summary get user by id
 // @Description get user by id test
 // @accept  json
@@ -41,7 +41,6 @@ type Server struct {
 // @Success 200 {string} json "{"Status":200,"Result":{},"Runtime":"ok"}"
 // @Failure 400 {string} json "{"Status":400,"Result":{},"Runtime":"ok"}"
 // @Router /ping/{id} [get]
-
 func (s *Server) GET() {
 	id, _ := strconv.Atoi(s.Tctx.GinCtx().Param("id"))
 	res, err := s.Service.Get(id)
@@ -70,7 +69,7 @@ func PermissionValidator(requiredP []string) func(application.Context) {
 	return func(c application.Context) {
 		// c.GinCtx().Set("permission", []string{"employee"}) // no permission
 		c.GinCtx().Set("permission", []string{"employee", "manager"}) // ok
-		in := utils.SliceInSlice(requiredP, c.GinCtx().GetStringSlice("permission"))
+		in := util.SliceInSlice(requiredP, c.GinCtx().GetStringSlice("permission"))
 		if !in {
 			c.HTTPResponseUnauthorizedErr(errors.New("np permission"))
 		}

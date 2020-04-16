@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/PolarPanda611/trinitygo/application"
-	"github.com/PolarPanda611/trinitygo/httputils"
+	"github.com/PolarPanda611/trinitygo/httputil"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc/codes"
 )
@@ -19,7 +19,7 @@ func New(app application.Application) gin.HandlerFunc {
 			keyValue := c.GetHeader(v.GetKeyName())
 			if keyValue == "" {
 				if v.GetRequired() {
-					c.AbortWithStatusJSON(400, httputils.ResponseData{
+					c.AbortWithStatusJSON(400, httputil.ResponseData{
 						Status: 400,
 						Error: map[string]string{
 							"code":    codes.Internal.String(),

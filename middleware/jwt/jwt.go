@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/PolarPanda611/trinitygo/application"
-	"github.com/PolarPanda611/trinitygo/httputils"
+	"github.com/PolarPanda611/trinitygo/httputil"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc/codes"
@@ -37,6 +37,7 @@ type Config struct {
 	SuccessCallback    func(c *gin.Context, claim jwt.Claims)
 }
 
+// DefaultConfig default jwt config
 func DefaultConfig() *Config {
 	return &Config{
 		HeaderName:         "Authorization",
@@ -99,7 +100,7 @@ func (m *JWTVerifierImpl) Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenClaims, err := m.checkUnverifiedTokenValid(c)
 		if err != nil {
-			c.AbortWithStatusJSON(401, httputils.ResponseData{
+			c.AbortWithStatusJSON(401, httputil.ResponseData{
 				Status: 401,
 				Error: map[string]string{
 					"code":    codes.Unauthenticated.String(),

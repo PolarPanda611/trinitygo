@@ -15,6 +15,7 @@ import (
 	"time"
 
 	truntime "github.com/PolarPanda611/trinitygo/runtime"
+	"github.com/PolarPanda611/trinitygo/util"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
@@ -31,7 +32,6 @@ import (
 
 	"github.com/PolarPanda611/trinitygo/interceptor/recovery"
 	"github.com/PolarPanda611/trinitygo/sd"
-	"github.com/PolarPanda611/trinitygo/utils"
 
 	"github.com/PolarPanda611/trinitygo/interceptor/runtime"
 	mdi "github.com/PolarPanda611/trinitygo/middleware/di"
@@ -46,6 +46,12 @@ import (
 	"google.golang.org/grpc"
 )
 
+var (
+	_configPath         string = "./config/"
+	_bootingControllers []bootingController
+	_bootingContainers  []bootingContainer
+)
+
 type bootingController struct {
 	controllerName string
 	controllerPool *sync.Pool
@@ -56,12 +62,6 @@ type bootingContainer struct {
 	containerName reflect.Type
 	containerPool *sync.Pool
 }
-
-var (
-	configpath         string = "./config/"
-	bootingControllers []bootingController
-	bootingContainers  []bootingContainer
-)
 
 // Application core of trinity
 type Application struct {
@@ -89,7 +89,7 @@ type Application struct {
 
 // SetConfigPath set config path
 func SetConfigPath(path string) {
-	configpath = path
+	_configPath = path
 }
 
 // SetDefaultHeaderPrefix set default header prefix
@@ -107,9 +107,9 @@ func New() application.Application {
 	app := &Application{
 		logger: golog.Default,
 	}
-	app.config = conf.NewSetting(configpath)
+	app.config = conf.NewSetting(_configPath)
 
-	appPrefix := fmt.Sprintf("[%v@%v]", utils.GetServiceName(app.config.GetProjectName()), app.config.GetProjectVersion())
+	appPrefix := fmt.Sprintf("[%v@%v]", util.GetServiceName(app.config.GetProjectName()), app.config.GetProjectVersion())
 	app.logger.SetPrefix(appPrefix)
 	app.logger.SetTimeFormat("2006-01-02 15:04:05.000")
 
@@ -227,13 +227,13 @@ func BindContainer(containerName reflect.Type, containerPool *sync.Pool) {
 		containerName: containerName,
 		containerPool: containerPool,
 	}
-	bootingContainers = append(bootingContainers, newContainer)
+	_bootingContainers = append(_bootingContainers, newContainer)
 }
 
 func (app *Application) initContainerPool() {
 
 	app.Logger().Info(fmt.Sprintf("booting installing container start"))
-	for _, container := range bootingContainers {
+	for _, container := range _bootingContainers {
 		app.containerPool.NewContainer(container.containerName, container.containerPool)
 		app.Logger().Info(fmt.Sprintf("booting installing container : %v ...installed", container.containerName))
 	}
@@ -248,12 +248,12 @@ func BindController(controllerName string, controllerPool *sync.Pool, requestMap
 		controllerPool: controllerPool,
 		requestMaps:    requestMaps,
 	}
-	bootingControllers = append(bootingControllers, newController)
+	_bootingControllers = append(_bootingControllers, newController)
 }
 
 func (app *Application) initControllerPool() {
 	app.Logger().Info(fmt.Sprintf("booting installing controller start"))
-	for _, controller := range bootingControllers {
+	for _, controller := range _bootingControllers {
 		if len(controller.requestMaps) == 0 {
 			app.controllerPool.NewController(controller.controllerName, controller.controllerPool)
 			app.Logger().Info(fmt.Sprintf("booting installing controller : %v ...installed", controller.controllerName))

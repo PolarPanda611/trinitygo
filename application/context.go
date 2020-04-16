@@ -3,8 +3,8 @@ package application
 import (
 	"net/http"
 
-	"github.com/PolarPanda611/trinitygo/httputils"
-	"github.com/PolarPanda611/trinitygo/utils"
+	"github.com/PolarPanda611/trinitygo/httputil"
+	"github.com/PolarPanda611/trinitygo/util"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 )
@@ -48,7 +48,11 @@ func (c *ContextImpl) Application() Application {
 
 // Runtime get runtime info
 func (c *ContextImpl) Runtime() map[string]string {
-	return c.runtime
+	newRuntime := make(map[string]string, len(c.runtime))
+	for k, v := range c.runtime {
+		newRuntime[k] = v
+	}
+	return newRuntime
 }
 
 // setRuntime set runtime info
@@ -129,13 +133,13 @@ func (c *ContextImpl) HTTPResponseErr(status int, err error) {
 	if c.c == nil {
 		panic("gin context not set , please if the func is used in http request handle")
 	}
-	err = utils.HTTPErrEncoder(err)
+	err = util.HTTPErrEncoder(err)
 	if err != nil {
 		if c.app.Conf().GetAtomicRequest() {
 			c.SafeRollback()
 		}
-		_, resErr := utils.HTTPErrDecoder(err)
-		c.c.AbortWithStatusJSON(status, httputils.ResponseData{
+		_, resErr := util.HTTPErrDecoder(err)
+		c.c.AbortWithStatusJSON(status, httputil.ResponseData{
 			Status:  status,
 			Error:   resErr,
 			Runtime: c.runtime,
@@ -166,7 +170,7 @@ func (c *ContextImpl) HTTPResponse(status int, res interface{}, err error) {
 	if c.app.Conf().GetAtomicRequest() {
 		c.SafeCommit()
 	}
-	c.c.JSON(status, httputils.ResponseData{
+	c.c.JSON(status, httputil.ResponseData{
 		Status:  status,
 		Result:  res,
 		Runtime: c.runtime,
@@ -190,5 +194,4 @@ func MockContext(app Application, db *gorm.DB, c *gin.Context, runtime map[strin
 		c:       c,
 		runtime: runtime,
 	}
-
 }

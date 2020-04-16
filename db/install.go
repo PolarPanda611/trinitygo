@@ -5,7 +5,7 @@ import (
 	"log"
 	"math/rand"
 
-	"github.com/PolarPanda611/trinitygo/utils"
+	"github.com/PolarPanda611/trinitygo/util"
 
 	"github.com/jinzhu/gorm"
 
@@ -46,7 +46,7 @@ func updateTimeStampAndUUIDForCreateCallback(scope *gorm.Scope) {
 	if !scope.HasError() {
 		userIDInterface, _ := scope.Get("user_id")
 		userID, _ := userIDInterface.(int64)
-		nowTime := utils.GetCurrentTime()
+		nowTime := util.GetCurrentTime()
 		if createTimeField, ok := scope.FieldByName("CreatedTime"); ok {
 			if createTimeField.IsBlank {
 				createTimeField.Set(nowTime)
@@ -58,7 +58,7 @@ func updateTimeStampAndUUIDForCreateCallback(scope *gorm.Scope) {
 			}
 		}
 		if idField, ok := scope.FieldByName("ID"); ok {
-			idField.Set(utils.GenerateSnowFlakeID(int64(rand.Intn(100))))
+			idField.Set(util.GenerateSnowFlakeID(int64(rand.Intn(100))))
 		}
 		if modifyTimeField, ok := scope.FieldByName("UpdatedTime"); ok {
 			if modifyTimeField.IsBlank {
@@ -86,7 +86,7 @@ func updateTimeStampForUpdateCallback(scope *gorm.Scope) {
 		var updateAttrs = map[string]interface{}{}
 		if attrs, ok := scope.InstanceGet("gorm:update_attrs"); ok {
 			updateAttrs = attrs.(map[string]interface{})
-			updateAttrs["updated_time"] = utils.GetCurrentTime()
+			updateAttrs["updated_time"] = util.GetCurrentTime()
 			updateAttrs["update_user_id"] = userID
 			updateAttrs["d_version"] = uuid.NewV4().String()
 			scope.InstanceSet("gorm:update_attrs", updateAttrs)
@@ -115,20 +115,20 @@ func deleteCallback(scope *gorm.Scope) {
 				"UPDATE %v SET %v=%v,%v=%v,%v=%v%v%v",
 				scope.QuotedTableName(),
 				scope.Quote(deletedAtField.DBName),
-				scope.AddToVars(utils.GetCurrentTime()),
+				scope.AddToVars(util.GetCurrentTime()),
 				scope.Quote(deleteUserIDField.DBName),
 				scope.AddToVars(userID),
 				scope.Quote(dVersionField.DBName),
 				scope.AddToVars(uuid.NewV4().String()),
-				utils.AddExtraSpaceIfExist(scope.CombinedConditionSql()),
-				utils.AddExtraSpaceIfExist(extraOption),
+				util.AddExtraSpaceIfExist(scope.CombinedConditionSql()),
+				util.AddExtraSpaceIfExist(extraOption),
 			)).Exec()
 		} else {
 			scope.Raw(fmt.Sprintf(
 				"DELETE FROM %v%v%v",
 				scope.QuotedTableName(),
-				utils.AddExtraSpaceIfExist(scope.CombinedConditionSql()),
-				utils.AddExtraSpaceIfExist(extraOption),
+				util.AddExtraSpaceIfExist(scope.CombinedConditionSql()),
+				util.AddExtraSpaceIfExist(extraOption),
 			)).Exec()
 		}
 	}

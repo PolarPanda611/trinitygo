@@ -9,6 +9,8 @@ import (
 	"github.com/PolarPanda611/trinitygo/example/server/domain/repository"
 )
 
+var _ UserService = new(UserServiceImpl)
+
 func init() {
 	trinitygo.BindContainer(reflect.TypeOf(&UserServiceImpl{}), &sync.Pool{
 		New: func() interface{} {

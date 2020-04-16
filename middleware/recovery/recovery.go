@@ -5,7 +5,7 @@ import (
 	"runtime/debug"
 
 	"github.com/PolarPanda611/trinitygo/application"
-	"github.com/PolarPanda611/trinitygo/httputils"
+	"github.com/PolarPanda611/trinitygo/httputil"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc/codes"
 )
@@ -20,7 +20,7 @@ func New(app application.Application) gin.HandlerFunc {
 				logMessage += fmt.Sprintf("Trace: %s\n", err)
 				logMessage += fmt.Sprintf("\n%s", debug.Stack())
 				app.Logger().Warn(logMessage)
-				c.AbortWithStatusJSON(400, httputils.ResponseData{
+				c.AbortWithStatusJSON(400, httputil.ResponseData{
 					Status: 400,
 					Error: map[string]string{
 						"code":    codes.Internal.String(),

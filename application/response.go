@@ -1,12 +1,10 @@
 package application
 
-import (
-	"github.com/PolarPanda611/trinitygo/httputils"
-)
+import "github.com/PolarPanda611/trinitygo/httputil"
 
 // RequestMap request map to register request
 type RequestMap struct {
-	Method     httputils.RequestMethod
+	Method     httputil.RequestMethod
 	SubPath    string
 	FuncName   string
 	Validators []Validator
@@ -16,7 +14,7 @@ type RequestMap struct {
 // @funcName if funcname is "" , trinitygoo will use the default http method name
 // to find the method
 // e.g : http method "GET" ==> find method "GET"
-func NewRequestMapping(method httputils.RequestMethod, path string, funcName string, validators ...Validator) *RequestMap {
+func NewRequestMapping(method httputil.RequestMethod, path string, funcName string, validators ...Validator) *RequestMap {
 	return &RequestMap{
 		Method:     method,
 		SubPath:    path,

@@ -1,4 +1,4 @@
-package httputils
+package httputil
 
 // ResponseData response data
 type ResponseData struct {

@@ -1,4 +1,4 @@
-package utils
+package util
 
 import (
 	"fmt"
@@ -46,8 +46,8 @@ func CheckFileIsExist(filename string) bool {
 	return exist
 }
 
-//InSlice if value in stringlist
-func InSlice(value string, stringSlice []string) bool {
+//StringInSlice if value in stringlist
+func StringInSlice(value string, stringSlice []string) bool {
 	for _, v := range stringSlice {
 		if v == value {
 			return true
@@ -59,7 +59,7 @@ func InSlice(value string, stringSlice []string) bool {
 //SliceInSlice if slice in slice
 func SliceInSlice(sliceToCheck []string, slice []string) bool {
 	for _, v := range sliceToCheck {
-		if !InSlice(v, slice) {
+		if !StringInSlice(v, slice) {
 			return false
 		}
 	}
