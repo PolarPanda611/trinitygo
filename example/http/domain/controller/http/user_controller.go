@@ -10,6 +10,7 @@ import (
 	"github.com/PolarPanda611/trinitygo/example/http/domain/service"
 	"github.com/PolarPanda611/trinitygo/httputil"
 	"github.com/PolarPanda611/trinitygo/util"
+	"github.com/gin-gonic/gin"
 )
 
 var _ UserController = new(userControllerImpl)
@@ -22,11 +23,11 @@ func init() {
 				return controller
 			},
 		},
-		application.NewRequestMapping(httputil.GET, "/:id", "GET", PermissionValidator([]string{"manager"}), gValidator, g1Validator),
-		// application.NewRequestMapping(httputil.GET, "/:id", "GET"),
+		//  GET  /users/:id  --> GET  from userControllerImpl
+		// application.NewRequestMapping(httputil.GET, "/:id", "GET", PermissionValidator([]string{"manager"}), gValidator, g1Validator),
+		application.NewRequestMapping(httputil.GET, "/:id", "GET"),
 		application.NewRequestMapping(httputil.GET, "", "Getsssss"),
 	)
-
 }
 
 // UserController user controller
@@ -39,6 +40,7 @@ type UserController interface {
 type userControllerImpl struct {
 	UserSrv service.UserService
 	Tctx    application.Context
+	C       *gin.Context
 }
 
 // GET get func

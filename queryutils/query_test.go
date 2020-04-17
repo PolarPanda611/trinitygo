@@ -19,14 +19,12 @@ func TestQueryHandler(t *testing.T) {
 		FilterCustomizeFunc: make(map[string]interface{}),
 		IsDebug:             true,
 	}
-	handler := New(query, config)
-
-	x := handler.Handle()
+	x := New(config).Handle(query)
 	fmt.Println(len(x))
 }
 
 func TestQueryHandlerWithPagi(t *testing.T) {
-	query := "query=123&Query=1234&code=sasfaf&query__ilike=234&OrderBy=id&SearchBy=124&PageSize=0&PageNum=0&test=wqrqwr"
+	query := "query=123&Query=1234&code=sasfaf&query__ilike=234&OrderBy=id&SearchBy=124&PageSize=30&PageNum=4&test=wqrqwr"
 	config := &QueryConfig{
 		TablePrefix:  "",
 		DbBackend:    nil,
@@ -42,6 +40,6 @@ func TestQueryHandlerWithPagi(t *testing.T) {
 		},
 		IsDebug: true,
 	}
-	x := New(query, config).HandleWithPagination()
+	x := New(config).HandleWithPagination(query)
 	fmt.Println(len(x))
 }

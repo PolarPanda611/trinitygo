@@ -23,8 +23,8 @@ var (
 // in query
 // out gorm scopes
 type QueryHandler interface {
-	HandleWithPagination() []func(*gorm.DB) *gorm.DB
-	Handle() []func(*gorm.DB) *gorm.DB
+	HandleWithPagination(query string) []func(*gorm.DB) *gorm.DB
+	Handle(query string) []func(*gorm.DB) *gorm.DB
 }
 
 type queryRepositoryImpl struct {
@@ -79,11 +79,11 @@ func DefaultConfig(tCtx application.Context) *QueryConfig {
 // NewWithDefaultConfig query handler with default config
 func NewWithDefaultConfig(tCtx application.Context, query string) QueryHandler {
 	config := DefaultConfig(tCtx)
-	return New(query, config)
+	return New(config)
 }
 
 // New query handler with customize handler config
-func New(query string, config *QueryConfig) QueryHandler {
+func New(config *QueryConfig) QueryHandler {
 	queryHandler := &queryRepositoryImpl{
 		tablePrefix:         config.TablePrefix,
 		pageSize:            config.PageSize,
@@ -91,7 +91,6 @@ func New(query string, config *QueryConfig) QueryHandler {
 		orderByList:         config.OrderByList,
 		searchByList:        config.SearchByList,
 		filterCustomizeFunc: config.FilterCustomizeFunc,
-		query:               query,
 		isDebug:             config.IsDebug,
 	}
 	return queryHandler
@@ -217,7 +216,8 @@ func (q *queryRepositoryImpl) handlePagination(pageNum []string, pageSize []stri
 	q.queryScope = append(q.queryScope, pagiScope)
 
 }
-func (q *queryRepositoryImpl) Handle() []func(*gorm.DB) *gorm.DB {
+func (q *queryRepositoryImpl) Handle(query string) []func(*gorm.DB) *gorm.DB {
+	q.query = query
 	q.decodeURL()
 	q.handleDBBackend()
 	for k, v := range q.queryMap {
@@ -232,7 +232,8 @@ func (q *queryRepositoryImpl) Handle() []func(*gorm.DB) *gorm.DB {
 
 }
 
-func (q *queryRepositoryImpl) HandleWithPagination() []func(*gorm.DB) *gorm.DB {
+func (q *queryRepositoryImpl) HandleWithPagination(query string) []func(*gorm.DB) *gorm.DB {
+	q.query = query
 	q.decodeURL()
 	q.handleDBBackend()
 	q.handlePagination(q.queryMap[_pageNumKey], q.queryMap[_pageSizeKey], q.queryMap[_paginitionOff])

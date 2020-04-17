@@ -27,7 +27,7 @@ var (
 				return db.Where("xxxxx = ?", queryValue)
 			},
 		},
-		IsDebug: true,
+		IsDebug: false,
 	}
 )
 
@@ -35,6 +35,7 @@ func init() {
 	trinitygo.BindContainer(reflect.TypeOf(&userRepositoryImpl{}), &sync.Pool{
 		New: func() interface{} {
 			repo := new(userRepositoryImpl)
+			repo.queryHandler = queryutil.New(_userConfig)
 			return repo
 		},
 	})
@@ -47,7 +48,8 @@ type UserRepository interface {
 }
 
 type userRepositoryImpl struct {
-	TCtx application.Context
+	TCtx         application.Context
+	queryHandler queryutil.QueryHandler
 }
 
 func (r *userRepositoryImpl) GetUserByID(id int) (*object.User, error) {
@@ -60,9 +62,8 @@ func (r *userRepositoryImpl) GetUserByID(id int) (*object.User, error) {
 
 func (r *userRepositoryImpl) GetUserList(query string) ([]object.User, error) {
 	var user []object.User
-
 	if err := r.TCtx.DB().Scopes(
-		queryutil.New(query, _userConfig).HandleWithPagination()...,
+		r.queryHandler.HandleWithPagination(query)...,
 	).Find(&user).Error; err != nil {
 		return nil, err
 	}
