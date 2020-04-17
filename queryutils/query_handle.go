@@ -5,13 +5,34 @@ import (
 	"strings"
 
 	"github.com/PolarPanda611/trinitygo/util"
+	"github.com/jinzhu/gorm"
 )
 
-var spiltValue = "__"
-var filterCondition = []string{"like", "ilike", "in", "notin", "start", "end", "lt", "lte", "gt", "gte", "isnull", "isempty"}
+var (
+	_spiltValue      = "__"
+	_filterCondition = []string{"like", "ilike", "in", "notin", "start", "end", "lt", "lte", "gt", "gte", "isnull", "isempty"}
+)
 
-// FilterQuery for filter query handling
-type FilterQuery struct {
+// QueryDecoder query decoder
+type QueryDecoder interface {
+	ConditionSQL() string
+	ValueSQL() interface{}
+}
+
+// NewDecoder new query decoder
+func NewDecoder(queryName string, queryValue string, tablePrefix string) QueryDecoder {
+	decoder := &filterQuery{
+		QueryName:   queryName,
+		QueryValue:  queryValue,
+		TablePrefix: tablePrefix,
+	}
+	decoder.decode()
+	decoder.decodeFilterAndValue()
+	decoder.decodeNestSQL()
+	return decoder
+}
+
+type filterQuery struct {
 	QueryName   string
 	QueryValue  string
 	TablePrefix string
@@ -23,19 +44,18 @@ type FilterQuery struct {
 	value            string
 
 	//output
-	ConditionSQL string
-	ValueSQL     interface{}
+	conditionSQL string
+	valueSQL     interface{}
 }
 
-func (f *FilterQuery) decode() {
-	params := strings.Split(f.QueryName, spiltValue)
+func (f *filterQuery) decode() {
+	params := strings.Split(f.QueryName, _spiltValue)
 	paramsLen := len(params)
 	if paramsLen == 1 {
 		f.queryParam = params[paramsLen-1]
-		return
 	}
 	if paramsLen >= 2 {
-		if util.StringInSlice(params[paramsLen-1], filterCondition) {
+		if util.StringInSlice(params[paramsLen-1], _filterCondition) {
 			f.condition = params[paramsLen-1]
 			f.queryParam = params[paramsLen-2]
 			if paramsLen >= 3 {
@@ -46,88 +66,103 @@ func (f *FilterQuery) decode() {
 			f.assosiationParam = params[:paramsLen-1]
 		}
 	}
+
+	f.queryParam = gorm.ToColumnName(f.queryParam)
+	newAssosiationParam := make([]string, len(f.assosiationParam))
+	for i, v := range f.assosiationParam {
+		newAssosiationParam[i] = gorm.ToColumnName(v)
+	}
+	f.assosiationParam = newAssosiationParam
+
 }
 
-// GetFilterConditionSQL get query sql
-func (f *FilterQuery) getFilterConditionSQL() {
+// decodeFilterAndValue get query sql
+func (f *filterQuery) decodeFilterAndValue() {
 	switch f.condition {
 	case "like":
-		f.ConditionSQL = fmt.Sprintf(" %v like ? ", f.queryParam)
-		f.ValueSQL = fmt.Sprintf("%v%v%v", "%", f.QueryValue, "%")
+		f.conditionSQL = fmt.Sprintf(" %v like ? ", f.queryParam)
+		f.valueSQL = fmt.Sprintf("%v%v%v", "%", f.QueryValue, "%")
 		break
 	case "ilike":
-		f.ConditionSQL = fmt.Sprintf(" %v ilike ? ", f.queryParam)
-		f.ValueSQL = fmt.Sprintf("%v%v%v", "%", f.QueryValue, "%")
+		f.conditionSQL = fmt.Sprintf(" %v ilike ? ", f.queryParam)
+		f.valueSQL = fmt.Sprintf("%v%v%v", "%", f.QueryValue, "%")
 		break
 	case "in":
-		f.ConditionSQL = fmt.Sprintf(" %v in (?)  ", f.queryParam)
-		f.ValueSQL = strings.Split(f.QueryValue, ",")
+		f.conditionSQL = fmt.Sprintf(" %v in (?)  ", f.queryParam)
+		f.valueSQL = strings.Split(f.QueryValue, ",")
 		break
 	case "notin":
-		f.ConditionSQL = fmt.Sprintf(" %v not in (?)  ", f.queryParam)
-		f.ValueSQL = strings.Split(f.QueryValue, ",")
+		f.conditionSQL = fmt.Sprintf(" %v not in (?)  ", f.queryParam)
+		f.valueSQL = strings.Split(f.QueryValue, ",")
 		break
 	case "start":
-		f.ConditionSQL = fmt.Sprintf(" %v  >= ? ", f.queryParam)
-		f.ValueSQL = fmt.Sprintf("%v%v", f.QueryValue, " 00:00:00")
+		f.conditionSQL = fmt.Sprintf(" %v  >= ? ", f.queryParam)
+		f.valueSQL = fmt.Sprintf("%v%v", f.QueryValue, " 00:00:00")
 		break
 	case "end":
-		f.ConditionSQL = fmt.Sprintf(" %v  <= ? ", f.queryParam)
-		f.ValueSQL = fmt.Sprintf("%v%v", f.QueryValue, " 23:59:59")
+		f.conditionSQL = fmt.Sprintf(" %v  <= ? ", f.queryParam)
+		f.valueSQL = fmt.Sprintf("%v%v", f.QueryValue, " 23:59:59")
 		break
 	case "isnull":
-		f.ConditionSQL = fmt.Sprintf(" %v is not null ", f.queryParam)
-		f.ValueSQL = nil
+		f.conditionSQL = fmt.Sprintf(" %v is not null ", f.queryParam)
+		f.valueSQL = nil
 		if f.QueryValue == "true" {
-			f.ConditionSQL = fmt.Sprintf(" %v is null ", f.queryParam)
+			f.conditionSQL = fmt.Sprintf(" %v is null ", f.queryParam)
 		}
 		break
 	case "lt":
-		f.ConditionSQL = fmt.Sprintf(" %v  < ? ", f.queryParam)
-		f.ValueSQL = f.QueryValue
+		f.conditionSQL = fmt.Sprintf(" %v  < ? ", f.queryParam)
+		f.valueSQL = f.QueryValue
 		break
 	case "lte":
-		f.ConditionSQL = fmt.Sprintf(" %v  <= ? ", f.queryParam)
-		f.ValueSQL = f.QueryValue
+		f.conditionSQL = fmt.Sprintf(" %v  <= ? ", f.queryParam)
+		f.valueSQL = f.QueryValue
 		break
 	case "gt":
-		f.ConditionSQL = fmt.Sprintf(" %v  > ? ", f.queryParam)
-		f.ValueSQL = f.QueryValue
+		f.conditionSQL = fmt.Sprintf(" %v  > ? ", f.queryParam)
+		f.valueSQL = f.QueryValue
 		break
 	case "gte":
-		f.ConditionSQL = fmt.Sprintf(" %v  >= ? ", f.queryParam)
-		f.ValueSQL = f.QueryValue
+		f.conditionSQL = fmt.Sprintf(" %v  >= ? ", f.queryParam)
+		f.valueSQL = f.QueryValue
 		break
 	case "isempty":
-		f.ConditionSQL = fmt.Sprintf(" (COALESCE(\"%v\"::varchar ,'') != '' )  ", f.queryParam)
-		f.ValueSQL = nil
+		f.conditionSQL = fmt.Sprintf(" (COALESCE(\"%v\"::varchar ,'') != '' )  ", f.queryParam)
+		f.valueSQL = nil
 		if f.QueryValue == "true" {
-			f.ConditionSQL = fmt.Sprintf(" (COALESCE(\"%v\"::varchar ,'') = '' )  ", f.queryParam)
-			f.ValueSQL = nil
+			f.conditionSQL = fmt.Sprintf(" (COALESCE(\"%v\"::varchar ,'') = '' )  ", f.queryParam)
+			f.valueSQL = nil
 		}
 		break
 	default:
-		f.ConditionSQL = fmt.Sprintf(" %v = ? ", f.queryParam)
-		f.ValueSQL = f.QueryValue
-
+		f.conditionSQL = fmt.Sprintf(" %v = ? ", f.queryParam)
+		f.valueSQL = f.QueryValue
 	}
 
 	// 	break
 	return
 }
 
-// GetFilterQuerySQL get query
-func (f *FilterQuery) GetFilterQuerySQL() {
-	f.decode()
-	f.getFilterConditionSQL()
+// decodeNestSQL get query
+func (f *filterQuery) decodeNestSQL() {
 	assosiationParamLen := len(f.assosiationParam)
 	for range f.assosiationParam {
 		lastIndex := assosiationParamLen - 1
 		lastParam := f.assosiationParam[lastIndex]
-		f.ConditionSQL = fmt.Sprintf(" %v_id in ( select id from %v%v where %v ) ", lastParam, f.TablePrefix, lastParam, f.ConditionSQL)
+		f.conditionSQL = fmt.Sprintf(" %v_id in ( select id from %v%v where %v ) ", lastParam, f.TablePrefix, lastParam, f.conditionSQL)
 		assosiationParamLen = assosiationParamLen - 1
 
 	}
-	f.ConditionSQL = util.DeleteExtraSpace(f.ConditionSQL)
+	f.conditionSQL = util.DeleteExtraSpace(f.conditionSQL)
 	return
+}
+
+// ConditionSQL get condition sql
+func (f *filterQuery) ConditionSQL() string {
+	return f.conditionSQL
+}
+
+// ValueSQL get value sql
+func (f *filterQuery) ValueSQL() interface{} {
+	return f.valueSQL
 }

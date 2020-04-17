@@ -1,17 +1,48 @@
 package queryutil
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+
+	"github.com/jinzhu/gorm"
+)
 
 func TestQueryHandler(t *testing.T) {
-	query := "query=123&query=1234"
+	query := "query=123&Query=1234&code=sasfaf&query__ilike=234&OrderBy=id&SearchBy=124"
 	config := &QueryConfig{
+		TablePrefix:         "",
 		DbBackend:           nil,
-		pageSize:            20,
-		FilterList:          []string{},
-		OrderByList:         make(map[string]bool),
+		PageSize:            20,
+		FilterList:          []string{"query", "query__ilike"},
+		OrderByList:         []string{"id"},
+		SearchByList:        []string{"code", "name"},
 		FilterCustomizeFunc: make(map[string]interface{}),
+		IsDebug:             true,
 	}
 	handler := New(query, config)
 
-	handler.Handle()
+	x := handler.Handle()
+	fmt.Println(len(x))
+}
+
+func TestQueryHandlerWithPagi(t *testing.T) {
+	query := "query=123&Query=1234&code=sasfaf&query__ilike=234&OrderBy=id&SearchBy=124&PageSize=0&PageNum=0&test=wqrqwr"
+	config := &QueryConfig{
+		TablePrefix:  "",
+		DbBackend:    nil,
+		PageSize:     20,
+		FilterList:   []string{"query", "query__ilike"},
+		OrderByList:  []string{"id"},
+		SearchByList: []string{"code", "name"},
+		FilterCustomizeFunc: map[string]interface{}{
+			"test": func(db *gorm.DB, queryValue string) *gorm.DB {
+				fmt.Println("Where xxxxx = ?", queryValue)
+				return db.Where("xxxxx = ?", queryValue)
+			},
+		},
+		IsDebug: true,
+	}
+	handler := New(query, config)
+	x := handler.HandleWithPagination()
+	fmt.Println(len(x))
 }

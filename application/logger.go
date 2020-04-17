@@ -212,7 +212,7 @@ func (l *loggerImpl) Middleware() gin.HandlerFunc {
 		}
 
 		if l.config.Runtime {
-			runtimeKey := DecodeHTTPRuntimeKey(c, l.app)
+			runtimeKey := DecodeHTTPRuntimeKey(c, l.app.RuntimeKeys())
 			for _, v := range l.app.RuntimeKeys() {
 				if v.IsLog() {
 					line += fmt.Sprintf("%v:%v ", v.GetKeyName(), runtimeKey[v.GetKeyName()])

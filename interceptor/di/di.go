@@ -13,7 +13,7 @@ import (
 // New new DI interceptor
 func New(app application.Application) func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		runtimeKeyMap := application.DecodeGRPCRuntimeKey(ctx, app)
+		runtimeKeyMap := application.DecodeGRPCRuntimeKey(ctx, app.RuntimeKeys())
 		tContext := app.ContextPool().Acquire(app, runtimeKeyMap, app.DB(), nil)
 		if app.Conf().GetAtomicRequest() {
 			tContext.DBTx()

@@ -36,13 +36,12 @@ type Application interface {
 }
 
 // DecodeGRPCRuntimeKey  decode runtime key from ctx
-func DecodeGRPCRuntimeKey(ctx context.Context, app Application) map[string]string {
+func DecodeGRPCRuntimeKey(ctx context.Context, runtimeKey []truntime.RuntimeKey) map[string]string {
 	runtimeKeyMap := make(map[string]string)
 	if ctx != nil {
 		md, ok := metadata.FromIncomingContext(ctx)
-
 		if ok {
-			for _, v := range app.RuntimeKeys() {
+			for _, v := range runtimeKey {
 				runtimeKeyMap[v.GetKeyName()] = md[v.GetKeyName()][0]
 			}
 		}
@@ -51,10 +50,10 @@ func DecodeGRPCRuntimeKey(ctx context.Context, app Application) map[string]strin
 }
 
 // DecodeHTTPRuntimeKey decode http runtime
-func DecodeHTTPRuntimeKey(c *gin.Context, app Application) map[string]string {
+func DecodeHTTPRuntimeKey(c *gin.Context, runtimeKey []truntime.RuntimeKey) map[string]string {
 	runtimeKeyMap := make(map[string]string)
 	if c != nil {
-		for _, v := range app.RuntimeKeys() {
+		for _, v := range runtimeKey {
 			runtimeKeyMap[v.GetKeyName()] = c.GetString(v.GetKeyName())
 		}
 	}

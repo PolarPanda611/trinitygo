@@ -47,6 +47,9 @@ import (
 )
 
 var (
+	_                   application.Application = new(Application)
+	_app                *Application
+	_initApp            sync.Once
 	_configPath         string = "./config/"
 	_bootingControllers []bootingController
 	_bootingContainers  []bootingContainer
@@ -78,13 +81,15 @@ type Application struct {
 
 	//grpc
 	interceptors []grpc.UnaryServerInterceptor
-	runtimeKeys  []truntime.RuntimeKey
 	serviceMesh  sd.ServiceMesh
 	grpcServer   *grpc.Server
 
 	//http
 	middlewares []gin.HandlerFunc
 	router      *gin.Engine
+
+	//runtime
+	runtimeKeys []truntime.RuntimeKey
 }
 
 // SetConfigPath set config path
@@ -104,22 +109,24 @@ func GetDefaultHeaderPrefix() string {
 
 // New new application
 func New() application.Application {
-	app := &Application{
-		logger: golog.Default,
-	}
-	app.config = conf.NewSetting(_configPath)
+	_initApp.Do(func() {
+		_app = &Application{
+			logger: golog.Default,
+			config: conf.NewSetting(_configPath),
+		}
 
-	appPrefix := fmt.Sprintf("[%v@%v]", util.GetServiceName(app.config.GetProjectName()), app.config.GetProjectVersion())
-	app.logger.SetPrefix(appPrefix)
-	app.logger.SetTimeFormat("2006-01-02 15:04:05.000")
+		appPrefix := fmt.Sprintf("[%v@%v]", util.GetServiceName(_app.config.GetProjectName()), _app.config.GetProjectVersion())
+		_app.logger.SetPrefix(appPrefix)
+		_app.logger.SetTimeFormat("2006-01-02 15:04:05.000")
 
-	app.contextPool = application.New(func() application.Context {
-		return application.NewContext(app)
+		_app.contextPool = application.New(func() application.Context {
+			return application.NewContext(_app)
+		})
+
+		_app.controllerPool = application.NewControllerPool()
+		_app.containerPool = application.NewContainerPool()
 	})
-
-	app.controllerPool = application.NewControllerPool()
-	app.containerPool = application.NewContainerPool()
-	return app
+	return _app
 }
 
 // DefaultGRPC default grpc server
@@ -145,14 +152,16 @@ func DefaultHTTP() application.Application {
 func (app *Application) Logger() *golog.Logger {
 	app.mu.RLock()
 	defer app.mu.RUnlock()
-	return app.logger
+	return app.logger.Clone()
 }
 
 // RuntimeKeys get runtime keys
 func (app *Application) RuntimeKeys() []truntime.RuntimeKey {
 	app.mu.RLock()
 	defer app.mu.RUnlock()
-	return app.runtimeKeys
+	newRuntimeKey := make([]truntime.RuntimeKey, len(app.runtimeKeys))
+	copy(newRuntimeKey, app.runtimeKeys)
+	return newRuntimeKey
 }
 
 // Conf get conf
@@ -390,7 +399,6 @@ func (app *Application) Router() *gin.Engine {
 func (app *Application) InitHTTP() {
 	app.InitTrinity()
 	app.InitRouter()
-	// app.router
 }
 
 // InitHTTP serve grpc

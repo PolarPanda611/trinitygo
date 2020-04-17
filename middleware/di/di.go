@@ -12,7 +12,7 @@ import (
 func New(app application.Application) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		method := fmt.Sprintf("%v@%v", c.Request.Method, c.FullPath())
-		runtimeKeyMap := application.DecodeHTTPRuntimeKey(c, app)
+		runtimeKeyMap := application.DecodeHTTPRuntimeKey(c, app.RuntimeKeys())
 		tContext := app.ContextPool().Acquire(app, runtimeKeyMap, app.DB(), c)
 		if app.Conf().GetAtomicRequest() {
 			tContext.DBTx()
