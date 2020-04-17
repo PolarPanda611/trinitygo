@@ -22,8 +22,8 @@ func init() {
 				return controller
 			},
 		},
-		// application.NewRequestMapping(httputil.GET, "/:id", "GET", PermissionValidator([]string{"manager"}), gValidator),
-		application.NewRequestMapping(httputil.GET, "/:id", "GET"),
+		application.NewRequestMapping(httputil.GET, "/:id", "GET", PermissionValidator([]string{"manager"}), gValidator, g1Validator),
+		// application.NewRequestMapping(httputil.GET, "/:id", "GET"),
 		application.NewRequestMapping(httputil.GET, "", "Getsssss"),
 	)
 
@@ -59,7 +59,7 @@ func (s *userControllerImpl) GET() {
 
 var gValidator = func(tctx application.Context) {
 	id, _ := strconv.Atoi(tctx.GinCtx().Param("id"))
-	if id < 100 {
+	if id < 3 {
 		tctx.HTTPResponseUnauthorizedErr(errors.New("gValidator no permission"))
 	}
 	return
@@ -67,7 +67,7 @@ var gValidator = func(tctx application.Context) {
 
 var g1Validator = func(tctx application.Context) {
 	id, _ := strconv.Atoi(tctx.GinCtx().Param("id"))
-	if id > 200 {
+	if id > 3 {
 		tctx.HTTPResponseUnauthorizedErr(errors.New("g1Validator no permission"))
 	}
 	return
