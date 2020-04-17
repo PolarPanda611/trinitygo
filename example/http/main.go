@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"path"
-	"runtime"
 
 	"github.com/PolarPanda611/trinitygo"
 	_ "github.com/PolarPanda611/trinitygo/example/http/domain/controller/http" // init controller
@@ -29,8 +29,8 @@ import (
 // @host 127.0.0.1:8088
 // @BasePath /trinitygo/
 func main() {
-	_, b, _, _ := runtime.Caller(0)
-	projectRootPath := path.Join(path.Dir(b), "../")
+	currentPath, _ := os.Getwd()
+	projectRootPath := path.Join(currentPath, "../")
 	configPath := fmt.Sprintf(projectRootPath + "/config/example.toml")
 	trinitygo.SetConfigPath(configPath)
 	t := trinitygo.DefaultHTTP()

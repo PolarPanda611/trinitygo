@@ -1,6 +1,10 @@
 package main
 
 import (
+	"fmt"
+	"os"
+	"path"
+
 	helloworldpb "github.com/PolarPanda611/trinitygo/example/pb/helloworld"
 
 	"github.com/PolarPanda611/trinitygo/example/server/domain/controller/grpc"
@@ -10,7 +14,10 @@ import (
 )
 
 func main() {
-	trinitygo.SetConfigPath("/Users/daniel/Documents/workspace/trinitygo/example/config/example.toml")
+	currentPath, _ := os.Getwd()
+	projectRootPath := path.Join(currentPath, "../")
+	configPath := fmt.Sprintf(projectRootPath + "/config/example.toml")
+	trinitygo.SetConfigPath(configPath)
 	t := trinitygo.DefaultGRPC()
 	t.RegRuntimeKey(truntime.NewRuntimeKey("trace_id", true, func() string { return "" }, true))
 	t.RegRuntimeKey(truntime.NewRuntimeKey("user_id", true, func() string { return "" }, true))
