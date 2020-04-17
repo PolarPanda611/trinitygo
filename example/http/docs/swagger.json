@@ -15,10 +15,36 @@
         },
         "version": "1.0"
     },
-    "host": "127.00.1:9000",
-    "basePath": "/",
+    "host": "127.0.0.1:8088",
+    "basePath": "/trinitygo/",
     "paths": {
-        "/ping/{id}": {
+        "/users": {
+            "get": {
+                "description": "get user by id test",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "get user list",
+                "responses": {
+                    "200": {
+                        "description": "{\"Status\":200,\"Result\":{},\"Runtime\":\"ok\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "{\"Status\":400,\"Result\":{},\"Runtime\":\"ok\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{id}": {
             "get": {
                 "description": "get user by id test",
                 "consumes": [

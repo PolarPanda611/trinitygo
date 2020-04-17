@@ -33,7 +33,7 @@ debug = true
 [app]
 type = "HTTP" # HTTP GRPC
 address = "127.0.0.1"
-port = 9000
+port = 8088
 read_timeout = 30 #second
 read_header_timeout = 30 #second
 writer_timeout=  30 #second

@@ -1,5 +1,5 @@
-basePath: /
-host: 127.00.1:9000
+basePath: /trinitygo/
+host: 127.0.0.1:8088
 info:
   contact:
     email: support@swagger.io
@@ -13,7 +13,24 @@ info:
   title: Trinity HTTP Example API
   version: "1.0"
 paths:
-  /ping/{id}:
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: get user by id test
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      summary: get user list
+  /users/{id}:
     get:
       consumes:
       - application/json

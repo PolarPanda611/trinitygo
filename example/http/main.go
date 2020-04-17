@@ -7,6 +7,7 @@ import (
 
 	"github.com/PolarPanda611/trinitygo"
 	_ "github.com/PolarPanda611/trinitygo/example/http/domain/controller/http" // init controller
+	"github.com/PolarPanda611/trinitygo/example/http/infra"
 	truntime "github.com/PolarPanda611/trinitygo/runtime"
 	"github.com/google/uuid"
 
@@ -25,8 +26,8 @@ import (
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @host 127.00.1:9000
-// @BasePath /
+// @host 127.0.0.1:8088
+// @BasePath /trinitygo/
 func main() {
 	_, b, _, _ := runtime.Caller(0)
 	projectRootPath := path.Join(path.Dir(b), "../")
@@ -37,5 +38,7 @@ func main() {
 	t.RegRuntimeKey(truntime.NewRuntimeKey("user_id", false, func() string { return "" }, false))
 	t.RegRuntimeKey(truntime.NewRuntimeKey("user_name", false, func() string { return "" }, true))
 	t.InitHTTP()
+	infra.DB = t.DB()
+	infra.Migrate()
 	t.ServeHTTP()
 }

@@ -42,7 +42,6 @@ func TestQueryHandlerWithPagi(t *testing.T) {
 		},
 		IsDebug: true,
 	}
-	handler := New(query, config)
-	x := handler.HandleWithPagination()
+	x := New(query, config).HandleWithPagination()
 	fmt.Println(len(x))
 }

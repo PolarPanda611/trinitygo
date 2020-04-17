@@ -249,7 +249,6 @@ func (q *queryRepositoryImpl) HandleWithPagination() []func(*gorm.DB) *gorm.DB {
 
 func newScope(conditionSQL string, valueSQL interface{}) func(*gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		db.Where(conditionSQL, valueSQL)
-		return db
+		return db.Where(conditionSQL, valueSQL)
 	}
 }
