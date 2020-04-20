@@ -219,6 +219,24 @@ func (q *queryRepositoryImpl) handlePagination(pageNum []string, pageSize []stri
 	q.queryScope = append(q.queryScope, pagiScope)
 
 }
+
+func (q *queryRepositoryImpl) handlePreload() {
+	if len(q.preloadList) > 0 {
+		preloadScope := func(db *gorm.DB) *gorm.DB {
+			for k, v := range q.preloadList {
+				if v == nil {
+					db = db.Preload(k)
+				} else {
+					db = db.Preload(k, v)
+				}
+
+			}
+			return db
+		}
+		q.queryScope = append(q.queryScope, preloadScope)
+	}
+}
+
 func (q *queryRepositoryImpl) Handle(query string) []func(*gorm.DB) *gorm.DB {
 	q.query = query
 	q.decodeURL()
@@ -229,6 +247,7 @@ func (q *queryRepositoryImpl) Handle(query string) []func(*gorm.DB) *gorm.DB {
 		q.handleCustomizeFilter(k, v)
 		q.handleFilter(k, v)
 	}
+	q.handlePreload()
 	newQueryScope := make([]func(*gorm.DB) *gorm.DB, len(q.queryScope))
 	copy(newQueryScope, q.queryScope)
 	return newQueryScope
@@ -246,6 +265,7 @@ func (q *queryRepositoryImpl) HandleWithPagination(query string) []func(*gorm.DB
 		q.handleCustomizeFilter(k, v)
 		q.handleFilter(k, v)
 	}
+	q.handlePreload()
 	newQueryScope := make([]func(*gorm.DB) *gorm.DB, len(q.queryScope))
 	copy(newQueryScope, q.queryScope)
 	return newQueryScope

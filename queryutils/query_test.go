@@ -16,7 +16,10 @@ func TestQueryHandler(t *testing.T) {
 		OrderByList:         []string{"id"},
 		SearchByList:        []string{"code", "name"},
 		FilterCustomizeFunc: make(map[string]interface{}),
-		IsDebug:             true,
+		PreloadList: map[string]func(db *gorm.DB) *gorm.DB{
+			"Test": nil,
+		},
+		IsDebug: true,
 	}
 	x := New(config).Handle(query)
 	fmt.Println(len(x))
@@ -30,6 +33,9 @@ func TestQueryHandlerWithPagi(t *testing.T) {
 		FilterList:    []string{"query", "query__ilike"},
 		OrderByList:   []string{"id"},
 		SearchByList:  []string{"code", "name"},
+		PreloadList: map[string]func(db *gorm.DB) *gorm.DB{
+			"Test": nil,
+		},
 		FilterCustomizeFunc: map[string]interface{}{
 			"test": func(db *gorm.DB, queryValue string) *gorm.DB {
 				fmt.Println("Where xxxxx = ?", queryValue)

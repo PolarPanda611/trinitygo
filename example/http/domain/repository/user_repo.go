@@ -17,9 +17,12 @@ var (
 	_userConfig *queryutil.QueryConfig = &queryutil.QueryConfig{
 		FilterBackend: nil,
 		PageSize:      20,
-		FilterList:    []string{"user_name", "language__user_name__ilike"},
+		FilterList:    []string{"user_name"},
 		OrderByList:   []string{"id"},
 		SearchByList:  []string{"user_name", "email"},
+		PreloadList: map[string]func(db *gorm.DB) *gorm.DB{
+			"Languages": nil,
+		},
 		FilterCustomizeFunc: map[string]interface{}{
 			"test": func(db *gorm.DB, queryValue string) *gorm.DB {
 				fmt.Println("Where xxxxx = ?", queryValue)
