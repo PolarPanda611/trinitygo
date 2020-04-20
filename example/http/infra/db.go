@@ -5,8 +5,10 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+// DB app global DB instance
 var DB *gorm.DB
 
+// Migrate migrate table
 func Migrate() {
 	DB.AutoMigrate(&object.User{})
 	DB.AutoMigrate(&object.Language{})

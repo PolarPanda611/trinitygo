@@ -82,7 +82,7 @@ func updateTimeStampAndUUIDForCreateCallback(scope *gorm.Scope) {
 func updateTimeStampForUpdateCallback(scope *gorm.Scope) {
 	if !scope.HasError() {
 		userID, _ := scope.Get("user_id")
-		var updateAttrs = map[string]interface{}{}
+		updateAttrs := make(map[string]interface{})
 		if attrs, ok := scope.InstanceGet("gorm:update_attrs"); ok {
 			updateAttrs = attrs.(map[string]interface{})
 			updateAttrs["updated_time"] = util.GetCurrentTime()

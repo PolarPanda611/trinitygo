@@ -52,7 +52,7 @@ func TestRuntimeKey(t *testing.T) {
 	defer conn.Close()
 	client := helloworldpb.NewGreeterClient(conn)
 	_, err := client.SayHello(ctx, &helloworldpb.HelloRequest{Name: "124"})
-	assert.NotEqual(t, nil, err, "err shouldnot be nil")
+	assert.NotEqual(t, nil, err, "err shouldnt be nil")
 	if err != nil {
 		status, _ := status.FromError(err)
 		assert.Equal(t, codes.InvalidArgument, status.Code(), "err should be nil")
@@ -67,7 +67,7 @@ func TestRuntimeKeyWithAuth(t *testing.T) {
 	defer conn.Close()
 	client := helloworldpb.NewGreeterClient(conn)
 	_, err := client.SayHello(ctxWithAuth, &helloworldpb.HelloRequest{Name: "124"})
-	assert.NotEqual(t, nil, err, "err shouldnot be nil")
+	assert.NotEqual(t, nil, err, "err shouldnt be nil")
 	if err != nil {
 		status, ok := status.FromError(err)
 		fmt.Println(ok)

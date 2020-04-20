@@ -58,11 +58,13 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
+// JWTVerifier jwt verifier
 type JWTVerifier interface {
 	parseUnverifiedToken(token string) (jwt.Claims, error)
 	Middleware() gin.HandlerFunc
 }
 
+// JWTVerifierImpl impl
 type JWTVerifierImpl struct {
 	app    application.Application
 	config *Config
@@ -96,6 +98,7 @@ func (m *JWTVerifierImpl) checkUnverifiedTokenValid(c *gin.Context) (jwt.Claims,
 	return tokenClaims, nil
 }
 
+// Middleware jwt middleware
 func (m *JWTVerifierImpl) Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenClaims, err := m.checkUnverifiedTokenValid(c)
