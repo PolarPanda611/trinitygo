@@ -1,9 +1,11 @@
-[![Build Status](https://travis-ci.org/PolarPanda611/trinity.svg)](https://travis-ci.org/PolarPanda611/trinity)
-[![GitHub Actions](https://github.com/aofei/air/workflows/Main/badge.svg)](https://github.com/PolarPanda611/trinity)
-[![codecov](https://codecov.io/gh/aofei/air/branch/master/graph/badge.svg)](https://codecov.io/gh/PolarPanda611/trinity)
+# trinitygo
+
+[![Build Status](https://travis-ci.org/PolarPanda611/trinitygo.svg)](https://travis-ci.org/PolarPanda611/trinitygo)
+[![GitHub Actions](https://github.com/aofei/air/workflows/Main/badge.svg)](https://github.com/PolarPanda611/trinitygo)
+[![codecov](https://codecov.io/gh/aofei/air/branch/master/graph/badge.svg)](https://codecov.io/gh/PolarPanda611/trinitygo)
 [![Go Report Card](https://goreportcard.com/badge/github.com/PolarPanda611/trinitygo)](https://goreportcard.com/report/github.com/PolarPanda611/trinitygo)
-[![GoDoc](https://godoc.org/github.com/PolarPanda611/trinity?status.svg)](https://godoc.org/github.com/PolarPanda611/trinity)
-[![Release](https://img.shields.io/github/release/PolarPanda611/trinity.svg?style=flat-square)](https://github.com/PolarPanda611/trinity/releases)
+[![GoDoc](https://godoc.org/github.com/PolarPanda611/trinitygo?status.svg)](https://godoc.org/github.com/PolarPanda611/trinitygo)
+[![Release](https://img.shields.io/github/release/PolarPanda611/trinitygo.svg?style=flat-square)](https://github.com/PolarPanda611/trinitygo/releases)
 
 golang restframework plugin with gin+gorm, fast and high scalable    
 p.s: spring restframework like :)
