@@ -15,12 +15,11 @@ import (
 var (
 	_           UserRepository         = new(userRepositoryImpl)
 	_userConfig *queryutil.QueryConfig = &queryutil.QueryConfig{
-		TablePrefix:  "",
-		DbBackend:    nil,
-		PageSize:     20,
-		FilterList:   []string{"user_name", "user_name__ilike"},
-		OrderByList:  []string{"id"},
-		SearchByList: []string{"user_name", "email"},
+		FilterBackend: nil,
+		PageSize:      20,
+		FilterList:    []string{"user_name", "language__user_name__ilike"},
+		OrderByList:   []string{"id"},
+		SearchByList:  []string{"user_name", "email"},
 		FilterCustomizeFunc: map[string]interface{}{
 			"test": func(db *gorm.DB, queryValue string) *gorm.DB {
 				fmt.Println("Where xxxxx = ?", queryValue)
@@ -53,6 +52,7 @@ type userRepositoryImpl struct {
 }
 
 func (r *userRepositoryImpl) GetUserByID(id int) (*object.User, error) {
+	fmt.Println("repo run ")
 	var user object.User
 	if err := r.TCtx.DB().Where("id = ?", id).First(&user).Error; err != nil {
 		return nil, err
@@ -61,6 +61,7 @@ func (r *userRepositoryImpl) GetUserByID(id int) (*object.User, error) {
 }
 
 func (r *userRepositoryImpl) GetUserList(query string) ([]object.User, error) {
+	fmt.Println("repo run ")
 	var user []object.User
 	if err := r.TCtx.DB().Scopes(
 		r.queryHandler.HandleWithPagination(query)...,

@@ -117,15 +117,6 @@ func (l *loggerImpl) Interceptor() func(ctx context.Context, req interface{}, in
 		endTime = time.Now()
 
 		line := ""
-		if l.config.Latency {
-			latency = endTime.Sub(startTime)
-			line += fmt.Sprintf("%4v ", latency)
-		}
-
-		if l.config.Path {
-			path = info.FullMethod
-			line += fmt.Sprintf("%v ", path)
-		}
 
 		if l.config.Runtime {
 			md, _ := metadata.FromIncomingContext(ctx)
@@ -134,6 +125,16 @@ func (l *loggerImpl) Interceptor() func(ctx context.Context, req interface{}, in
 					line += fmt.Sprintf("%v:%v ", v.GetKeyName(), md[v.GetKeyName()][0])
 				}
 			}
+		}
+
+		if l.config.Latency {
+			latency = endTime.Sub(startTime)
+			line += fmt.Sprintf("%4v ", latency)
+		}
+
+		if l.config.Path {
+			path = info.FullMethod
+			line += fmt.Sprintf("%v ", path)
 		}
 
 		if l.config.Request {
@@ -180,6 +181,14 @@ func (l *loggerImpl) Middleware() gin.HandlerFunc {
 		endTime = time.Now()
 
 		line := ""
+		if l.config.Runtime {
+			runtimeKey := DecodeHTTPRuntimeKey(c, l.app.RuntimeKeys())
+			for _, v := range l.app.RuntimeKeys() {
+				if v.IsLog() {
+					line += fmt.Sprintf("%v:%v ", v.GetKeyName(), runtimeKey[v.GetKeyName()])
+				}
+			}
+		}
 
 		if l.config.Latency {
 			latency = endTime.Sub(startTime)
@@ -209,15 +218,6 @@ func (l *loggerImpl) Middleware() gin.HandlerFunc {
 		if l.config.BodySize {
 			bodySize = c.Writer.Size()
 			line += fmt.Sprintf("%v ", bodySize)
-		}
-
-		if l.config.Runtime {
-			runtimeKey := DecodeHTTPRuntimeKey(c, l.app.RuntimeKeys())
-			for _, v := range l.app.RuntimeKeys() {
-				if v.IsLog() {
-					line += fmt.Sprintf("%v:%v ", v.GetKeyName(), runtimeKey[v.GetKeyName()])
-				}
-			}
 		}
 
 		if l.config.Request {

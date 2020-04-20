@@ -29,12 +29,12 @@ type QueryHandler interface {
 
 type queryRepositoryImpl struct {
 	query               string
-	tablePrefix         string
-	dbBackend           func(db *gorm.DB) *gorm.DB
+	filterBackend       []func(db *gorm.DB) *gorm.DB
 	pageSize            int
 	searchByList        []string
 	filterList          []string
 	orderByList         []string
+	preloadList         map[string]func(db *gorm.DB) *gorm.DB
 	filterCustomizeFunc map[string]interface{}
 
 	queryMap   url.Values
@@ -45,12 +45,12 @@ type queryRepositoryImpl struct {
 
 // QueryConfig query config
 type QueryConfig struct {
-	TablePrefix  string
-	DbBackend    func(db *gorm.DB) *gorm.DB
-	PageSize     int
-	SearchByList []string
-	FilterList   []string
-	OrderByList  []string
+	FilterBackend []func(db *gorm.DB) *gorm.DB
+	PageSize      int
+	SearchByList  []string
+	FilterList    []string
+	OrderByList   []string
+	PreloadList   map[string]func(db *gorm.DB) *gorm.DB
 	// SetFilterCustomizeFunc
 	// run local
 	// option 1 : func(db *gorm.DB, queryValue string) *gorm.DB
@@ -64,12 +64,12 @@ type QueryConfig struct {
 // DefaultConfig with system setting
 func DefaultConfig(tCtx application.Context) *QueryConfig {
 	return &QueryConfig{
-		TablePrefix:         tCtx.Application().Conf().GetTablePrefix(),
-		DbBackend:           nil,
+		FilterBackend:       nil,
 		PageSize:            tCtx.Application().Conf().GetPageSize(),
 		SearchByList:        []string{},
 		FilterList:          []string{},
 		OrderByList:         []string{},
+		PreloadList:         make(map[string]func(db *gorm.DB) *gorm.DB),
 		FilterCustomizeFunc: make(map[string]interface{}),
 		IsDebug:             false,
 	}
@@ -85,10 +85,11 @@ func NewWithDefaultConfig(tCtx application.Context, query string) QueryHandler {
 // New query handler with customize handler config
 func New(config *QueryConfig) QueryHandler {
 	queryHandler := &queryRepositoryImpl{
-		tablePrefix:         config.TablePrefix,
+		filterBackend:       config.FilterBackend,
 		pageSize:            config.PageSize,
 		filterList:          config.FilterList,
 		orderByList:         config.OrderByList,
+		preloadList:         config.PreloadList,
 		searchByList:        config.SearchByList,
 		filterCustomizeFunc: config.FilterCustomizeFunc,
 		isDebug:             config.IsDebug,
@@ -100,14 +101,16 @@ func (q *queryRepositoryImpl) decodeURL() {
 	q.queryMap, _ = url.ParseQuery(q.query)
 }
 func (q *queryRepositoryImpl) handleDBBackend() {
-	if q.dbBackend != nil {
-		q.queryScope = append(q.queryScope, q.dbBackend)
+	if len(q.filterBackend) != 0 {
+		for _, backend := range q.filterBackend {
+			q.queryScope = append(q.queryScope, backend)
+		}
 	}
 }
 func (q *queryRepositoryImpl) handleFilter(k string, v []string) {
 	if util.StringInSlice(k, q.filterList) {
 		if len(v) != 0 {
-			d := NewDecoder(k, v[0], q.tablePrefix)
+			d := NewDecoder(k, v[0])
 			if q.isDebug {
 				fmt.Printf("where : %v  %v \n ", d.ConditionSQL(), d.ValueSQL())
 			}

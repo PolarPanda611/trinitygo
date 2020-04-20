@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"reflect"
 	"sync"
 
@@ -24,17 +25,20 @@ func init() {
 //UserService user service
 type UserService interface {
 	GetUserByID(id int) (*object.User, error)
-	GetUserListByQuery(query string) ([]object.User, error)
+	GetUserList(query string) ([]object.User, error)
 }
+
 type userServiceImpl struct {
 	UserRepo repository.UserRepository
 	TCtx     application.Context
 }
 
 func (s *userServiceImpl) GetUserByID(id int) (*object.User, error) {
+	fmt.Println("service run ")
 	return s.UserRepo.GetUserByID(id)
 }
 
-func (s *userServiceImpl) GetUserListByQuery(query string) ([]object.User, error) {
+func (s *userServiceImpl) GetUserList(query string) ([]object.User, error) {
+	fmt.Println("service run ")
 	return s.UserRepo.GetUserList(query)
 }

@@ -20,11 +20,10 @@ type QueryDecoder interface {
 }
 
 // NewDecoder new query decoder
-func NewDecoder(queryName string, queryValue string, tablePrefix string) QueryDecoder {
+func NewDecoder(queryName string, queryValue string) QueryDecoder {
 	decoder := &filterQuery{
-		QueryName:   queryName,
-		QueryValue:  queryValue,
-		TablePrefix: tablePrefix,
+		QueryName:  queryName,
+		QueryValue: queryValue,
 	}
 	decoder.decode()
 	decoder.decodeFilterAndValue()
@@ -33,9 +32,8 @@ func NewDecoder(queryName string, queryValue string, tablePrefix string) QueryDe
 }
 
 type filterQuery struct {
-	QueryName   string
-	QueryValue  string
-	TablePrefix string
+	QueryName  string
+	QueryValue string
 
 	// processing
 	assosiationParam []string
@@ -70,7 +68,7 @@ func (f *filterQuery) decode() {
 	f.queryParam = gorm.ToColumnName(f.queryParam)
 	newAssosiationParam := make([]string, len(f.assosiationParam))
 	for i, v := range f.assosiationParam {
-		newAssosiationParam[i] = gorm.ToColumnName(v)
+		newAssosiationParam[i] = gorm.ToTableName(v)
 	}
 	f.assosiationParam = newAssosiationParam
 
@@ -149,7 +147,7 @@ func (f *filterQuery) decodeNestSQL() {
 	for range f.assosiationParam {
 		lastIndex := assosiationParamLen - 1
 		lastParam := f.assosiationParam[lastIndex]
-		f.conditionSQL = fmt.Sprintf(" %v_id in ( select id from %v%v where %v ) ", lastParam, f.TablePrefix, lastParam, f.conditionSQL)
+		f.conditionSQL = fmt.Sprintf(" %v_id in ( select id from %v where %v ) ", lastParam, gorm.DefaultTableNameHandler(nil, lastParam), f.conditionSQL)
 		assosiationParamLen = assosiationParamLen - 1
 
 	}

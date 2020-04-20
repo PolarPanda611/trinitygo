@@ -10,7 +10,6 @@ import (
 	"github.com/PolarPanda611/trinitygo/example/http/domain/service"
 	"github.com/PolarPanda611/trinitygo/httputil"
 	"github.com/PolarPanda611/trinitygo/util"
-	"github.com/gin-gonic/gin"
 )
 
 var _ UserController = new(userControllerImpl)
@@ -40,7 +39,6 @@ type UserController interface {
 type userControllerImpl struct {
 	UserSrv service.UserService
 	Tctx    application.Context
-	C       *gin.Context
 }
 
 // GET get func
@@ -96,7 +94,7 @@ func PermissionValidator(requiredP []string) func(application.Context) {
 // @Failure 400 {string} json "{"Status":400,"Result":{},"Runtime":"ok"}"
 // @Router /users [get]
 func (s *userControllerImpl) Getsssss() {
-	res, err := s.UserSrv.GetUserListByQuery(s.Tctx.GinCtx().Request.URL.RawQuery)
+	res, err := s.UserSrv.GetUserList(s.Tctx.GinCtx().Request.URL.RawQuery)
 	s.Tctx.HTTPResponseOk(res, err)
 	return
 }

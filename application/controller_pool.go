@@ -86,7 +86,7 @@ func (s *ControllerPool) ControllSelfCheck(controllerName string) bool {
 }
 
 // GetController from pool
-func (s *ControllerPool) GetController(controllerName string, tctx Context, app Application, c *gin.Context) (interface{}, []interface{}) {
+func (s *ControllerPool) GetController(controllerName string, tctx Context, app Application, c *gin.Context) (interface{}, map[reflect.Type]interface{}) {
 	s.mu.RLock()
 	pool, ok := s.poolMap[controllerName]
 	s.mu.RUnlock()
@@ -94,8 +94,8 @@ func (s *ControllerPool) GetController(controllerName string, tctx Context, app 
 		panic(fmt.Sprintf("unknown controller name : %v", controllerName))
 	}
 	controller := pool.Get()
-	toFreeContainer := DiAllFields(controller, tctx, app, c)
-	return controller, toFreeContainer
+	sharedInstance := DiAllFields(controller, tctx, app, c)
+	return controller, sharedInstance
 }
 
 // GetControllerFuncName get controller func name

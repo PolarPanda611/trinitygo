@@ -33,14 +33,14 @@ func (s *ContainerPool) GetContainerType() []reflect.Type {
 }
 
 // GetContainer get service with di
-func (s *ContainerPool) GetContainer(containerType reflect.Type, tctx Context, app Application, c *gin.Context) (interface{}, []interface{}) {
+func (s *ContainerPool) GetContainer(containerType reflect.Type, tctx Context, app Application, c *gin.Context) (interface{}, map[reflect.Type]interface{}) {
 	pool, ok := s.poolMap[containerType]
 	if !ok {
 		panic("unknown service name")
 	}
 	service := pool.Get()
-	toFreeContainer := DiAllFields(service, tctx, app, c)
-	return service, toFreeContainer
+	sharedInstance := DiAllFields(service, tctx, app, c)
+	return service, sharedInstance
 }
 
 // Release release service

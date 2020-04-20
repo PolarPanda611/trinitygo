@@ -141,7 +141,7 @@ func GetFreePort() (int, error) {
 
 // GetServiceName get service name which will register to service mesh
 func GetServiceName(projectName string) string {
-	return fmt.Sprintf("grpc.health.v1.%v", projectName)
+	return fmt.Sprintf("%v", projectName)
 }
 
 // GetServiceID get service name which will register to service mesh

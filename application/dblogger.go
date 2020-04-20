@@ -45,15 +45,18 @@ func (l *DBLogger) Print(v ...interface{}) {
 		line := ""
 		if l.config.Runtime {
 			for _, v := range l.app.RuntimeKeys() {
-				line += fmt.Sprintf("%v %v ", v.GetKeyName(), l.runtime[v.GetKeyName()])
+				if v.IsLog() {
+					line += fmt.Sprintf("%v %v ", v.GetKeyName(), l.runtime[v.GetKeyName()])
+				}
 			}
 		}
-		line += fmt.Sprintf("%v %v ", "DBRunningFile", v[1])
 		DBRunningTime, _ := v[2].(time.Duration)
-		line += fmt.Sprintf("%v %v ", "DBRunningTime", DBRunningTime)
-		line += fmt.Sprintf("%v %v ", "DBSQL", v[3])
-		line += fmt.Sprintf("%v %v ", "DBParams", v[4])
-		line += fmt.Sprintf("%v %v ", "DBEffectedRows", v[5])
+		line += fmt.Sprintf("%v ", DBRunningTime)
+		line += fmt.Sprintf("%v ", v[1])
+
+		line += fmt.Sprintf("%v ", v[3])
+		line += fmt.Sprintf("%v ", v[4])
+		line += fmt.Sprintf("%v ", v[5])
 
 		l.app.Logger().Info(line)
 	}

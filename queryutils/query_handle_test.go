@@ -1,14 +1,21 @@
 package queryutil
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 )
 
+func init() {
+	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
+		return fmt.Sprintf("%v%v", "trinity_", defaultTableName)
+	}
+}
 func TestSingleQuery(t *testing.T) {
 
-	d := NewDecoder("Code", "test", "trinity_")
+	d := NewDecoder("Code", "test")
 	expectConditionSQL := " code = ? "
 	expectValueSQL := "test"
 	assert.Equal(t, expectConditionSQL, d.ConditionSQL(), "conditionsql error")
@@ -16,7 +23,7 @@ func TestSingleQuery(t *testing.T) {
 }
 
 func TestTwoQuery(t *testing.T) {
-	d := NewDecoder("company__code", "test", "trinity_")
+	d := NewDecoder("company__code", "test")
 	expectConditionSQL := " company_id in ( select id from trinity_company where code = ? ) "
 	expectValueSQL := "test"
 	assert.Equal(t, expectConditionSQL, d.ConditionSQL(), "conditionsql error")
@@ -24,7 +31,7 @@ func TestTwoQuery(t *testing.T) {
 }
 
 func TestThreeQuery(t *testing.T) {
-	d := NewDecoder("costcenter__company__code", "test", "trinity_")
+	d := NewDecoder("costcenter__company__code", "test")
 	expectConditionSQL := " costcenter_id in ( select id from trinity_costcenter where company_id in ( select id from trinity_company where code = ? ) ) "
 	expectValueSQL := "test"
 
@@ -33,7 +40,7 @@ func TestThreeQuery(t *testing.T) {
 }
 
 func TestFourQuery(t *testing.T) {
-	d := NewDecoder("asset__costcenter__company__code", "test", "trinity_")
+	d := NewDecoder("asset__costcenter__company__code", "test")
 	expectConditionSQL := " asset_id in ( select id from trinity_asset where costcenter_id in ( select id from trinity_costcenter where company_id in ( select id from trinity_company where code = ? ) ) ) "
 	expectValueSQL := "test"
 
@@ -42,7 +49,7 @@ func TestFourQuery(t *testing.T) {
 }
 
 func TestIlike(t *testing.T) {
-	d := NewDecoder("ilike", "test", "trinity_")
+	d := NewDecoder("ilike", "test")
 	expectConditionSQL := " ilike = ? "
 	expectValueSQL := "test"
 
@@ -51,7 +58,7 @@ func TestIlike(t *testing.T) {
 }
 
 func TestSingleIlike(t *testing.T) {
-	d := NewDecoder("Code__ilike", "test", "trinity_")
+	d := NewDecoder("Code__ilike", "test")
 	expectConditionSQL := " code ilike ? "
 	expectValueSQL := "%test%"
 
@@ -59,7 +66,7 @@ func TestSingleIlike(t *testing.T) {
 	assert.Equal(t, expectValueSQL, d.ValueSQL(), "value error")
 }
 func TestFourIlike(t *testing.T) {
-	d := NewDecoder("asset__costcenter__company__code__ilike", "test", "trinity_")
+	d := NewDecoder("asset__costcenter__company__code__ilike", "test")
 	expectConditionSQL := " asset_id in ( select id from trinity_asset where costcenter_id in ( select id from trinity_costcenter where company_id in ( select id from trinity_company where code ilike ? ) ) ) "
 	expectValueSQL := "%test%"
 
@@ -68,7 +75,7 @@ func TestFourIlike(t *testing.T) {
 }
 
 func TestFourIn(t *testing.T) {
-	d := NewDecoder("Asset__costcenter__company__Code__in", "test,test,test", "trinity_")
+	d := NewDecoder("Asset__costcenter__company__Code__in", "test,test,test")
 	expectConditionSQL := " asset_id in ( select id from trinity_asset where costcenter_id in ( select id from trinity_costcenter where company_id in ( select id from trinity_company where code in (?) ) ) ) "
 	expectValueSQL := []string{"test", "test", "test"}
 
@@ -77,7 +84,7 @@ func TestFourIn(t *testing.T) {
 }
 
 func TestFourStart(t *testing.T) {
-	d := NewDecoder("asset__costcenter__company__create_time__start", "2019-01-01", "trinity_")
+	d := NewDecoder("asset__costcenter__company__create_time__start", "2019-01-01")
 	expectConditionSQL := " asset_id in ( select id from trinity_asset where costcenter_id in ( select id from trinity_costcenter where company_id in ( select id from trinity_company where create_time >= ? ) ) ) "
 	expectValueSQL := "2019-01-01 00:00:00"
 
@@ -86,7 +93,7 @@ func TestFourStart(t *testing.T) {
 }
 
 func TestFourEnd(t *testing.T) {
-	d := NewDecoder("asset__costcenter__company__create_time__end", "2019-01-01", "trinity_")
+	d := NewDecoder("asset__costcenter__company__create_time__end", "2019-01-01")
 	expectConditionSQL := " asset_id in ( select id from trinity_asset where costcenter_id in ( select id from trinity_costcenter where company_id in ( select id from trinity_company where create_time <= ? ) ) ) "
 	expectValueSQL := "2019-01-01 23:59:59"
 
@@ -95,7 +102,7 @@ func TestFourEnd(t *testing.T) {
 }
 
 func TestFourIsNullFalse(t *testing.T) {
-	d := NewDecoder("asset__costcenter__company__create_time__isnull", "false", "trinity_")
+	d := NewDecoder("asset__costcenter__company__create_time__isnull", "false")
 	expectConditionSQL := " asset_id in ( select id from trinity_asset where costcenter_id in ( select id from trinity_costcenter where company_id in ( select id from trinity_company where create_time is not null ) ) ) "
 	var expectValueSQL interface{}
 
@@ -105,7 +112,7 @@ func TestFourIsNullFalse(t *testing.T) {
 }
 
 func TestFourIsNullTrue(t *testing.T) {
-	d := NewDecoder("asset__costcenter__company__create_time__isnull", "true", "trinity_")
+	d := NewDecoder("asset__costcenter__company__create_time__isnull", "true")
 	expectConditionSQL := " asset_id in ( select id from trinity_asset where costcenter_id in ( select id from trinity_costcenter where company_id in ( select id from trinity_company where create_time is null ) ) ) "
 	var expectValueSQL interface{}
 
@@ -115,7 +122,7 @@ func TestFourIsNullTrue(t *testing.T) {
 }
 
 func TestFourIsEmptyTrue(t *testing.T) {
-	d := NewDecoder("asset__costcenter__company__create_time__isempty", "true", "trinity_")
+	d := NewDecoder("asset__costcenter__company__create_time__isempty", "true")
 	expectConditionSQL := " asset_id in ( select id from trinity_asset where costcenter_id in ( select id from trinity_costcenter where company_id in ( select id from trinity_company where (COALESCE(\"create_time\"::varchar ,'') = '' ) ) ) ) "
 	var expectValueSQL interface{}
 
@@ -125,7 +132,7 @@ func TestFourIsEmptyTrue(t *testing.T) {
 }
 
 func TestFourIsEmptyFalse(t *testing.T) {
-	d := NewDecoder("asset__costcenter__company__create_time__isempty", "false", "trinity_")
+	d := NewDecoder("asset__costcenter__company__create_time__isempty", "false")
 	expectConditionSQL := " asset_id in ( select id from trinity_asset where costcenter_id in ( select id from trinity_costcenter where company_id in ( select id from trinity_company where (COALESCE(\"create_time\"::varchar ,'') != '' ) ) ) ) "
 	var expectValueSQL interface{}
 
@@ -135,7 +142,7 @@ func TestFourIsEmptyFalse(t *testing.T) {
 }
 
 func TestFourLT(t *testing.T) {
-	d := NewDecoder("asset__costcenter__company__qty__lt", "50", "trinity_")
+	d := NewDecoder("asset__costcenter__company__qty__lt", "50")
 	expectConditionSQL := " asset_id in ( select id from trinity_asset where costcenter_id in ( select id from trinity_costcenter where company_id in ( select id from trinity_company where qty < ? ) ) ) "
 	expectValueSQL := "50"
 
@@ -144,7 +151,7 @@ func TestFourLT(t *testing.T) {
 }
 
 func TestFourLTE(t *testing.T) {
-	d := NewDecoder("asset__costcenter__company__qty__lte", "50", "trinity_")
+	d := NewDecoder("asset__costcenter__company__qty__lte", "50")
 	expectConditionSQL := " asset_id in ( select id from trinity_asset where costcenter_id in ( select id from trinity_costcenter where company_id in ( select id from trinity_company where qty <= ? ) ) ) "
 	expectValueSQL := "50"
 
@@ -153,7 +160,7 @@ func TestFourLTE(t *testing.T) {
 }
 
 func TestFourGT(t *testing.T) {
-	d := NewDecoder("asset__costcenter__company__qty__gt", "50", "trinity_")
+	d := NewDecoder("asset__costcenter__company__qty__gt", "50")
 	expectConditionSQL := " asset_id in ( select id from trinity_asset where costcenter_id in ( select id from trinity_costcenter where company_id in ( select id from trinity_company where qty > ? ) ) ) "
 	expectValueSQL := "50"
 
@@ -161,7 +168,7 @@ func TestFourGT(t *testing.T) {
 	assert.Equal(t, expectValueSQL, d.ValueSQL(), "value error")
 }
 func TestFourGTE(t *testing.T) {
-	d := NewDecoder("asset__costcenter__company__qty__gte", "50", "trinity_")
+	d := NewDecoder("asset__costcenter__company__qty__gte", "50")
 	expectConditionSQL := " asset_id in ( select id from trinity_asset where costcenter_id in ( select id from trinity_costcenter where company_id in ( select id from trinity_company where qty >= ? ) ) ) "
 	expectValueSQL := "50"
 

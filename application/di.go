@@ -1,53 +1,52 @@
 package application
 
 import (
-	"fmt"
 	"reflect"
 
 	"github.com/gin-gonic/gin"
 )
 
 // DiAllFields di service pool
-func DiAllFields(dest interface{}, tctx Context, app Application, c *gin.Context) []interface{} {
-	var toFreeContainer []interface{}
+func DiAllFields(dest interface{}, tctx Context, app Application, c *gin.Context) map[reflect.Type]interface{} {
+	sharedInstance := make(map[reflect.Type]interface{})
 	destVal := reflect.Indirect(reflect.ValueOf(dest))
 	for index := 0; index < destVal.NumField(); index++ {
 		val := destVal.Field(index)
 		if val.Kind() == reflect.Ptr && val.IsZero() {
 			if !val.CanSet() {
-				fmt.Println("skip")
+				continue
 			}
-
 			if reflect.TypeOf(c) == val.Type() {
 				val.Set(reflect.ValueOf(c))
+				continue
 			}
-
 		}
 		if val.Kind() == reflect.Interface && val.IsZero() {
 			if !val.CanSet() {
-				// not the public param , cannot inject
 				continue
 			}
-
-			// check if implement tctx
 			if reflect.TypeOf(tctx).Implements(val.Type()) {
-				// if  implemented
 				val.Set(reflect.ValueOf(tctx))
 				continue
 			}
-
 			for _, v := range app.ContainerPool().GetContainerType() {
 				if v.Implements(val.Type()) {
-					repo, subToFreeContainer := app.ContainerPool().GetContainer(v, tctx, app, c)
-					toFreeContainer = append(toFreeContainer, repo)
-					toFreeContainer = append(toFreeContainer, subToFreeContainer...)
+					if instance, exist := sharedInstance[val.Type()]; exist {
+						val.Set(reflect.ValueOf(instance))
+						break
+					}
+					repo, sharedInstanceMap := app.ContainerPool().GetContainer(v, tctx, app, c)
+					for instanceType, instanceValue := range sharedInstanceMap {
+						sharedInstance[instanceType] = instanceValue
+					}
 					val.Set(reflect.ValueOf(repo))
-					continue
+					sharedInstance[val.Type()] = repo
+					break
 				}
 			}
 		}
 	}
-	return toFreeContainer
+	return sharedInstance
 }
 
 // DiFree di controller
@@ -56,11 +55,9 @@ func DiFree(dest interface{}) {
 	for index := 0; index < destVal.NumField(); index++ {
 		val := destVal.Field(index)
 		if !val.CanSet() {
-			// not the public param , cannot inject
 			continue
 		}
 		if !val.IsZero() {
-			// fmt.Println(val.Type(), "set null")
 			val.Set(reflect.Zero(val.Type()))
 		}
 	}
