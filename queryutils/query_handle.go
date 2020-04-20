@@ -77,12 +77,8 @@ func (f *filterQuery) decode() {
 // decodeFilterAndValue get query sql
 func (f *filterQuery) decodeFilterAndValue() {
 	switch f.condition {
-	case "like":
-		f.conditionSQL = fmt.Sprintf(" %v like ? ", f.queryParam)
-		f.valueSQL = fmt.Sprintf("%v%v%v", "%", f.QueryValue, "%")
-		break
-	case "ilike":
-		f.conditionSQL = fmt.Sprintf(" %v ilike ? ", f.queryParam)
+	case "like", "ilike":
+		f.conditionSQL = fmt.Sprintf(" %v %v ? ", f.queryParam, f.condition)
 		f.valueSQL = fmt.Sprintf("%v%v%v", "%", f.QueryValue, "%")
 		break
 	case "in":
