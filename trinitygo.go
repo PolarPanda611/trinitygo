@@ -459,6 +459,7 @@ func (app *Application) ServeHTTP() {
 				app.config.GetAppAddress(),
 				app.config.GetAppPort(),
 				app.config.GetProjectTags(),
+				app.config.GetServiceDiscoveryTimeout(),
 			); err != nil {
 				gErr <- err
 			}
@@ -494,6 +495,7 @@ func (app *Application) ServeHTTP() {
 			app.config.GetProjectVersion(),
 			app.config.GetAppAddress(),
 			app.config.GetAppPort(),
+			app.config.GetServiceDiscoveryTimeout(),
 		)
 		if err != nil {
 			line = fmt.Sprintf("boooting http service deregistered failed !")
@@ -529,6 +531,7 @@ func (app *Application) ServeGRPC() {
 				app.config.GetAppAddress(),
 				app.config.GetAppPort(),
 				app.config.GetProjectTags(),
+				app.config.GetServiceDiscoveryTimeout(),
 			); err != nil {
 				gErr <- err
 			}
@@ -556,6 +559,7 @@ func (app *Application) ServeGRPC() {
 			app.config.GetProjectVersion(),
 			app.config.GetAppAddress(),
 			app.config.GetAppPort(),
+			app.config.GetServiceDiscoveryTimeout(),
 		)
 		if err != nil {
 			line = fmt.Sprintf("boooting grpc service deregistered failed !")

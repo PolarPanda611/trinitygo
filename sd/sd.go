@@ -15,8 +15,8 @@ import (
 // ServiceMesh interface
 type ServiceMesh interface {
 	GetClient() interface{}
-	RegService(projectName string, projectVersion string, serviceIP string, servicePort int, Tags []string) error
-	DeRegService(projectName string, projectVersion string, serviceIP string, servicePort int) error
+	RegService(projectName string, projectVersion string, serviceIP string, servicePort int, Tags []string, timeout int) error
+	DeRegService(projectName string, projectVersion string, serviceIP string, servicePort int, timeout int) error
 }
 
 // ServiceMeshEtcdImpl consul register
@@ -51,9 +51,11 @@ func (s *ServiceMeshEtcdImpl) GetClient() interface{} {
 }
 
 // RegService register etcd service
-func (s *ServiceMeshEtcdImpl) RegService(projectName string, projectVersion string, serviceIP string, servicePort int, Tags []string) error {
+func (s *ServiceMeshEtcdImpl) RegService(projectName string, projectVersion string, serviceIP string, servicePort int, Tags []string, timeout int) error {
 	r := &etcdnaming.GRPCResolver{Client: s.client}
-	err := r.Update(context.TODO(), util.GetServiceName(projectName), naming.Update{Op: naming.Add, Addr: fmt.Sprintf("%v:%v", serviceIP, servicePort), Metadata: fmt.Sprintf("%v", Tags)})
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(timeout))
+	defer cancel()
+	err := r.Update(ctx, util.GetServiceName(projectName), naming.Update{Op: naming.Add, Addr: fmt.Sprintf("%v:%v", serviceIP, servicePort), Metadata: fmt.Sprintf("%v", Tags)})
 	if err != nil {
 		return err
 	}
@@ -61,9 +63,11 @@ func (s *ServiceMeshEtcdImpl) RegService(projectName string, projectVersion stri
 }
 
 // DeRegService deregister service
-func (s *ServiceMeshEtcdImpl) DeRegService(projectName string, projectVersion string, serviceIP string, servicePort int) error {
+func (s *ServiceMeshEtcdImpl) DeRegService(projectName string, projectVersion string, serviceIP string, servicePort int, timeout int) error {
 	r := &etcdnaming.GRPCResolver{Client: s.client}
-	err := r.Update(context.TODO(), util.GetServiceName(projectName), naming.Update{Op: naming.Delete, Addr: fmt.Sprintf("%v:%v", serviceIP, servicePort)})
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(timeout))
+	defer cancel()
+	err := r.Update(ctx, util.GetServiceName(projectName), naming.Update{Op: naming.Delete, Addr: fmt.Sprintf("%v:%v", serviceIP, servicePort)})
 	if err != nil {
 		return err
 	}
@@ -71,7 +75,7 @@ func (s *ServiceMeshEtcdImpl) DeRegService(projectName string, projectVersion st
 }
 
 // NewEtcdClientConn new etcd client connection
-func NewEtcdClientConn(address string, port int, serviceName string) (*grpc.ClientConn, error) {
+func NewEtcdClientConn(address string, port int, serviceName string, timeout int) (*grpc.ClientConn, error) {
 	cli, err := clientv3.NewFromURL(fmt.Sprintf("http://%v:%v", address, port))
 	if err != nil {
 		return nil, fmt.Errorf("failed to conn etcd client , %v", err)
@@ -79,7 +83,7 @@ func NewEtcdClientConn(address string, port int, serviceName string) (*grpc.Clie
 	r := &etcdnaming.GRPCResolver{Client: cli}
 	b := grpc.RoundRobin(r)
 
-	ctx1, cel := context.WithTimeout(context.Background(), time.Second*3)
+	ctx1, cel := context.WithTimeout(context.Background(), time.Second*time.Duration(timeout))
 	defer cel()
 	conn, err := grpc.DialContext(ctx1, serviceName, grpc.WithInsecure(), grpc.WithBlock(), grpc.WithBalancer(b))
 	if err != nil {

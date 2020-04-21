@@ -77,6 +77,7 @@ max_open_conn =  100
 type =  "etcd"  # consult , etcd
 address = "127.0.0.1"
 port =  2379
+timeout = 5 
 deregister_after_critical =  60
 health_check_interval =  10
 auto_register =  true

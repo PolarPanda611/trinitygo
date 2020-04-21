@@ -17,6 +17,7 @@ type Conf interface {
 	GetAppPort() int
 	GetServiceDiscoveryAddress() string
 	GetServiceDiscoveryPort() int
+	GetServiceDiscoveryTimeout() int
 	GetDeregisterAfterCritical() int
 	GetHealthCheckInterval() int
 	GetCAPemFile() string
@@ -91,6 +92,7 @@ type ServiceDiscovery struct {
 	Type                    string // etcd oor consul
 	Address                 string
 	Port                    int
+	Timeout                 int
 	DeregisterAfterCritical int  `toml:"deregister_after_critical"` //second
 	HealthCheckInterval     int  `toml:"health_check_interval"`     //second
 	AutoRegister            bool `toml:"auto_register"`
@@ -438,6 +440,12 @@ func (s *DefaultConf) GetServiceDiscoveryAddress() string {
 // GetServiceDiscoveryPort get service mesh port
 func (s *DefaultConf) GetServiceDiscoveryPort() int {
 	return s.ServiceDiscovery.Port
+}
+
+// GetServiceDiscoveryTimeout get service mesh port
+func (s *DefaultConf) GetServiceDiscoveryTimeout() int {
+	return s.ServiceDiscovery.Timeout
+
 }
 
 // GetDBType get db type
