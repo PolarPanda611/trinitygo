@@ -14,9 +14,6 @@ func New(app application.Application) gin.HandlerFunc {
 		method := fmt.Sprintf("%v@%v", c.Request.Method, c.FullPath())
 		runtimeKeyMap := application.DecodeHTTPRuntimeKey(c, app.RuntimeKeys())
 		tContext := app.ContextPool().Acquire(app, runtimeKeyMap, app.DB(), c)
-		if app.Conf().GetAtomicRequest() {
-			tContext.DBTx()
-		}
 		defer func() {
 			//release tcontext obj
 			app.ContextPool().Release(tContext)

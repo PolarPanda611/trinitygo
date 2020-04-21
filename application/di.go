@@ -26,6 +26,21 @@ func DiAllFields(dest interface{}, tctx Context, app Application, c *gin.Context
 				continue
 			}
 			if reflect.TypeOf(tctx).Implements(val.Type()) {
+				isTransaction := reflect.TypeOf(dest).Elem().Field(index).Tag.Get("transaction")
+				enableTx := false
+				if app.Conf().GetAtomicRequest() {
+					enableTx = true
+				}
+				if isTransaction != "" {
+					if isTransaction == "true" {
+						enableTx = true
+					} else {
+						enableTx = false
+					}
+				}
+				if enableTx {
+					tctx.DBTx()
+				}
 				val.Set(reflect.ValueOf(tctx))
 				continue
 			}
