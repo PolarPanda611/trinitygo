@@ -94,7 +94,7 @@ func (s *ControllerPool) GetController(controllerName string, tctx Context, app 
 		panic(fmt.Sprintf("unknown controller name : %v", controllerName))
 	}
 	controller := pool.Get()
-	sharedInstance := DiAllFields(controller, tctx, app, c)
+	sharedInstance := DiAllFields(controller, tctx, app, c, true)
 	return controller, sharedInstance
 }
 

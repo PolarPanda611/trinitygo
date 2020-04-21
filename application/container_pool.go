@@ -39,7 +39,7 @@ func (s *ContainerPool) GetContainer(containerType reflect.Type, tctx Context, a
 		panic("unknown service name")
 	}
 	service := pool.Get()
-	sharedInstance := DiAllFields(service, tctx, app, c)
+	sharedInstance := DiAllFields(service, tctx, app, c, false)
 	return service, sharedInstance
 }
 
