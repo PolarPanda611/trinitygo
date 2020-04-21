@@ -38,7 +38,7 @@ type UserController interface {
 // UserController  test
 type userControllerImpl struct {
 	UserSrv service.UserService
-	Tctx    application.Context
+	Tctx    application.Context `transaction:"false"`
 }
 
 // GET get func

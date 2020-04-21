@@ -35,7 +35,8 @@ func DiAllFields(dest interface{}, tctx Context, app Application, c *gin.Context
 					if isTransaction != "" {
 						if isTransaction == "true" {
 							enableTx = true
-						} else {
+						}
+						if isTransaction == "false" {
 							enableTx = false
 						}
 					}

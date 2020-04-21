@@ -184,6 +184,18 @@ atomic_request = true
 ...
 
 
+
+// if the controller you add the tag transaction 
+// this tag will replace the automic request 
+// if transaction is true , will get the db with tx 
+// if transaction is false , will get the db without tx
+// UserController  test
+type userControllerImpl struct {
+	UserSrv service.UserService
+	Tctx    application.Context `transaction:"false"`
+}
+
+
 ```
 
 * support customize validator 
