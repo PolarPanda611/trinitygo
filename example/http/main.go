@@ -33,6 +33,7 @@ func main() {
 	projectRootPath := path.Join(currentPath, "../")
 	configPath := fmt.Sprintf(projectRootPath + "/config/example.toml")
 	trinitygo.SetConfigPath(configPath)
+	trinitygo.EnableHealthCheckURL()
 	t := trinitygo.DefaultHTTP()
 	t.RegRuntimeKey(truntime.NewRuntimeKey("trace_id", false, func() string { return uuid.New().String() }, true))
 	t.RegRuntimeKey(truntime.NewRuntimeKey("user_id", false, func() string { return "" }, false))

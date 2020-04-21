@@ -14,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/PolarPanda611/trinitygo/httputil"
 	truntime "github.com/PolarPanda611/trinitygo/runtime"
 	"github.com/PolarPanda611/trinitygo/util"
 	"github.com/gin-contrib/cors"
@@ -47,12 +48,35 @@ import (
 )
 
 var (
-	_                   application.Application = new(Application)
-	_app                *Application
-	_initApp            sync.Once
-	_configPath         string = "./config/"
-	_bootingControllers []bootingController
-	_bootingContainers  []bootingContainer
+	_                          application.Application = new(Application)
+	_app                       *Application
+	_initApp                   sync.Once
+	_configPath                string = "./config/"
+	_bootingControllers        []bootingController
+	_bootingContainers         []bootingContainer
+	_healthCheckPath           string                                                 = "/ping"
+	_enableHealthCheckPath     bool                                                   = false
+	_defaultHealthCheckHandler func(app application.Application) func(c *gin.Context) = func(app application.Application) func(c *gin.Context) {
+		return func(c *gin.Context) {
+			err := app.DB().DB().Ping()
+			if err != nil {
+				c.AbortWithStatusJSON(400, httputil.ResponseData{
+					Status: 400,
+					Error:  err,
+				})
+				return
+			}
+			c.JSON(200, httputil.ResponseData{
+				Status: 200,
+				Result: gin.H{
+					"APIStatus": "alive",
+					"DBStatus":  "alive",
+					"DBInfo":    app.DB().DB().Stats(),
+				},
+			})
+			return
+		}
+	}
 )
 
 type bootingController struct {
@@ -95,6 +119,19 @@ type Application struct {
 // SetConfigPath set config path
 func SetConfigPath(path string) {
 	_configPath = path
+}
+
+// EnableHealthCheckURL set config path
+func EnableHealthCheckURL(path ...string) {
+	if len(path) > 0 {
+		_healthCheckPath = path[0]
+	}
+	_enableHealthCheckPath = true
+}
+
+// SetHealthCheckDefaultHandler set default health check handler
+func SetHealthCheckDefaultHandler(handler func(app application.Application) func(c *gin.Context)) {
+	_defaultHealthCheckHandler = handler
 }
 
 // SetDefaultHeaderPrefix set default header prefix
@@ -362,6 +399,12 @@ func (app *Application) InitGRPC() {
 	app.grpcServer = grpc.NewServer(opts...)
 }
 
+func (app *Application) initHealthCheck() {
+	app.router.GET(app.Conf().GetAppBaseURL()+_healthCheckPath, _defaultHealthCheckHandler(app))
+
+	app.Logger().Info(fmt.Sprintf("booting installing healthChecker : %v  -> %v ...installed", app.Conf().GetAppBaseURL()+_healthCheckPath, "_defaultHealthCheckHandler"))
+}
+
 // InitRouter init router
 // use gin framework by default
 func (app *Application) InitRouter() {
@@ -378,6 +421,9 @@ func (app *Application) InitRouter() {
 		}))
 	}
 	app.router.RedirectTrailingSlash = false
+	if _enableHealthCheckPath {
+		app.initHealthCheck()
+	}
 	app.router.GET(app.Conf().GetAppBaseURL()+"/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	for _, v := range app.middlewares {
 		app.router.Use(v)

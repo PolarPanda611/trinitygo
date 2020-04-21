@@ -41,6 +41,10 @@ done.
 // can see the example in example/http
 
 trinitygo.SetConfigPath(configPath)  // put config path here
+// by default the health check is disabled 
+//trinitygo.EnableHealthCheckURL("/v1/ping")  ==> // the health check path will be /baseurl/v1/ping
+//trinitygo.EnableHealthCheckURL()            ==> // if the path not set , the check path will be default /baseurl/ping
+//trinitygo.SetHealthCheckDefaultHandler(handler) == > also can use this func to change the default health check handler
 t := trinitygo.DefaultHTTP()
 t.InitHTTP()
 t.ServeHTTP()
