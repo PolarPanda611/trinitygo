@@ -15,8 +15,8 @@ package repository
 
 // 	"github.com/PolarPanda611/trinitygo"
 // 	"github.com/PolarPanda611/trinitygo/application"
-// 	"github.com/PolarPanda611/trinitygo/example/http/domain/object"
-// 	"github.com/PolarPanda611/trinitygo/example/http/domain/repository"
+// 	"{{.PackageName}}/domain/object"
+// 	"{{.PackageName}}/domain/repository"
 // )
 
 // func init() {

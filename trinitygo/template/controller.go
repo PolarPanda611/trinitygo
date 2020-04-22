@@ -1,7 +1,7 @@
 package template
 
 func init() {
-	_templates["/domain/controller/controller.go"] = genController()
+	_templates["/domain/controller/http/controller.go"] = genController()
 }
 
 func genController() string {

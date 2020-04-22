@@ -12,10 +12,13 @@ package main
 import (
 	"fmt"
 	"os"
+	
+	_ "{{.PackageName}}/domain/controller/http"
 
 	"github.com/PolarPanda611/trinitygo"
 	truntime "github.com/PolarPanda611/trinitygo/runtime"
 	"github.com/google/uuid"
+
 )
 
 // @title {{.PackageName}}

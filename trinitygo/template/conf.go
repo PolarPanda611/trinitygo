@@ -7,7 +7,7 @@ func init() {
 func genConf() string {
 	return `
 [project]
-name = "trinity"
+name = "{{.PackageName}}"
 version = "v1.0"
 tags = ["primary"]
 
@@ -56,7 +56,7 @@ migration_path =  "./static/migrations"
 page_size =  20
 max_body_size =  5242880
 atomic_request = true
-base_url = "/trinitygo"
+base_url = "/{{.PackageName}}"
 
 [log]
 log_root_path = "/var/log/trinity"
@@ -76,8 +76,8 @@ log_name = "app.log"
 
 [database]
 db_type = "postgres" #mysql  postgres
-server = "host=127.0.0.1 port=60901 user=trinity password= dbname=trinity sslmode=disable" #mysql option =  charset=utf8&parseTime=True&loc=Local
-table_prefix =  "trinity_"
+server = "host=127.0.0.1 port=60901 user={{.PackageName}} password= dbname={{.PackageName}} sslmode=disable" #mysql option =  charset=utf8&parseTime=True&loc=Local
+table_prefix =  "{{.PackageName}}_"
 max_idle_conn =  10
 max_open_conn =  100
 
