@@ -15,7 +15,9 @@ p.s: spring restframework like :)
 打开终端输入
 
 ```bash
-$ go get -u github.com/PolarPanda611/trinitygo
+$ go get -u github.com/PolarPanda611/trinitygo/trinitygo
+$ go install 
+$ trinity newhttp [Your Project Name]
 ```
 
 done.

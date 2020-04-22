@@ -410,6 +410,15 @@ func (app *Application) initHealthCheck() {
 func (app *Application) InitRouter() {
 	gin.DefaultWriter = ioutil.Discard
 	app.router = gin.New()
+
+	app.router.RedirectTrailingSlash = false
+	for _, v := range app.middlewares {
+		app.router.Use(v)
+	}
+	if _enableHealthCheckPath {
+		app.initHealthCheck()
+	}
+	app.router.GET(app.Conf().GetAppBaseURL()+"/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	if app.Conf().GetCorsEnable() {
 		app.router.Use(cors.New(cors.Config{
 			AllowOrigins:     app.Conf().GetAllowOrigins(),
@@ -419,14 +428,6 @@ func (app *Application) InitRouter() {
 			AllowCredentials: app.Conf().GetAllowCredentials(),
 			MaxAge:           time.Duration(app.Conf().GetMaxAgeHour()) * time.Hour,
 		}))
-	}
-	app.router.RedirectTrailingSlash = false
-	if _enableHealthCheckPath {
-		app.initHealthCheck()
-	}
-	app.router.GET(app.Conf().GetAppBaseURL()+"/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	for _, v := range app.middlewares {
-		app.router.Use(v)
 	}
 	for _, controllerName := range app.ControllerPool().GetControllerMap() {
 		controllerNameList := strings.Split(controllerName, "@")
@@ -441,7 +442,7 @@ func (app *Application) Router() *gin.Engine {
 	return app.router
 }
 
-// InitHTTP serve grpc
+// InitHTTP serve http
 func (app *Application) InitHTTP() {
 	app.InitTrinity()
 	app.InitRouter()
