@@ -11,24 +11,36 @@ import (
 type ContainerPool struct {
 	poolMap       map[reflect.Type]*sync.Pool
 	containerType []reflect.Type
+	poolTags      map[string]reflect.Type
 }
 
 // NewContainerPool new pool with init map
 func NewContainerPool() *ContainerPool {
 	result := new(ContainerPool)
 	result.poolMap = make(map[reflect.Type]*sync.Pool)
+	result.poolTags = make(map[string]reflect.Type)
 	return result
 
 }
 
 // NewContainer add new container
-func (s *ContainerPool) NewContainer(containerType reflect.Type, containerPool *sync.Pool) {
+func (s *ContainerPool) NewContainer(containerType reflect.Type, containerPool *sync.Pool, containerTags []string) {
 	s.poolMap[containerType] = containerPool
 	s.containerType = append(s.containerType, containerType)
+	if len(containerTags) > 0 {
+		if containerTags[0] != "" {
+			s.poolTags[containerTags[0]] = containerType
+		}
+	}
 }
 
 // GetContainerType get all service type
-func (s *ContainerPool) GetContainerType() []reflect.Type {
+func (s *ContainerPool) GetContainerType(tags string) []reflect.Type {
+	if tags != "" {
+		var types []reflect.Type
+		types = append(types, s.poolTags[tags])
+		return types
+	}
 	return s.containerType
 }
 

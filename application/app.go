@@ -16,6 +16,7 @@ import (
 
 // Application global app interface
 type Application interface {
+	IsLogSelfCheck() bool
 	Logger() *golog.Logger
 	RuntimeKeys() []truntime.RuntimeKey
 	Conf() conf.Conf

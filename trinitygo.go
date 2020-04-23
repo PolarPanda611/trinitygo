@@ -56,6 +56,7 @@ var (
 	_bootingContainers         []bootingContainer
 	_healthCheckPath           string                                                 = "/ping"
 	_enableHealthCheckPath     bool                                                   = false
+	_logSelfCheck              bool                                                   = true
 	_defaultHealthCheckHandler func(app application.Application) func(c *gin.Context) = func(app application.Application) func(c *gin.Context) {
 		return func(c *gin.Context) {
 			err := app.DB().DB().Ping()
@@ -88,13 +89,15 @@ type bootingController struct {
 type bootingContainer struct {
 	containerName reflect.Type
 	containerPool *sync.Pool
+	containerTags []string
 }
 
 // Application core of trinity
 type Application struct {
-	config      conf.Conf
-	logger      *golog.Logger
-	contextPool *application.ContextPool
+	config       conf.Conf
+	logger       *golog.Logger
+	logSelfCheck bool
+	contextPool  *application.ContextPool
 
 	// used for build
 	once           sync.Once
@@ -134,6 +137,12 @@ func SetHealthCheckDefaultHandler(handler func(app application.Application) func
 	_defaultHealthCheckHandler = handler
 }
 
+// SetIsLogSelfCheck set is log self check
+// bydefault , it is true
+func SetIsLogSelfCheck(isLog bool) {
+	_logSelfCheck = isLog
+}
+
 // SetDefaultHeaderPrefix set default header prefix
 func SetDefaultHeaderPrefix(newPrefix string) {
 	mruntime.DefaultHeaderPrefix = newPrefix
@@ -148,8 +157,9 @@ func GetDefaultHeaderPrefix() string {
 func New() application.Application {
 	_initApp.Do(func() {
 		_app = &Application{
-			logger: golog.Default,
-			config: conf.NewSetting(_configPath),
+			logger:       golog.Default,
+			config:       conf.NewSetting(_configPath),
+			logSelfCheck: _logSelfCheck,
 		}
 
 		appPrefix := fmt.Sprintf("[%v@%v]", util.GetServiceName(_app.config.GetProjectName()), _app.config.GetProjectVersion())
@@ -268,22 +278,25 @@ func (app *Application) InstallDB(f func() *gorm.DB) {
 }
 
 // BindContainer bind container
-func BindContainer(containerName reflect.Type, containerPool *sync.Pool) {
+func BindContainer(containerName reflect.Type, containerPool *sync.Pool, tags ...string) {
 	newContainer := bootingContainer{
 		containerName: containerName,
 		containerPool: containerPool,
+		containerTags: tags,
 	}
 	_bootingContainers = append(_bootingContainers, newContainer)
 }
 
+// IsLogSelfCheck if log self check
+func (app *Application) IsLogSelfCheck() bool {
+	return app.logSelfCheck
+}
 func (app *Application) initContainerPool() {
-
-	app.Logger().Info(fmt.Sprintf("booting installing container start"))
 	for _, container := range _bootingContainers {
-		app.containerPool.NewContainer(container.containerName, container.containerPool)
+		app.containerPool.NewContainer(container.containerName, container.containerPool, container.containerTags)
 		app.Logger().Info(fmt.Sprintf("booting installing container : %v ...installed", container.containerName))
 	}
-	line := fmt.Sprintf("booting installed %v container pool successfully", len(app.containerPool.GetContainerType()))
+	line := fmt.Sprintf("booting installed %v container pool successfully", len(app.containerPool.GetContainerType("")))
 	app.Logger().Info(line)
 }
 
@@ -311,20 +324,24 @@ func (app *Application) initControllerPool() {
 			app.controllerPool.NewControllerFunc(newControllerName, request.FuncName)
 			app.controllerPool.NewControllerValidators(newControllerName, request.Validators...)
 			realControllerName := strings.Replace(newControllerName, "@", " ==> ", -1)
-			if app.controllerPool.ControllSelfCheck(newControllerName) {
-				app.Logger().Info(fmt.Sprintf("booting installing controller : %v  -> %v ...installed", realControllerName, request.FuncName))
-			} else {
-				app.Logger().Info(fmt.Sprintf("booting installing controller : %v  -> no func registered, will use %v as default ...installed", realControllerName, request.Method))
-			}
+			app.Logger().Info(fmt.Sprintf("booting installing controller : %v  -> %v ...installed", realControllerName, request.FuncName))
+
 		}
 	}
 	line := fmt.Sprintf("booting installed %v controller pool successfully", len(app.controllerPool.GetControllerMap()))
 	app.Logger().Info(line)
 }
 
+func (app *Application) initSelfCheck() {
+	app.controllerPool.ControllerFuncSelfCheck(app.IsLogSelfCheck(), app.logger)
+	app.Logger().Info("booting self func checking controller successfully ")
+	app.controllerPool.ControllerDISelfCheck(app)
+}
 func (app *Application) initPool() {
 	app.initControllerPool()
 	app.initContainerPool()
+	app.initSelfCheck()
+
 }
 
 func (app *Application) initRuntime() {

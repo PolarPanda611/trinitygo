@@ -193,10 +193,11 @@ atomic_request = true
 // this tag will replace the automic request 
 // if transaction is true , will get the db with tx 
 // if transaction is false , will get the db without tx
-// UserController  test
+// if tag set autowired , system will auto inject this field 
+// with registered container 
 type userControllerImpl struct {
-	UserSrv service.UserService
-	Tctx    application.Context `transaction:"false"`
+	UserSrv service.UserService `autowired:"true"`
+	Tctx    application.Context `autowired:"true" transaction:"false"`
 }
 
 

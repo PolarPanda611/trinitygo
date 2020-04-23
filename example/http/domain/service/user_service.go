@@ -11,15 +11,17 @@ import (
 	"github.com/PolarPanda611/trinitygo/example/http/domain/repository"
 )
 
-var _ UserService = new(userServiceImpl)
+var _ UserService = new(UserServiceImpl)
 
 func init() {
-	trinitygo.BindContainer(reflect.TypeOf(&userServiceImpl{}), &sync.Pool{
+	trinitygo.BindContainer(reflect.TypeOf(&UserServiceImpl{}), &sync.Pool{
 		New: func() interface{} {
-			service := new(userServiceImpl)
+			service := new(UserServiceImpl)
 			return service
 		},
-	})
+	},
+		"UserService",
+	)
 }
 
 //UserService user service
@@ -28,17 +30,17 @@ type UserService interface {
 	GetUserList(query string) ([]object.User, error)
 }
 
-type userServiceImpl struct {
-	UserRepo repository.UserRepository
-	TCtx     application.Context
+type UserServiceImpl struct {
+	UserRepo repository.UserRepository `autowired:"true"`
+	Tctx     application.Context       `autowired:"true"`
 }
 
-func (s *userServiceImpl) GetUserByID(id int) (*object.User, error) {
+func (s *UserServiceImpl) GetUserByID(id int) (*object.User, error) {
 	fmt.Println("service run ")
 	return s.UserRepo.GetUserByID(id)
 }
 
-func (s *userServiceImpl) GetUserList(query string) ([]object.User, error) {
+func (s *UserServiceImpl) GetUserList(query string) ([]object.User, error) {
 	fmt.Println("service run ")
 	return s.UserRepo.GetUserList(query)
 }

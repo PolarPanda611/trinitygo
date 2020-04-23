@@ -10,6 +10,7 @@ import (
 	"github.com/PolarPanda611/trinitygo/example/http/domain/service"
 	"github.com/PolarPanda611/trinitygo/httputil"
 	"github.com/PolarPanda611/trinitygo/util"
+	"github.com/gin-gonic/gin"
 )
 
 var _ UserController = new(userControllerImpl)
@@ -37,8 +38,9 @@ type UserController interface {
 
 // UserController  test
 type userControllerImpl struct {
-	UserSrv service.UserService
-	Tctx    application.Context `transaction:"false"`
+	UserSrv service.UserService `autowired:"true" resource:"UserService"`
+	Tctx    application.Context `autowired:"true" transaction:"false"`
+	C       *gin.Context
 }
 
 // GET get func

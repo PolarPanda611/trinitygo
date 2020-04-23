@@ -8,6 +8,7 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	"github.com/kataras/golog"
 )
 
 // ControllerPool service pool
@@ -63,26 +64,41 @@ func (s *ControllerPool) GetControllerMap() []string {
 	return s.controllerMap
 }
 
-// ControllSelfCheck self check http request registered func exist or not
-func (s *ControllerPool) ControllSelfCheck(controllerName string) bool {
+// ControllerFuncSelfCheck self check http request registered func exist or not
+func (s *ControllerPool) ControllerFuncSelfCheck(isLog bool, logger *golog.Logger) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	pool, poolExist := s.poolMap[controllerName]
-	if !poolExist {
-		log.Fatalf("controller %v not registered , self check failed", controllerName)
+	for controllerName, pool := range s.poolMap {
+		funcName, funcExist := s.controllerFuncMap[controllerName]
+		if funcName == "" || !funcExist {
+			// func not exist
+			logger.Fatalf("booting self func checking controller %v , no func registered , self check failed ...", controllerName)
+		}
+		controller := pool.Get()
+		defer pool.Put(controller)
+		_, funcImpled := reflect.TypeOf(controller).MethodByName(funcName)
+		if !funcImpled {
+			log.Fatalf("booting self func checking controller %v , func %v not registered , self check failed ...", controllerName, funcName)
+		}
+		if isLog {
+			logger.Infof("booting self func checking controller %v , func %v checked ", controllerName, funcName)
+		}
 	}
-	funcName, funcExist := s.controllerFuncMap[controllerName]
-	if funcName == "" || !funcExist {
-		// func not exist
-		return false
+
+	return
+}
+
+// ControllerDISelfCheck  self check di request registered func exist or not
+func (s *ControllerPool) ControllerDISelfCheck(app Application) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	for controllerName, pool := range s.poolMap {
+		app.Logger().Infof("booting self DI checking controller %v ", controllerName)
+
+		DiSelfCheck(controllerName, pool, app)
 	}
-	controller := pool.Get()
-	defer pool.Put(controller)
-	_, funcImpled := reflect.TypeOf(controller).MethodByName(funcName)
-	if !funcImpled {
-		log.Fatalf("func %v not registered on controller %v , self check failed", funcName, controllerName)
-	}
-	return true
+	return
+
 }
 
 // GetController from pool

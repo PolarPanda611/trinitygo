@@ -29,7 +29,6 @@ var (
 				return db.Where("xxxxx = ?", queryValue)
 			},
 		},
-		IsDebug: false,
 	}
 )
 
@@ -40,7 +39,9 @@ func init() {
 			repo.queryHandler = queryutil.New(_userConfig)
 			return repo
 		},
-	})
+	},
+		"UserRepository",
+	)
 }
 
 // UserRepository user repository
@@ -50,14 +51,14 @@ type UserRepository interface {
 }
 
 type userRepositoryImpl struct {
-	TCtx         application.Context
+	Tctx         application.Context `autowired:"true"`
 	queryHandler queryutil.QueryHandler
 }
 
 func (r *userRepositoryImpl) GetUserByID(id int) (*object.User, error) {
 	fmt.Println("repo run ")
 	var user object.User
-	if err := r.TCtx.DB().Where("id = ?", id).First(&user).Error; err != nil {
+	if err := r.Tctx.DB().Where("id = ?", id).First(&user).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
@@ -66,7 +67,7 @@ func (r *userRepositoryImpl) GetUserByID(id int) (*object.User, error) {
 func (r *userRepositoryImpl) GetUserList(query string) ([]object.User, error) {
 	fmt.Println("repo run ")
 	var user []object.User
-	if err := r.TCtx.DB().Scopes(
+	if err := r.Tctx.DB().Scopes(
 		r.queryHandler.HandleWithPagination(query)...,
 	).Find(&user).Error; err != nil {
 		return nil, err
