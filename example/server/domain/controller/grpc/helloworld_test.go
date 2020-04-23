@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
+	"path"
 	"testing"
 
 	"github.com/PolarPanda611/trinitygo"
@@ -26,7 +28,10 @@ var lis *bufconn.Listener
 func init() {
 	const bufSize = 1024 * 1024
 	lis = bufconn.Listen(bufSize)
-	trinitygo.SetConfigPath("/Users/daniel/Documents/workspace/trinitygo/example/config/example.toml")
+	currentPath, _ := os.Getwd()
+	projectRootPath := path.Join(currentPath, "../../../../")
+	configPath := fmt.Sprintf(projectRootPath + "/config/example.toml")
+	trinitygo.SetConfigPath(configPath)
 	t := trinitygo.DefaultGRPC()
 	t.RegRuntimeKey(truntime.NewRuntimeKey("trace_id", true, func() string { return "" }, true))
 	t.RegRuntimeKey(truntime.NewRuntimeKey("user_id", true, func() string { return "" }, true))
