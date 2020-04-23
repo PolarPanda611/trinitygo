@@ -3,7 +3,6 @@ package http
 import (
 	"errors"
 	"strconv"
-	"sync"
 
 	"github.com/PolarPanda611/trinitygo"
 	"github.com/PolarPanda611/trinitygo/application"
@@ -16,13 +15,7 @@ import (
 var _ UserController = new(userControllerImpl)
 
 func init() {
-	trinitygo.BindController("/users",
-		&sync.Pool{
-			New: func() interface{} {
-				controller := new(userControllerImpl)
-				return controller
-			},
-		},
+	trinitygo.BindController("/users", userControllerImpl{},
 		//  GET  /users/:id  --> GET  from userControllerImpl
 		// application.NewRequestMapping(httputil.GET, "/:id", "GET", PermissionValidator([]string{"manager"}), gValidator, g1Validator),
 		application.NewRequestMapping(httputil.GET, "/:id", "GET"),

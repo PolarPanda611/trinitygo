@@ -2,8 +2,6 @@ package repository
 
 import (
 	"fmt"
-	"reflect"
-	"sync"
 
 	"github.com/PolarPanda611/trinitygo"
 
@@ -13,12 +11,7 @@ import (
 var _ UserRepo = new(UserRepoImpl)
 
 func init() {
-	trinitygo.BindContainer(reflect.TypeOf(&UserRepoImpl{}), &sync.Pool{
-		New: func() interface{} {
-			service := new(UserRepoImpl)
-			return service
-		},
-	})
+	trinitygo.BindContainer(UserRepoImpl{})
 }
 
 // UserRepo user repo

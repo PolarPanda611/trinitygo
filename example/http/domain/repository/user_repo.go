@@ -2,8 +2,6 @@ package repository
 
 import (
 	"fmt"
-	"reflect"
-	"sync"
 
 	"github.com/PolarPanda611/trinitygo"
 	"github.com/PolarPanda611/trinitygo/application"
@@ -17,7 +15,7 @@ var (
 	_userConfig *queryutil.QueryConfig = &queryutil.QueryConfig{
 		FilterBackend: nil,
 		PageSize:      20,
-		FilterList:    []string{"user_name"},
+		FilterList:    []string{"user_name", "user_name__ilike"},
 		OrderByList:   []string{"id"},
 		SearchByList:  []string{"user_name", "email"},
 		PreloadList: map[string]func(db *gorm.DB) *gorm.DB{
@@ -33,15 +31,7 @@ var (
 )
 
 func init() {
-	trinitygo.BindContainer(reflect.TypeOf(&userRepositoryImpl{}), &sync.Pool{
-		New: func() interface{} {
-			repo := new(userRepositoryImpl)
-			repo.queryHandler = queryutil.New(_userConfig)
-			return repo
-		},
-	},
-		"UserRepository",
-	)
+	trinitygo.BindContainer(userRepositoryImpl{}, "UserRepository")
 }
 
 // UserRepository user repository
@@ -52,7 +42,7 @@ type UserRepository interface {
 
 type userRepositoryImpl struct {
 	Tctx         application.Context `autowired:"true"`
-	queryHandler queryutil.QueryHandler
+	QueryHandler queryutil.QueryHandler
 }
 
 func (r *userRepositoryImpl) GetUserByID(id int) (*object.User, error) {
@@ -67,8 +57,9 @@ func (r *userRepositoryImpl) GetUserByID(id int) (*object.User, error) {
 func (r *userRepositoryImpl) GetUserList(query string) ([]object.User, error) {
 	fmt.Println("repo run ")
 	var user []object.User
+	r.QueryHandler = queryutil.New(_userConfig)
 	if err := r.Tctx.DB().Scopes(
-		r.queryHandler.HandleWithPagination(query)...,
+		r.QueryHandler.HandleWithPagination(query)...,
 	).Find(&user).Error; err != nil {
 		return nil, err
 	}

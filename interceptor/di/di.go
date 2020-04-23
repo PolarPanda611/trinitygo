@@ -23,7 +23,6 @@ func New(app application.Application) func(ctx context.Context, req interface{},
 
 		controller, sharedInstance := app.ControllerPool().GetController(method[1], tContext, app, nil)
 		defer func() {
-			app.ControllerPool().Release(method[1], controller)
 			for _, v := range sharedInstance {
 				app.ContainerPool().Release(v)
 			}

@@ -20,7 +20,6 @@ func New(app application.Application) gin.HandlerFunc {
 		}()
 		controller, sharedInstance := app.ControllerPool().GetController(method, tContext, app, c)
 		defer func() {
-			app.ControllerPool().Release(method, controller)
 			for _, v := range sharedInstance {
 				app.ContainerPool().Release(v)
 			}

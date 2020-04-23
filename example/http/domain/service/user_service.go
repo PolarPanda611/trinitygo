@@ -2,8 +2,6 @@ package service
 
 import (
 	"fmt"
-	"reflect"
-	"sync"
 
 	"github.com/PolarPanda611/trinitygo"
 	"github.com/PolarPanda611/trinitygo/application"
@@ -11,17 +9,10 @@ import (
 	"github.com/PolarPanda611/trinitygo/example/http/domain/repository"
 )
 
-var _ UserService = new(UserServiceImpl)
+var _ UserService = new(userServiceImpl)
 
 func init() {
-	trinitygo.BindContainer(reflect.TypeOf(&UserServiceImpl{}), &sync.Pool{
-		New: func() interface{} {
-			service := new(UserServiceImpl)
-			return service
-		},
-	},
-		"UserService",
-	)
+	trinitygo.BindContainer(userServiceImpl{}, "UserService")
 }
 
 //UserService user service
@@ -30,17 +21,17 @@ type UserService interface {
 	GetUserList(query string) ([]object.User, error)
 }
 
-type UserServiceImpl struct {
-	UserRepo repository.UserRepository `autowired:"true"`
+type userServiceImpl struct {
+	UserRepo repository.UserRepository `autowired:"true" resource:"UserRepository"`
 	Tctx     application.Context       `autowired:"true"`
 }
 
-func (s *UserServiceImpl) GetUserByID(id int) (*object.User, error) {
+func (s *userServiceImpl) GetUserByID(id int) (*object.User, error) {
 	fmt.Println("service run ")
 	return s.UserRepo.GetUserByID(id)
 }
 
-func (s *UserServiceImpl) GetUserList(query string) ([]object.User, error) {
+func (s *userServiceImpl) GetUserList(query string) ([]object.User, error) {
 	fmt.Println("service run ")
 	return s.UserRepo.GetUserList(query)
 }

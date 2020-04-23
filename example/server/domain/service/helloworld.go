@@ -1,9 +1,6 @@
 package service
 
 import (
-	"reflect"
-	"sync"
-
 	"github.com/PolarPanda611/trinitygo"
 	"github.com/PolarPanda611/trinitygo/application"
 	"github.com/PolarPanda611/trinitygo/example/server/domain/repository"
@@ -12,12 +9,7 @@ import (
 var _ UserService = new(UserServiceImpl)
 
 func init() {
-	trinitygo.BindContainer(reflect.TypeOf(&UserServiceImpl{}), &sync.Pool{
-		New: func() interface{} {
-			service := new(UserServiceImpl)
-			return service
-		},
-	})
+	trinitygo.BindContainer(UserServiceImpl{})
 }
 
 // UserService user service

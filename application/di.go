@@ -66,7 +66,7 @@ func DiSelfCheck(destName interface{}, pool *sync.Pool, app Application) {
 		}
 		if val.Kind() == reflect.Interface {
 			if reflect.TypeOf(&ContextImpl{}).Implements(val.Type()) {
-				app.Logger().Warnf("booting self DI checking Inject param: %v ,type:%v , injected ",
+				app.Logger().Infof("booting self DI checking Inject param: %v ,type:%v , injected ",
 					reflect.TypeOf(controller).Elem().Field(index).Name,
 					val.Type())
 				continue
@@ -84,7 +84,7 @@ func DiSelfCheck(destName interface{}, pool *sync.Pool, app Application) {
 }
 
 // DiAllFields di service pool
-func DiAllFields(dest interface{}, tctx Context, app Application, c *gin.Context, isController bool) map[reflect.Type]interface{} {
+func DiAllFields(dest interface{}, tctx Context, app Application, c *gin.Context) map[reflect.Type]interface{} {
 	sharedInstance := make(map[reflect.Type]interface{})
 	destVal := reflect.Indirect(reflect.ValueOf(dest))
 	for index := 0; index < destVal.NumField(); index++ {
@@ -122,7 +122,7 @@ func DiAllFields(dest interface{}, tctx Context, app Application, c *gin.Context
 		}
 		if val.Kind() == reflect.Interface {
 			if reflect.TypeOf(tctx).Implements(val.Type()) {
-				if isController {
+				if !tctx.DBTxIsOpen() {
 					enableTx := false
 					if app.Conf().GetAtomicRequest() {
 						enableTx = true
@@ -210,7 +210,7 @@ func GetResourceTags(object interface{}, index int) string {
 
 func availableContainerLogger(availableInjectContainer int, dest interface{}, index int, val reflect.Value, logger *golog.Logger, availableInjectType []reflect.Type) {
 	if availableInjectContainer == 1 {
-		logger.Warnf("booting self DI checking Inject param: %v ,type:%v ,container: %v ...injected ",
+		logger.Infof("booting self DI checking Inject param: %v ,type:%v ,container: %v ...injected ",
 			reflect.TypeOf(dest).Elem().Field(index).Name,
 			val.Type(),
 			availableInjectType[0],

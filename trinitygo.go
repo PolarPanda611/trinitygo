@@ -82,7 +82,7 @@ var (
 
 type bootingController struct {
 	controllerName string
-	controllerPool *sync.Pool
+	container      interface{}
 	requestMaps    []*application.RequestMap
 }
 
@@ -277,50 +277,51 @@ func (app *Application) InstallDB(f func() *gorm.DB) {
 	app.Logger().Info("booting detected db initializer ...install successfully , test passed ! ")
 }
 
-// BindContainer bind container
-func BindContainer(containerName reflect.Type, containerPool *sync.Pool, tags ...string) {
-	newContainer := bootingContainer{
-		containerName: containerName,
-		containerPool: containerPool,
-		containerTags: tags,
-	}
-	_bootingContainers = append(_bootingContainers, newContainer)
-}
-
 // IsLogSelfCheck if log self check
 func (app *Application) IsLogSelfCheck() bool {
 	return app.logSelfCheck
 }
-func (app *Application) initContainerPool() {
-	for _, container := range _bootingContainers {
-		app.containerPool.NewContainer(container.containerName, container.containerPool, container.containerTags)
-		app.Logger().Info(fmt.Sprintf("booting installing container : %v ...installed", container.containerName))
-	}
-	line := fmt.Sprintf("booting installed %v container pool successfully", len(app.containerPool.GetContainerType("")))
-	app.Logger().Info(line)
-}
 
 // BindController bind service
-func BindController(controllerName string, controllerPool *sync.Pool, requestMaps ...*application.RequestMap) {
+func BindController(controllerName string, container interface{}, requestMaps ...*application.RequestMap) {
 	newController := bootingController{
 		controllerName: controllerName,
-		controllerPool: controllerPool,
+		container:      container,
 		requestMaps:    requestMaps,
 	}
 	_bootingControllers = append(_bootingControllers, newController)
+}
+
+// BindContainer bind container
+func BindContainer(container interface{}, tags ...string) {
+	if reflect.TypeOf(container).Kind() != reflect.Struct {
+		log.Fatal("The container should be struct ")
+	}
+	newContainer := bootingContainer{
+		containerName: reflect.New(reflect.TypeOf(container)).Type(),
+		containerPool: &sync.Pool{
+			New: func() interface{} {
+				return reflect.New(reflect.TypeOf(container)).Interface()
+			},
+		},
+		containerTags: tags,
+	}
+	_bootingContainers = append(_bootingContainers, newContainer)
 }
 
 func (app *Application) initControllerPool() {
 	app.Logger().Info(fmt.Sprintf("booting installing controller start"))
 	for _, controller := range _bootingControllers {
 		if len(controller.requestMaps) == 0 {
-			app.controllerPool.NewController(controller.controllerName, controller.controllerPool)
+			app.controllerPool.NewController(controller.controllerName, reflect.New(reflect.TypeOf(controller.container)).Type())
+			BindContainer(controller.container, controller.controllerName)
 			app.Logger().Info(fmt.Sprintf("booting installing controller : %v ...installed", controller.controllerName))
 			continue
 		}
 		for _, request := range controller.requestMaps {
 			newControllerName := fmt.Sprintf("%v@%v%v%v", request.Method, app.Conf().GetAppBaseURL(), controller.controllerName, request.SubPath)
-			app.controllerPool.NewController(newControllerName, controller.controllerPool)
+			app.controllerPool.NewController(newControllerName, reflect.New(reflect.TypeOf(controller.container)).Type())
+			BindContainer(controller.container, newControllerName)
 			app.controllerPool.NewControllerFunc(newControllerName, request.FuncName)
 			app.controllerPool.NewControllerValidators(newControllerName, request.Validators...)
 			realControllerName := strings.Replace(newControllerName, "@", " ==> ", -1)
@@ -332,10 +333,25 @@ func (app *Application) initControllerPool() {
 	app.Logger().Info(line)
 }
 
+func (app *Application) initContainerPool() {
+	for _, container := range _bootingContainers {
+		if len(container.containerTags) > 0 && len(app.containerPool.GetContainerType(container.containerTags[0])) > 0 {
+			app.Logger().Fatalf("booting installing container : %v failed ,container with tag %v already exists", container.containerName, container.containerTags[0])
+		}
+		if app.containerPool.CheckContainerNameIfExist(container.containerName) {
+			continue
+		}
+		app.containerPool.NewContainer(container.containerName, container.containerPool, container.containerTags)
+		app.Logger().Info(fmt.Sprintf("booting installing container : %v ...installed", container.containerName))
+	}
+	line := fmt.Sprintf("booting installed %v container pool successfully", len(app.containerPool.GetContainerType("")))
+	app.Logger().Info(line)
+}
+
 func (app *Application) initSelfCheck() {
-	app.controllerPool.ControllerFuncSelfCheck(app.IsLogSelfCheck(), app.logger)
+	app.controllerPool.ControllerFuncSelfCheck(app.containerPool, app.IsLogSelfCheck(), app.logger)
 	app.Logger().Info("booting self func checking controller successfully ")
-	app.controllerPool.ControllerDISelfCheck(app)
+	app.containerPool.ContainerDISelfCheck(app)
 }
 func (app *Application) initPool() {
 	app.initControllerPool()

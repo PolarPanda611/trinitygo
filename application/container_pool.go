@@ -25,6 +25,9 @@ func NewContainerPool() *ContainerPool {
 
 // NewContainer add new container
 func (s *ContainerPool) NewContainer(containerType reflect.Type, containerPool *sync.Pool, containerTags []string) {
+	if _, ok := s.poolMap[containerType]; ok {
+		return
+	}
 	s.poolMap[containerType] = containerPool
 	s.containerType = append(s.containerType, containerType)
 	if len(containerTags) > 0 {
@@ -38,10 +41,30 @@ func (s *ContainerPool) NewContainer(containerType reflect.Type, containerPool *
 func (s *ContainerPool) GetContainerType(tags string) []reflect.Type {
 	if tags != "" {
 		var types []reflect.Type
-		types = append(types, s.poolTags[tags])
+		if container, ok := s.poolTags[tags]; ok {
+			types = append(types, container)
+			return types
+		}
 		return types
 	}
 	return s.containerType
+}
+
+// CheckContainerNameIfExist check contain name if exist
+func (s *ContainerPool) CheckContainerNameIfExist(containerName reflect.Type) bool {
+	_, ok := s.poolMap[containerName]
+	return ok
+}
+
+// ContainerDISelfCheck  self check di request registered func exist or not
+func (s *ContainerPool) ContainerDISelfCheck(app Application) {
+	for controllerName, pool := range s.poolMap {
+		app.Logger().Infof("booting self DI checking container %v ", controllerName)
+
+		DiSelfCheck(controllerName, pool, app)
+	}
+	return
+
 }
 
 // GetContainer get service with di
@@ -51,7 +74,7 @@ func (s *ContainerPool) GetContainer(containerType reflect.Type, tctx Context, a
 		panic("unknown service name")
 	}
 	service := pool.Get()
-	sharedInstance := DiAllFields(service, tctx, app, c, false)
+	sharedInstance := DiAllFields(service, tctx, app, c)
 	return service, sharedInstance
 }
 

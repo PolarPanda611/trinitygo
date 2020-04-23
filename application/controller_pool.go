@@ -17,7 +17,7 @@ import (
 // need to filter controllerFuncMap to filter funcname
 type ControllerPool struct {
 	mu                   sync.RWMutex
-	poolMap              map[string]*sync.Pool
+	containerMap         map[string]reflect.Type
 	controllerMap        []string
 	controllerFuncMap    map[string]string
 	controllerValidators map[string][]Validator
@@ -28,7 +28,7 @@ func NewControllerPool() *ControllerPool {
 	result := new(ControllerPool)
 	result.mu.Lock()
 	defer result.mu.Unlock()
-	result.poolMap = make(map[string]*sync.Pool)
+	result.containerMap = make(map[string]reflect.Type)
 	result.controllerFuncMap = make(map[string]string)
 	result.controllerValidators = make(map[string][]Validator)
 	return result
@@ -36,10 +36,10 @@ func NewControllerPool() *ControllerPool {
 }
 
 // NewController add new service
-func (s *ControllerPool) NewController(controllerType string, controllerPool *sync.Pool) {
+func (s *ControllerPool) NewController(controllerType string, container reflect.Type) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.poolMap[controllerType] = controllerPool
+	s.containerMap[controllerType] = container
 	s.controllerMap = append(s.controllerMap, controllerType)
 }
 
@@ -65,18 +65,23 @@ func (s *ControllerPool) GetControllerMap() []string {
 }
 
 // ControllerFuncSelfCheck self check http request registered func exist or not
-func (s *ControllerPool) ControllerFuncSelfCheck(isLog bool, logger *golog.Logger) {
+func (s *ControllerPool) ControllerFuncSelfCheck(contailerPool *ContainerPool, isLog bool, logger *golog.Logger) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	for controllerName, pool := range s.poolMap {
+	for controllerName, containerName := range s.containerMap {
 		funcName, funcExist := s.controllerFuncMap[controllerName]
 		if funcName == "" || !funcExist {
 			// func not exist
 			logger.Fatalf("booting self func checking controller %v , no func registered , self check failed ...", controllerName)
 		}
-		controller := pool.Get()
-		defer pool.Put(controller)
-		_, funcImpled := reflect.TypeOf(controller).MethodByName(funcName)
+		containerPool, ok := contailerPool.poolMap[containerName]
+		if !ok {
+			// func not exist
+			logger.Fatalf("booting self func checking controller %v , no container %v registered , self check failed ...", controllerName, containerName)
+		}
+		container := containerPool.Get()
+		defer containerPool.Put(container)
+		_, funcImpled := reflect.TypeOf(container).MethodByName(funcName)
 		if !funcImpled {
 			log.Fatalf("booting self func checking controller %v , func %v not registered , self check failed ...", controllerName, funcName)
 		}
@@ -88,30 +93,15 @@ func (s *ControllerPool) ControllerFuncSelfCheck(isLog bool, logger *golog.Logge
 	return
 }
 
-// ControllerDISelfCheck  self check di request registered func exist or not
-func (s *ControllerPool) ControllerDISelfCheck(app Application) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	for controllerName, pool := range s.poolMap {
-		app.Logger().Infof("booting self DI checking controller %v ", controllerName)
-
-		DiSelfCheck(controllerName, pool, app)
-	}
-	return
-
-}
-
 // GetController from pool
 func (s *ControllerPool) GetController(controllerName string, tctx Context, app Application, c *gin.Context) (interface{}, map[reflect.Type]interface{}) {
 	s.mu.RLock()
-	pool, ok := s.poolMap[controllerName]
+	containerName, ok := s.containerMap[controllerName]
 	s.mu.RUnlock()
 	if !ok {
 		panic(fmt.Sprintf("unknown controller name : %v", controllerName))
 	}
-	controller := pool.Get()
-	sharedInstance := DiAllFields(controller, tctx, app, c, true)
-	return controller, sharedInstance
+	return app.ContainerPool().GetContainer(containerName, tctx, app, c)
 }
 
 // GetControllerFuncName get controller func name
@@ -138,18 +128,5 @@ func (s *ControllerPool) GetControllerValidators(controllerName string) []Valida
 		return nil
 	}
 	return validators
-
-}
-
-// Release release controller to pool
-func (s *ControllerPool) Release(controllerName string, controller interface{}) {
-	s.mu.RLock()
-	pool, ok := s.poolMap[controllerName]
-	s.mu.RUnlock()
-	if !ok {
-		panic("unknown controller name")
-	}
-	DiFree(controller)
-	pool.Put(controller)
 
 }
