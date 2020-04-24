@@ -20,12 +20,7 @@ package service
 // )
 
 // func init() {
-// 	trinitygo.BindContainer(reflect.TypeOf("&userServiceImpl{} <- YOURSERVICE"), &sync.Pool{
-// 		New: func() interface{} {
-// 			service := new(userServiceImpl  < - userServiceImpl)
-// 			return service
-// 		},
-// 	})
+// 	trinitygo.BindContainer(userServiceImpl{})
 // }
 
 	`

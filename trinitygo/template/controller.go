@@ -17,14 +17,9 @@ package http
 // )
 
 // func init() {
-// 	trinitygo.BindController("/YOURBASEURL",
-// 		&sync.Pool{
-// 			New: func() interface{} {
-// 				controller := new("YOURCONTROLLER")
-// 				return controller
-// 			},
-// 		},
-// 		application.NewRequestMapping(httputil.GET, "YOURSUBPATH", "YOURFUNC"),
+// 	trinitygo.BindController("/users", userControllerImpl{},
+// 		application.NewRequestMapping(httputil.GET, "/:id", "GET"),
+// 		application.NewRequestMapping(httputil.GET, "", "Getsssss"),
 // 	)
 // }
 `

@@ -20,13 +20,8 @@ package repository
 // )
 
 // func init() {
-// 	trinitygo.BindContainer(reflect.TypeOf("&userRepositoryImpl{} <- YOURSERVICE"), &sync.Pool{
-// 		New: func() interface{} {
-// 			repository := new(userRepositoryImpl  < - YOURREPOSITORY)
-// 			return repository
-// 		},
-// 	})
+// 	trinitygo.BindContainer(userRepositoryImpl{}}
 // }
 
-	`
+`
 }
