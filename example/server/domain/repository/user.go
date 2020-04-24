@@ -21,7 +21,7 @@ type UserRepo interface {
 
 // UserRepoImpl user repo impl
 type UserRepoImpl struct {
-	TContext application.Context
+	TContext application.Context `autowired:"true"`
 }
 
 // Print user repo impl print method

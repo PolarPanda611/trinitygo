@@ -16,8 +16,6 @@ var _ UserController = new(userControllerImpl)
 
 func init() {
 	trinitygo.BindController("/users", userControllerImpl{},
-		//  GET  /users/:id  --> GET  from userControllerImpl
-		// application.NewRequestMapping(httputil.GET, "/:id", "GET", PermissionValidator([]string{"manager"}), gValidator, g1Validator),
 		application.NewRequestMapping(httputil.GET, "/:id", "GET"),
 		application.NewRequestMapping(httputil.GET, "", "Getsssss"),
 	)

@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	address     = ":9000"
+	address     = ":8088"
 	defaultName = "test trinity go "
 )
 

@@ -19,8 +19,8 @@ type UserService interface {
 
 // UserServiceImpl user service iompl
 type UserServiceImpl struct {
-	UserRepo repository.UserRepo
-	TContext application.Context
+	UserRepo repository.UserRepo `autowired:"true"`
+	TContext application.Context `autowired:"true"`
 }
 
 // GetUserNameByID method

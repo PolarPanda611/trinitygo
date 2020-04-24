@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"context"
-	"sync"
 
 	helloworldpb "github.com/PolarPanda611/trinitygo/example/pb/helloworld"
 
@@ -12,17 +11,12 @@ import (
 )
 
 func init() {
-	trinitygo.BindController("helloworld.Greeter", &sync.Pool{
-		New: func() interface{} {
-			service := new(Server)
-			return service
-		},
-	})
+	trinitygo.BindController("helloworld.Greeter", Server{})
 }
 
 // Server is used to implement helloworld.GreeterServer.
 type Server struct {
-	UserService service.UserService
+	UserService service.UserService `autowired:"true"`
 }
 
 // SayHello implements helloworld.GreeterServer

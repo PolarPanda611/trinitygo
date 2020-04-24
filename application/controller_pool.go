@@ -3,6 +3,7 @@ package application
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"sync"
 
 	"log"
@@ -69,8 +70,14 @@ func (s *ControllerPool) ControllerFuncSelfCheck(contailerPool *ContainerPool, i
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	for controllerName, containerName := range s.containerMap {
+		controllerNameDecode := strings.Split(controllerName, "@")
+		if len(controllerNameDecode) == 1 {
+			// GRPC
+			return
+		}
 		funcName, funcExist := s.controllerFuncMap[controllerName]
 		if funcName == "" || !funcExist {
+			funcName = controllerNameDecode[0]
 			// func not exist
 			logger.Fatalf("booting self func checking controller %v , no func registered , self check failed ...", controllerName)
 		}
