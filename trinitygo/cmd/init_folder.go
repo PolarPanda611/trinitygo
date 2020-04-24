@@ -5,6 +5,8 @@ import "os"
 func initHTTPFolder(rootPath string) {
 	os.MkdirAll(rootPath, os.ModePerm)
 	os.MkdirAll(rootPath+"/conf", os.ModePerm)
+	os.MkdirAll(rootPath+"/static", os.ModePerm)
+	os.MkdirAll(rootPath+"/media", os.ModePerm)
 	os.MkdirAll(rootPath+"/domain", os.ModePerm)
 	os.MkdirAll(rootPath+"/domain/entity", os.ModePerm)
 	os.MkdirAll(rootPath+"/domain/object", os.ModePerm)
@@ -18,6 +20,8 @@ func initHTTPFolder(rootPath string) {
 func initGRPCFolder(rootPath string) {
 	os.MkdirAll(rootPath, os.ModePerm)
 	os.MkdirAll(rootPath+"/conf", os.ModePerm)
+	os.MkdirAll(rootPath+"/static", os.ModePerm)
+	os.MkdirAll(rootPath+"/media", os.ModePerm)
 	os.MkdirAll(rootPath+"/domain", os.ModePerm)
 	os.MkdirAll(rootPath+"/domain/entity", os.ModePerm)
 	os.MkdirAll(rootPath+"/domain/object", os.ModePerm)
