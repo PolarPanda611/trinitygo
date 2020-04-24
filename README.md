@@ -99,19 +99,15 @@ t.ServeHTTP()
 // the new request mapping will add new router 
 // to trinity router 
 // @this example 
+// the container has to be struct 
+// add the tag name as you want , 
+// and you can also leave it as blank 
 // router : 
 // GET --->  /users/:id   ==> GET func as the handler  
 // GET --->  /users       ==> Getsssss func as the handler  
 func init() {
-	trinitygo.BindController("/users",
-		&sync.Pool{
-			New: func() interface{} {
-				controller := new(userControllerImpl)
-				return controller
-			},
-		},
+	trinitygo.BindController("/users",userControllerImpl{},
 		application.NewRequestMapping(httputil.GET, "/:id", "GET", PermissionValidator([]string{"manager"}), gValidator, g1Validator),
-		// application.NewRequestMapping(httputil.GET, "/:id", "GET"),
 		application.NewRequestMapping(httputil.GET, "", "Getsssss"),
 	)
 }
@@ -123,13 +119,11 @@ func init() {
 // You can bind your service and repository layer to container 
 // The container will auto dependency injection to your 
 // controller 
+// the container has to be struct 
+// add the tag name as you want , 
+// and you can also leave it as blank 
 func init() {
-	trinitygo.BindContainer(reflect.TypeOf(&userServiceImpl{}), &sync.Pool{
-		New: func() interface{} {
-			service := new(userServiceImpl)
-			return service
-		},
-	})
+	trinitygo.BindContainer(userServiceImpl{} , "xxxx")
 }
 
 ```
@@ -195,8 +189,10 @@ atomic_request = true
 // if transaction is false , will get the db without tx
 // if tag set autowired , system will auto inject this field 
 // with registered container 
+// if want to point to the specfic container 
+// add resource tag 
 type userControllerImpl struct {
-	UserSrv service.UserService `autowired:"true"`
+	UserSrv service.UserService `autowired:"true" resource="xxxxx"`
 	Tctx    application.Context `autowired:"true" transaction:"false"`
 }
 
