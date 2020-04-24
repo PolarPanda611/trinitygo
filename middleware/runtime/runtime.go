@@ -9,9 +9,6 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-// DefaultHeaderPrefix will be used in set header as prefix
-var DefaultHeaderPrefix = "trinity_"
-
 // New runtime middleware
 func New(app application.Application) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -30,7 +27,7 @@ func New(app application.Application) gin.HandlerFunc {
 				}
 				c.Set(v.GetKeyName(), v.GetDefaultValue())
 				if v.IsLog() {
-					c.Header(fmt.Sprintf("%v%v", DefaultHeaderPrefix, v.GetKeyName()), v.GetDefaultValue())
+					c.Header(v.GetKeyName(), v.GetDefaultValue())
 				}
 			}
 		}
