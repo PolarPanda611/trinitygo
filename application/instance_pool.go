@@ -9,9 +9,15 @@ import (
 
 // InstancePool service pool
 type InstancePool struct {
-	poolMap          map[reflect.Type]*sync.Pool
+	// map[instanceName] = instancePool
+	poolMap map[reflect.Type]*sync.Pool
+	// instance list
 	instanceTypeList []reflect.Type
-	poolTags         map[string]reflect.Type
+	// instance tags maps instanceName
+	poolTags map[string]reflect.Type
+	// instanceMapping instance mapping
+	// caching the instance di instance relation during the self check
+	instanceMapping map[reflect.Type]reflect.Type
 }
 
 // NewInstancePool new pool with init map
@@ -19,6 +25,7 @@ func NewInstancePool() *InstancePool {
 	result := new(InstancePool)
 	result.poolMap = make(map[reflect.Type]*sync.Pool)
 	result.poolTags = make(map[string]reflect.Type)
+	result.instanceMapping = make(map[reflect.Type]reflect.Type)
 	return result
 
 }
@@ -77,6 +84,9 @@ func (s *InstancePool) GetInstance(instanceType reflect.Type, tctx Context, app 
 	sharedInstance := DiAllFields(service, tctx, app, c)
 	return service, sharedInstance
 }
+
+// InstanceMapping instance mapping
+func (s *InstancePool) InstanceMapping() {}
 
 // Release release service
 func (s *InstancePool) Release(instance interface{}) {
