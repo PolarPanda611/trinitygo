@@ -31,7 +31,7 @@ var (
 )
 
 func init() {
-	trinitygo.BindContainer(userRepositoryImpl{}, "UserRepository")
+	trinitygo.RegisterInstance(userRepositoryImpl{}, "UserRepository")
 }
 
 // UserRepository user repository

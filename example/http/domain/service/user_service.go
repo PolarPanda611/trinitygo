@@ -12,7 +12,7 @@ import (
 var _ UserService = new(userServiceImpl)
 
 func init() {
-	trinitygo.BindContainer(userServiceImpl{}, "UserService")
+	trinitygo.RegisterInstance(userServiceImpl{}, "UserService")
 }
 
 //UserService user service
@@ -22,7 +22,7 @@ type UserService interface {
 }
 
 type userServiceImpl struct {
-	UserRepo repository.UserRepository `autowired:"true" resource:"UserRepository"`
+	UserRepo repository.UserRepository `autowired:"true"  resource:"UserRepository"`
 	Tctx     application.Context       `autowired:"true"`
 }
 

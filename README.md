@@ -88,10 +88,10 @@ t.ServeHTTP()
 
 * fast register router
 
-```BindController 
+```RegisterController 
 
 // example/http/domain/controller/http
-// @BindController to trinitygo 
+// @RegisterController to trinitygo 
 // when init trinity  and the trinity 
 // will auto register as root controller to 
 // the gin router 
@@ -99,14 +99,14 @@ t.ServeHTTP()
 // the new request mapping will add new router 
 // to trinity router 
 // @this example 
-// the container has to be struct 
+// the instance has to be struct 
 // add the tag name as you want , 
 // and you can also leave it as blank 
 // router : 
 // GET --->  /users/:id   ==> GET func as the handler  
 // GET --->  /users       ==> Getsssss func as the handler  
 func init() {
-	trinitygo.BindController("/users",userControllerImpl{},
+	trinitygo.RegisterController("/users",userControllerImpl{},
 		application.NewRequestMapping(httputil.GET, "/:id", "GET", PermissionValidator([]string{"manager"}), gValidator, g1Validator),
 		application.NewRequestMapping(httputil.GET, "", "Getsssss"),
 	)
@@ -115,15 +115,15 @@ func init() {
 
 ```
 
-```BindContainer 
-// You can bind your service and repository layer to container 
-// The container will auto dependency injection to your 
+```RegisterInstance 
+// You can bind your service and repository layer to instance 
+// The instance will auto dependency injection to your 
 // controller 
-// the container has to be struct 
+// the instance has to be struct 
 // add the tag name as you want , 
 // and you can also leave it as blank 
 func init() {
-	trinitygo.BindContainer(userServiceImpl{} , "xxxx")
+	trinitygo.RegisterInstance(userServiceImpl{} , "xxxx")
 }
 
 ```
@@ -188,8 +188,8 @@ atomic_request = true
 // if transaction is true , will get the db with tx 
 // if transaction is false , will get the db without tx
 // if tag set autowired , system will auto inject this field 
-// with registered container 
-// if want to point to the specfic container 
+// with registered instance 
+// if want to point to the specfic instance 
 // add resource tag 
 type userControllerImpl struct {
 	UserSrv service.UserService `autowired:"true" resource="xxxxx"`

@@ -53,7 +53,7 @@ var (
 	_initApp                   sync.Once
 	_configPath                string = "./config/"
 	_bootingControllers        []bootingController
-	_bootingContainers         []bootingContainer
+	_bootingInstances          []bootingInstance
 	_healthCheckPath           string                                                 = "/ping"
 	_enableHealthCheckPath     bool                                                   = false
 	_logSelfCheck              bool                                                   = true
@@ -82,14 +82,14 @@ var (
 
 type bootingController struct {
 	controllerName string
-	container      interface{}
+	instance       interface{}
 	requestMaps    []*application.RequestMap
 }
 
-type bootingContainer struct {
-	containerName reflect.Type
-	containerPool *sync.Pool
-	containerTags []string
+type bootingInstance struct {
+	instanceName reflect.Type
+	instancePool *sync.Pool
+	instanceTags []string
 }
 
 // Application core of trinity
@@ -104,7 +104,7 @@ type Application struct {
 	mu             sync.RWMutex
 	db             *gorm.DB
 	controllerPool *application.ControllerPool
-	containerPool  *application.ContainerPool
+	instancePool   *application.InstancePool
 
 	//grpc
 	interceptors []grpc.UnaryServerInterceptor
@@ -171,7 +171,7 @@ func New() application.Application {
 		})
 
 		_app.controllerPool = application.NewControllerPool()
-		_app.containerPool = application.NewContainerPool()
+		_app.instancePool = application.NewInstancePool()
 	})
 	return _app
 }
@@ -239,11 +239,11 @@ func (app *Application) ControllerPool() *application.ControllerPool {
 	return app.controllerPool
 }
 
-// ContainerPool get all serviice pool
-func (app *Application) ContainerPool() *application.ContainerPool {
+// InstancePool get all serviice pool
+func (app *Application) InstancePool() *application.InstancePool {
 	app.mu.RLock()
 	defer app.mu.RUnlock()
-	return app.containerPool
+	return app.instancePool
 }
 
 // UseInterceptor application use interceptor, only impact on http server
@@ -282,46 +282,46 @@ func (app *Application) IsLogSelfCheck() bool {
 	return app.logSelfCheck
 }
 
-// BindController bind service
-func BindController(controllerName string, container interface{}, requestMaps ...*application.RequestMap) {
+// RegisterController bind service
+func RegisterController(controllerName string, instance interface{}, requestMaps ...*application.RequestMap) {
 	newController := bootingController{
 		controllerName: controllerName,
-		container:      container,
+		instance:       instance,
 		requestMaps:    requestMaps,
 	}
 	_bootingControllers = append(_bootingControllers, newController)
 }
 
-// BindContainer bind container
-func BindContainer(container interface{}, tags ...string) {
-	if reflect.TypeOf(container).Kind() != reflect.Struct {
-		log.Fatal("The container should be struct ")
+// RegisterInstance bind instance
+func RegisterInstance(instance interface{}, tags ...string) {
+	if reflect.TypeOf(instance).Kind() != reflect.Struct {
+		log.Fatal("The instance should be struct ")
 	}
-	newContainer := bootingContainer{
-		containerName: reflect.New(reflect.TypeOf(container)).Type(),
-		containerPool: &sync.Pool{
+	newInstance := bootingInstance{
+		instanceName: reflect.New(reflect.TypeOf(instance)).Type(),
+		instancePool: &sync.Pool{
 			New: func() interface{} {
-				return reflect.New(reflect.TypeOf(container)).Interface()
+				return reflect.New(reflect.TypeOf(instance)).Interface()
 			},
 		},
-		containerTags: tags,
+		instanceTags: tags,
 	}
-	_bootingContainers = append(_bootingContainers, newContainer)
+	_bootingInstances = append(_bootingInstances, newInstance)
 }
 
 func (app *Application) initControllerPool() {
 	app.Logger().Info(fmt.Sprintf("booting installing controller start"))
 	for _, controller := range _bootingControllers {
 		if len(controller.requestMaps) == 0 {
-			app.controllerPool.NewController(controller.controllerName, reflect.New(reflect.TypeOf(controller.container)).Type())
-			BindContainer(controller.container, controller.controllerName)
+			app.controllerPool.NewController(controller.controllerName, reflect.New(reflect.TypeOf(controller.instance)).Type())
+			RegisterInstance(controller.instance, controller.controllerName)
 			app.Logger().Info(fmt.Sprintf("booting installing controller : %v ...installed", controller.controllerName))
 			continue
 		}
 		for _, request := range controller.requestMaps {
 			newControllerName := fmt.Sprintf("%v@%v%v%v", request.Method, app.Conf().GetAppBaseURL(), controller.controllerName, request.SubPath)
-			app.controllerPool.NewController(newControllerName, reflect.New(reflect.TypeOf(controller.container)).Type())
-			BindContainer(controller.container, newControllerName)
+			app.controllerPool.NewController(newControllerName, reflect.New(reflect.TypeOf(controller.instance)).Type())
+			RegisterInstance(controller.instance, newControllerName)
 			app.controllerPool.NewControllerFunc(newControllerName, request.FuncName)
 			app.controllerPool.NewControllerValidators(newControllerName, request.Validators...)
 			realControllerName := strings.Replace(newControllerName, "@", " ==> ", -1)
@@ -333,29 +333,29 @@ func (app *Application) initControllerPool() {
 	app.Logger().Info(line)
 }
 
-func (app *Application) initContainerPool() {
-	for _, container := range _bootingContainers {
-		if len(container.containerTags) > 0 && len(app.containerPool.GetContainerType(container.containerTags[0])) > 0 {
-			app.Logger().Fatalf("booting installing container : %v failed ,container with tag %v already exists", container.containerName, container.containerTags[0])
+func (app *Application) initInstancePool() {
+	for _, instance := range _bootingInstances {
+		if len(instance.instanceTags) > 0 && len(app.instancePool.GetInstanceType(instance.instanceTags[0])) > 0 {
+			app.Logger().Fatalf("booting installing instance : %v failed ,instance with tag %v already exists", instance.instanceName, instance.instanceTags[0])
 		}
-		if app.containerPool.CheckContainerNameIfExist(container.containerName) {
+		if app.instancePool.CheckInstanceNameIfExist(instance.instanceName) {
 			continue
 		}
-		app.containerPool.NewContainer(container.containerName, container.containerPool, container.containerTags)
-		app.Logger().Info(fmt.Sprintf("booting installing container : %v ...installed", container.containerName))
+		app.instancePool.NewInstance(instance.instanceName, instance.instancePool, instance.instanceTags)
+		app.Logger().Info(fmt.Sprintf("booting installing instance : %v ...installed", instance.instanceName))
 	}
-	line := fmt.Sprintf("booting installed %v container pool successfully", len(app.containerPool.GetContainerType("")))
+	line := fmt.Sprintf("booting installed %v instance pool successfully", len(app.instancePool.GetInstanceType("")))
 	app.Logger().Info(line)
 }
 
 func (app *Application) initSelfCheck() {
-	app.controllerPool.ControllerFuncSelfCheck(app.containerPool, app.IsLogSelfCheck(), app.logger)
+	app.controllerPool.ControllerFuncSelfCheck(app.instancePool, app.IsLogSelfCheck(), app.logger)
 	app.Logger().Info("booting self func checking controller successfully ")
-	app.containerPool.ContainerDISelfCheck(app)
+	app.instancePool.InstanceDISelfCheck(app)
 }
 func (app *Application) initPool() {
 	app.initControllerPool()
-	app.initContainerPool()
+	app.initInstancePool()
 	app.initSelfCheck()
 
 }

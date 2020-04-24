@@ -11,7 +11,7 @@ import (
 var _ UserRepo = new(UserRepoImpl)
 
 func init() {
-	trinitygo.BindContainer(UserRepoImpl{})
+	trinitygo.RegisterInstance(UserRepoImpl{})
 }
 
 // UserRepo user repo

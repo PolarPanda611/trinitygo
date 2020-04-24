@@ -9,7 +9,7 @@ import (
 var _ UserService = new(UserServiceImpl)
 
 func init() {
-	trinitygo.BindContainer(UserServiceImpl{})
+	trinitygo.RegisterInstance(UserServiceImpl{})
 }
 
 // UserService user service

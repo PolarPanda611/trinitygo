@@ -20,7 +20,7 @@ package service
 // )
 
 // func init() {
-// 	trinitygo.BindContainer(userServiceImpl{})
+// 	trinitygo.RegisterInstance(userServiceImpl{})
 // }
 
 	`

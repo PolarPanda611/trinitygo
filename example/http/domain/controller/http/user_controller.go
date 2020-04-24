@@ -15,7 +15,7 @@ import (
 var _ UserController = new(userControllerImpl)
 
 func init() {
-	trinitygo.BindController("/users", userControllerImpl{},
+	trinitygo.RegisterController("/users", userControllerImpl{},
 		application.NewRequestMapping(httputil.GET, "/:id", "GET"),
 		application.NewRequestMapping(httputil.GET, "", "Getsssss"),
 	)

@@ -20,7 +20,7 @@ package repository
 // )
 
 // func init() {
-// 	trinitygo.BindContainer(userRepositoryImpl{}}
+// 	trinitygo.RegisterInstance(userRepositoryImpl{}}
 // }
 
 `

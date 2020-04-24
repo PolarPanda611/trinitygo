@@ -24,7 +24,7 @@ func New(app application.Application) func(ctx context.Context, req interface{},
 		controller, sharedInstance := app.ControllerPool().GetController(method[1], tContext, app, nil)
 		defer func() {
 			for _, v := range sharedInstance {
-				app.ContainerPool().Release(v)
+				app.InstancePool().Release(v)
 			}
 		}()
 		currentMethod, ok := reflect.TypeOf(controller).MethodByName(method[2])

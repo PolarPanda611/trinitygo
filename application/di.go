@@ -19,7 +19,7 @@ func DiSelfCheck(destName interface{}, pool *sync.Pool, app Application) {
 		destName,
 		reflect.TypeOf(controller))
 	for index := 0; index < controllerVal.NumField(); index++ {
-		availableInjectContainer := 0
+		availableInjectInstance := 0
 		var availableInjectType []reflect.Type
 		val := controllerVal.Field(index)
 		if !GetAutowiredTags(controller, index) {
@@ -55,13 +55,13 @@ func DiSelfCheck(destName interface{}, pool *sync.Pool, app Application) {
 					val.Type())
 				continue
 			}
-			for _, v := range app.ContainerPool().GetContainerType(GetResourceTags(controller, index)) {
+			for _, v := range app.InstancePool().GetInstanceType(GetResourceTags(controller, index)) {
 				if val.Type() == v {
 					availableInjectType = append(availableInjectType, v)
-					availableInjectContainer++
+					availableInjectInstance++
 				}
 			}
-			availableContainerLogger(availableInjectContainer, controller, index, val, app.Logger(), availableInjectType)
+			availableInstanceLogger(availableInjectInstance, controller, index, val, app.Logger(), availableInjectType)
 			continue
 		}
 		if val.Kind() == reflect.Interface {
@@ -71,13 +71,13 @@ func DiSelfCheck(destName interface{}, pool *sync.Pool, app Application) {
 					val.Type())
 				continue
 			}
-			for _, v := range app.ContainerPool().GetContainerType(GetResourceTags(controller, index)) {
+			for _, v := range app.InstancePool().GetInstanceType(GetResourceTags(controller, index)) {
 				if v.Implements(val.Type()) {
 					availableInjectType = append(availableInjectType, v)
-					availableInjectContainer++
+					availableInjectInstance++
 				}
 			}
-			availableContainerLogger(availableInjectContainer, controller, index, val, app.Logger(), availableInjectType)
+			availableInstanceLogger(availableInjectInstance, controller, index, val, app.Logger(), availableInjectType)
 			continue
 		}
 	}
@@ -104,13 +104,13 @@ func DiAllFields(dest interface{}, tctx Context, app Application, c *gin.Context
 				val.Set(reflect.ValueOf(c))
 				continue
 			}
-			for _, v := range app.ContainerPool().GetContainerType(GetResourceTags(dest, index)) {
+			for _, v := range app.InstancePool().GetInstanceType(GetResourceTags(dest, index)) {
 				if val.Type() == v {
 					if instance, exist := sharedInstance[val.Type()]; exist {
 						val.Set(reflect.ValueOf(instance))
 						break
 					}
-					repo, sharedInstanceMap := app.ContainerPool().GetContainer(v, tctx, app, c)
+					repo, sharedInstanceMap := app.InstancePool().GetInstance(v, tctx, app, c)
 					for instanceType, instanceValue := range sharedInstanceMap {
 						sharedInstance[instanceType] = instanceValue
 					}
@@ -137,13 +137,13 @@ func DiAllFields(dest interface{}, tctx Context, app Application, c *gin.Context
 				val.Set(reflect.ValueOf(tctx))
 				continue
 			}
-			for _, v := range app.ContainerPool().GetContainerType(GetResourceTags(dest, index)) {
+			for _, v := range app.InstancePool().GetInstanceType(GetResourceTags(dest, index)) {
 				if v.Implements(val.Type()) {
 					if instance, exist := sharedInstance[val.Type()]; exist {
 						val.Set(reflect.ValueOf(instance))
 						break
 					}
-					repo, sharedInstanceMap := app.ContainerPool().GetContainer(v, tctx, app, c)
+					repo, sharedInstanceMap := app.InstancePool().GetInstance(v, tctx, app, c)
 					for instanceType, instanceValue := range sharedInstanceMap {
 						sharedInstance[instanceType] = instanceValue
 					}
@@ -208,15 +208,15 @@ func GetResourceTags(object interface{}, index int) string {
 
 }
 
-func availableContainerLogger(availableInjectContainer int, dest interface{}, index int, val reflect.Value, logger *golog.Logger, availableInjectType []reflect.Type) {
-	if availableInjectContainer == 1 {
-		logger.Infof("booting self DI checking Inject param: %v ,type:%v ,container: %v ...injected ",
+func availableInstanceLogger(availableInjectInstance int, dest interface{}, index int, val reflect.Value, logger *golog.Logger, availableInjectType []reflect.Type) {
+	if availableInjectInstance == 1 {
+		logger.Infof("booting self DI checking Inject param: %v ,type:%v ,instance: %v ...injected ",
 			reflect.TypeOf(dest).Elem().Field(index).Name,
 			val.Type(),
 			availableInjectType[0],
 		)
-	} else if availableInjectContainer < 1 {
-		logger.Fatalf("booting self DI checking Inject param: %v ,type:%v , no container available , ...inject failed",
+	} else if availableInjectInstance < 1 {
+		logger.Fatalf("booting self DI checking Inject param: %v ,type:%v , no instance available , ...inject failed",
 			reflect.TypeOf(dest).Elem().Field(index).Name,
 			val.Type())
 	} else {
@@ -224,7 +224,7 @@ func availableContainerLogger(availableInjectContainer int, dest interface{}, in
 		for _, v := range availableInjectType {
 			availableType += fmt.Sprintf("%v,", v)
 		}
-		logger.Fatalf("booting self DI checking Inject param: %v ,type:%v , more than one container (%v) available , ...inject failed",
+		logger.Fatalf("booting self DI checking Inject param: %v ,type:%v , more than one instance (%v) available , ...inject failed",
 			reflect.TypeOf(dest).Elem().Field(index).Name,
 			val.Type(),
 			availableType)

@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	trinitygo.BindController("helloworld.Greeter", Server{})
+	trinitygo.RegisterController("helloworld.Greeter", Server{})
 }
 
 // Server is used to implement helloworld.GreeterServer.
