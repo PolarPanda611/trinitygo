@@ -17,7 +17,7 @@ type InstancePool struct {
 	poolTags map[string]reflect.Type
 	// instanceMapping instance mapping
 	// caching the instance di instance relation during the self check
-	instanceMapping map[reflect.Type]reflect.Type
+	instanceMapping map[string]reflect.Type
 }
 
 // NewInstancePool new pool with init map
@@ -25,7 +25,7 @@ func NewInstancePool() *InstancePool {
 	result := new(InstancePool)
 	result.poolMap = make(map[reflect.Type]*sync.Pool)
 	result.poolTags = make(map[string]reflect.Type)
-	result.instanceMapping = make(map[reflect.Type]reflect.Type)
+	result.instanceMapping = make(map[string]reflect.Type)
 	return result
 
 }
@@ -65,10 +65,8 @@ func (s *InstancePool) CheckInstanceNameIfExist(instanceName reflect.Type) bool 
 
 // InstanceDISelfCheck  self check di request registered func exist or not
 func (s *InstancePool) InstanceDISelfCheck(app Application) {
-	for controllerName, pool := range s.poolMap {
-		app.Logger().Infof("booting self DI checking instance %v ", controllerName)
-
-		DiSelfCheck(controllerName, pool, app)
+	for instanceType, pool := range s.poolMap {
+		DiSelfCheck(instanceType, pool, app.Logger(), app.InstancePool(), s.instanceMapping)
 	}
 	return
 
@@ -81,12 +79,18 @@ func (s *InstancePool) GetInstance(instanceType reflect.Type, tctx Context, app 
 		panic("unknown service name")
 	}
 	service := pool.Get()
-	sharedInstance := DiAllFields(service, tctx, app, c)
+	sharedInstance := DiAllFields(service, tctx, app, c, s.InstanceMapping())
 	return service, sharedInstance
 }
 
 // InstanceMapping instance mapping
-func (s *InstancePool) InstanceMapping() {}
+func (s *InstancePool) InstanceMapping() map[string]reflect.Type {
+	instanceMap := make(map[string]reflect.Type, len(s.instanceMapping))
+	for k, v := range s.instanceMapping {
+		instanceMap[k] = v
+	}
+	return instanceMap
+}
 
 // Release release service
 func (s *InstancePool) Release(instance interface{}) {

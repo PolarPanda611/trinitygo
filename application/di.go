@@ -10,81 +10,74 @@ import (
 	"github.com/kataras/golog"
 )
 
+type diSelfCheckResultCount struct {
+	info    int
+	warning int
+}
+
 // DiSelfCheck ()map[reflect.Type]interface{} {}
-func DiSelfCheck(destName interface{}, pool *sync.Pool, app Application) {
-	controller := pool.Get()
-	defer pool.Put(controller)
-	controllerVal := reflect.Indirect(reflect.ValueOf(controller))
-	app.Logger().Infof("booting self DI checking %v => %v ",
-		destName,
-		reflect.TypeOf(controller))
-	for index := 0; index < controllerVal.NumField(); index++ {
+func DiSelfCheck(destName interface{}, pool *sync.Pool, logger *golog.Logger, instancePool *InstancePool, instanceMapping map[string]reflect.Type) {
+	resultCount := new(diSelfCheckResultCount)
+	instance := pool.Get()
+	defer pool.Put(instance)
+	instanceVal := reflect.Indirect(reflect.ValueOf(instance))
+	for index := 0; index < instanceVal.NumField(); index++ {
+		objectName := encodeObjectName(instance, index)
 		availableInjectInstance := 0
 		var availableInjectType []reflect.Type
-		val := controllerVal.Field(index)
-		if !GetAutowiredTags(controller, index) {
-			app.Logger().Infof("booting self DI checking Inject param: %v ,type:%v ,autowired tag not set, skipped ",
-				reflect.TypeOf(controller).Elem().Field(index).Name,
-				val.Type())
+		val := instanceVal.Field(index)
+		if !GetAutowiredTags(instance, index) {
+			logDIWarnf(objectName, logger, resultCount, "autowired tag not set")
 			continue
 		}
 		if !val.CanSet() {
-			app.Logger().Fatalf("booting self DI checking Inject param: %v ,type: %v , private param , ...inject failed",
-				reflect.TypeOf(controller).Elem().Field(index).Name,
-				val.Type())
+			logDIFatalf(objectName, logger, resultCount, "private param")
 			continue
 		}
 		if !val.IsZero() {
-			app.Logger().Fatalf("booting self DI checking Inject param: %v ,type:%v , not null param , ...inject failed",
-				reflect.TypeOf(controller).Elem().Field(index).Name,
-				val.Type())
+			logDIFatalf(objectName, logger, resultCount, "not null param")
 			continue
 		}
 		if val.Kind() == reflect.Struct {
-			app.Logger().Fatalf("booting self DI checking Inject param: %v ,type:%v , should be addressable , ...inject failed",
-				reflect.TypeOf(controller).Elem().Field(index).Name,
-				val.Type())
+			logDIFatalf(objectName, logger, resultCount, "should be addressable")
 			continue
 		}
 		if val.Kind() == reflect.Ptr {
 			// if is the gin context
 			if reflect.TypeOf(&gin.Context{}) == val.Type() {
-				app.Logger().Warn("The Gin Context already included in Trinity Go Context , You don't need to inject again !")
-				app.Logger().Warnf("booting self DI checking Inject param: %v ,type:%v , injected ",
-					reflect.TypeOf(controller).Elem().Field(index).Name,
-					val.Type())
+				logDIWarnf(objectName, logger, resultCount, "Should use Application.Context instead of gin.Context !")
+				logDIInfof(objectName, logger, resultCount, reflect.TypeOf(&gin.Context{}), instanceMapping)
 				continue
 			}
-			for _, v := range app.InstancePool().GetInstanceType(GetResourceTags(controller, index)) {
+			for _, v := range instancePool.GetInstanceType(GetResourceTags(instance, index)) {
 				if val.Type() == v {
 					availableInjectType = append(availableInjectType, v)
 					availableInjectInstance++
 				}
 			}
-			availableInstanceLogger(availableInjectInstance, controller, index, val, app.Logger(), availableInjectType)
+			availableInstanceLogger(availableInjectInstance, objectName, logger, resultCount, availableInjectType, instanceMapping)
 			continue
 		}
 		if val.Kind() == reflect.Interface {
 			if reflect.TypeOf(&ContextImpl{}).Implements(val.Type()) {
-				app.Logger().Infof("booting self DI checking Inject param: %v ,type:%v , injected ",
-					reflect.TypeOf(controller).Elem().Field(index).Name,
-					val.Type())
+				logDIInfof(objectName, logger, resultCount, reflect.TypeOf(&ContextImpl{}), instanceMapping)
 				continue
 			}
-			for _, v := range app.InstancePool().GetInstanceType(GetResourceTags(controller, index)) {
+			for _, v := range instancePool.GetInstanceType(GetResourceTags(instance, index)) {
 				if v.Implements(val.Type()) {
 					availableInjectType = append(availableInjectType, v)
 					availableInjectInstance++
 				}
 			}
-			availableInstanceLogger(availableInjectInstance, controller, index, val, app.Logger(), availableInjectType)
+			availableInstanceLogger(availableInjectInstance, objectName, logger, resultCount, availableInjectType, instanceMapping)
 			continue
 		}
 	}
+	logger.Infof("booting self DI checking instance %v finished with info %v , warning %v", destName, resultCount.info, resultCount.warning)
 }
 
 // DiAllFields di service pool
-func DiAllFields(dest interface{}, tctx Context, app Application, c *gin.Context) map[reflect.Type]interface{} {
+func DiAllFields(dest interface{}, tctx Context, app Application, c *gin.Context, instanceMapping map[string]reflect.Type) map[reflect.Type]interface{} {
 	sharedInstance := make(map[reflect.Type]interface{})
 	destVal := reflect.Indirect(reflect.ValueOf(dest))
 	for index := 0; index < destVal.NumField(); index++ {
@@ -92,76 +85,52 @@ func DiAllFields(dest interface{}, tctx Context, app Application, c *gin.Context
 		if !GetAutowiredTags(dest, index) {
 			continue
 		}
-		if !val.CanSet() {
-			continue
-		}
-		if !val.IsZero() {
-			continue
-		}
-		if val.Kind() == reflect.Ptr {
-			// if is the gin context
-			if reflect.TypeOf(c) == val.Type() {
+		objectName := encodeObjectName(dest, index)
+		switch instanceMapping[objectName] {
+		case reflect.TypeOf(c):
+			val.Set(reflect.ValueOf(c))
+			break
+		case reflect.TypeOf(tctx):
+			if !tctx.DBTxIsOpen() {
+				enableTx := false
+				if app.Conf().GetAtomicRequest() {
+					enableTx = true
+				}
+				if TransactionTag(dest, index) {
+					enableTx = true
+				}
+				if enableTx {
+					tctx.DBTx()
+				}
+			}
+			val.Set(reflect.ValueOf(tctx))
+			break
+		default:
+			if instanceMapping[objectName] == reflect.TypeOf(c) {
 				val.Set(reflect.ValueOf(c))
 				continue
 			}
-			for _, v := range app.InstancePool().GetInstanceType(GetResourceTags(dest, index)) {
-				if val.Type() == v {
-					if instance, exist := sharedInstance[val.Type()]; exist {
-						val.Set(reflect.ValueOf(instance))
-						break
-					}
-					repo, sharedInstanceMap := app.InstancePool().GetInstance(v, tctx, app, c)
-					for instanceType, instanceValue := range sharedInstanceMap {
-						sharedInstance[instanceType] = instanceValue
-					}
-					val.Set(reflect.ValueOf(repo))
-					sharedInstance[val.Type()] = repo
-					break
-				}
+
+			repo, sharedInstanceMap := app.InstancePool().GetInstance(instanceMapping[objectName], tctx, app, c)
+			for instanceType, instanceValue := range sharedInstanceMap {
+				sharedInstance[instanceType] = instanceValue
 			}
-		}
-		if val.Kind() == reflect.Interface {
-			if reflect.TypeOf(tctx).Implements(val.Type()) {
-				if !tctx.DBTxIsOpen() {
-					enableTx := false
-					if app.Conf().GetAtomicRequest() {
-						enableTx = true
-					}
-					if TransactionTag(dest, index) {
-						enableTx = true
-					}
-					if enableTx {
-						tctx.DBTx()
-					}
-				}
-				val.Set(reflect.ValueOf(tctx))
-				continue
-			}
-			for _, v := range app.InstancePool().GetInstanceType(GetResourceTags(dest, index)) {
-				if v.Implements(val.Type()) {
-					if instance, exist := sharedInstance[val.Type()]; exist {
-						val.Set(reflect.ValueOf(instance))
-						break
-					}
-					repo, sharedInstanceMap := app.InstancePool().GetInstance(v, tctx, app, c)
-					for instanceType, instanceValue := range sharedInstanceMap {
-						sharedInstance[instanceType] = instanceValue
-					}
-					val.Set(reflect.ValueOf(repo))
-					sharedInstance[val.Type()] = repo
-					break
-				}
-			}
+			val.Set(reflect.ValueOf(repo))
+			sharedInstance[val.Type()] = repo
+			break
 		}
 	}
 	return sharedInstance
 }
 
-// DiFree di controller
+// DiFree di instance
 func DiFree(dest interface{}) {
 	destVal := reflect.Indirect(reflect.ValueOf(dest))
 	for index := 0; index < destVal.NumField(); index++ {
 		val := destVal.Field(index)
+		if !GetAutowiredTags(dest, index) {
+			continue
+		}
 		if !val.CanSet() {
 			continue
 		}
@@ -208,25 +177,40 @@ func GetResourceTags(object interface{}, index int) string {
 
 }
 
-func availableInstanceLogger(availableInjectInstance int, dest interface{}, index int, val reflect.Value, logger *golog.Logger, availableInjectType []reflect.Type) {
-	if availableInjectInstance == 1 {
-		logger.Infof("booting self DI checking Inject param: %v ,type:%v ,instance: %v ...injected ",
-			reflect.TypeOf(dest).Elem().Field(index).Name,
-			val.Type(),
-			availableInjectType[0],
-		)
-	} else if availableInjectInstance < 1 {
-		logger.Fatalf("booting self DI checking Inject param: %v ,type:%v , no instance available , ...inject failed",
-			reflect.TypeOf(dest).Elem().Field(index).Name,
-			val.Type())
+func availableInstanceLogger(availableInjectInstanceCount int, objectName string, logger *golog.Logger, resultCount *diSelfCheckResultCount, availableInjectType []reflect.Type, instanceMapping map[string]reflect.Type) {
+	if availableInjectInstanceCount == 1 {
+		logDIInfof(objectName, logger, resultCount, availableInjectType[0], instanceMapping)
+	} else if availableInjectInstanceCount < 1 {
+		logDIFatalf(objectName, logger, resultCount, "no instance available")
 	} else {
 		availableType := ""
 		for _, v := range availableInjectType {
 			availableType += fmt.Sprintf("%v,", v)
 		}
-		logger.Fatalf("booting self DI checking Inject param: %v ,type:%v , more than one instance (%v) available , ...inject failed",
-			reflect.TypeOf(dest).Elem().Field(index).Name,
-			val.Type(),
-			availableType)
+		logDIFatalf(objectName, logger, resultCount, fmt.Sprintf("more than one instance (%v) available", availableType))
 	}
+}
+
+func encodeObjectName(instance interface{}, index int) string {
+	instanceType := reflect.TypeOf(instance)
+	instanceVal := reflect.Indirect(reflect.ValueOf(instance))
+	paramName := instanceType.Elem().Field(index).Name
+	paramType := instanceVal.Field(index).Type()
+	return fmt.Sprintf("%v.%v.(%v)", instanceType, paramName, paramType)
+
+}
+func logDIInfof(objectName string, logger *golog.Logger, resultCount *diSelfCheckResultCount, instance reflect.Type, instanceMapping map[string]reflect.Type) {
+	logger.Infof("booting self DI checking Inject object: %v, with instance: %v,  ...injected ", objectName, instance)
+	resultCount.info++
+	instanceMapping[objectName] = instance
+	return
+}
+
+func logDIWarnf(objectName string, logger *golog.Logger, resultCount *diSelfCheckResultCount, errString string) {
+	logger.Warnf("booting self DI checking Inject object: %v, %v, skipped ", objectName, errString)
+	resultCount.warning++
+}
+
+func logDIFatalf(objectName string, logger *golog.Logger, resultCount *diSelfCheckResultCount, errString string) {
+	logger.Fatalf("booting self DI checking Inject object: %v, %v, ...inject failed ", objectName, errString)
 }

@@ -101,7 +101,7 @@ func (c *ContextImpl) SafeRollback() {
 	}
 }
 
-// DBTxIsOpen return is transactioon is open
+// DBTxIsOpen return is transaction is open
 func (c *ContextImpl) DBTxIsOpen() bool {
 	return c.dbTxOpen
 }
@@ -158,7 +158,7 @@ func (c *ContextImpl) HTTPResponseCreated(res interface{}, err error) {
 	c.HTTPResponse(http.StatusCreated, res, err)
 }
 
-// HTTPResponse handle respoonse
+// HTTPResponse handle response
 func (c *ContextImpl) HTTPResponse(status int, res interface{}, err error) {
 	if c.c == nil {
 		panic("gin context not set , please if the func is used in http request handle")

@@ -48,7 +48,7 @@ type LogConfig struct {
 	// Req show request info
 	// Defaults to true.
 	Request bool
-	// Response show response einfo
+	// Response show response info
 	// Defaults to true.
 	Response bool
 	// Error show error messagee
@@ -56,11 +56,11 @@ type LogConfig struct {
 	Error bool
 
 	// Latency show latency
-	// Defaulte to true
+	// Default to true
 	Latency bool
 
 	// Runtime
-	// Defaulte to true
+	// Default to true
 	Runtime bool
 
 	// Defaults nil
@@ -70,7 +70,7 @@ type LogConfig struct {
 	Skippers []SkipperFunc
 }
 
-// DefaultLogConfig default log  miiddleware setting
+// DefaultLogConfig default log  middleware setting
 func DefaultLogConfig() *LogConfig {
 	return &LogConfig{
 		ProjectName:    true,
