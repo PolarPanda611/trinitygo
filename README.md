@@ -14,7 +14,6 @@ p.s: spring restframework like :)
 
 ```bash
 $ go get -u github.com/PolarPanda611/trinitygo/trinitygo
-$ go install 
 $ trinitygo newhttp [Your Project Name]
 ```
 
