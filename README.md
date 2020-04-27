@@ -12,6 +12,9 @@ golang restframework plugin with gin+gorm, fast and high scalable
 ```bash
 $ go get github.com/PolarPanda611/trinitygo/trinitygo
 $ trinitygo newhttp [Your Project Name]
+
+
+$ trinitygo new_crud [Your Model Name]
 ```
 
 done.
