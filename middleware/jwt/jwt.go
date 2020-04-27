@@ -101,7 +101,7 @@ func (m *JWTVerifierImpl) checkUnverifiedTokenValid(c *gin.Context) (jwt.Claims,
 // Middleware jwt middleware
 func (m *JWTVerifierImpl) Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if c.Request.Method == "OPTION" {
+		if c.Request.Method == "OPTIONS" {
 			c.Next()
 			return
 		}
