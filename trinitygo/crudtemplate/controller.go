@@ -23,7 +23,7 @@ import (
 var _ {{.ModelName}}Controller = new({{.ModelNamePrivate}}ControllerImpl)
 
 func init() {
-	trinitygo.RegisterController("/{{.ModelNamePrivate}}s", {{.ModelNamePrivate}}ControllerImpl{},
+	trinitygo.RegisterController("/{{.ModelNameToUnderscore}}s", {{.ModelNamePrivate}}ControllerImpl{},
 		application.NewRequestMapping(httputil.GET, "/:id", "Get{{.ModelName}}ByID"),
 		application.NewRequestMapping(httputil.GET, "", "Get{{.ModelName}}List"),
 		application.NewRequestMapping(httputil.POST, "", "Create{{.ModelName}}"),

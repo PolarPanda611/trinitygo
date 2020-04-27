@@ -18,9 +18,6 @@ import (
 	"github.com/PolarPanda611/trinitygo/application"
 )
 
-type PaginationResponse struct {
-}
-
 var _ {{.ModelName}}Service = new({{.ModelNamePrivate}}ServiceImpl)
 
 func init() {

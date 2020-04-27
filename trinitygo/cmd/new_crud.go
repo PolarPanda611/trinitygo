@@ -36,8 +36,9 @@ var (
 				return fmt.Errorf("first characters should be Upper case ")
 			}
 			pData := map[string]interface{}{
-				"ModelName":        modelName,
-				"ModelNamePrivate": fmt.Sprint(strings.ToLower(modelName[0:1]) + modelName[1:len(modelName)]),
+				"ModelName":             modelName,
+				"ModelNamePrivate":      fmt.Sprint(strings.ToLower(modelName[0:1]) + modelName[1:len(modelName)]),
+				"ModelNameToUnderscore": modelNameWithUnderscore,
 			}
 			fmt.Println(pData)
 			templates := crudtemplate.Templates()

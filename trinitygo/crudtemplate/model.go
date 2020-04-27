@@ -1,7 +1,7 @@
 package crudtemplate
 
 func init() {
-	_templates["/domain/model/%v_controller.go"] = genModel()
+	_templates["/domain/model/%v.go"] = genModel()
 }
 
 func genModel() string {
