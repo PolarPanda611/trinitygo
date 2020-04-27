@@ -15,7 +15,7 @@ func New(app application.Application) gin.HandlerFunc {
 		runtimeKeyMap := application.DecodeHTTPRuntimeKey(c, app.RuntimeKeys())
 		tContext := app.ContextPool().Acquire(app, runtimeKeyMap, app.DB(), c)
 		defer func() {
-			//release tcontext obj
+			//release trinity go context obj
 			app.ContextPool().Release(tContext)
 		}()
 		controller, sharedInstance := app.ControllerPool().GetController(method, tContext, app, c)

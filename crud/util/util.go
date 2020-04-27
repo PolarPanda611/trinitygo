@@ -2,6 +2,7 @@ package util
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 
 	"github.com/gin-gonic/gin"
@@ -19,7 +20,7 @@ func DecodeReqBodyToMap(c *gin.Context) (map[string]interface{}, string, error) 
 	}
 	dVersionInterface, ok := change["d_version"]
 	if !ok {
-		return nil, "", err
+		return nil, "", errors.New("d_version is required ")
 	}
 	dVersion, ok := dVersionInterface.(string)
 	if !ok {

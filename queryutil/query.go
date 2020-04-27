@@ -16,13 +16,16 @@ var (
 	_pageNumKey    string = "PageNum"
 	_pageSizeKey   string = "PageSize"
 	_orderByKey    string = "OrderBy"
-	_paginitionOff string = "PaginationOff"
+	_paginationOff string = "PaginationOff"
 )
 
 // QueryHandler query handler
 // in query
 // out gorm scopes
 type QueryHandler interface {
+	PageSize() int
+	PageNum() int
+	HandleDBBackend() []func(*gorm.DB) *gorm.DB
 	HandleWithPagination(query string) []func(*gorm.DB) *gorm.DB
 	Handle(query string) []func(*gorm.DB) *gorm.DB
 }
@@ -36,11 +39,12 @@ type queryRepositoryImpl struct {
 	orderByList         []string
 	preloadList         map[string]func(db *gorm.DB) *gorm.DB
 	filterCustomizeFunc map[string]interface{}
+	queryMap            url.Values
+	queryScope          []func(*gorm.DB) *gorm.DB
+	isDebug             bool
 
-	queryMap   url.Values
-	queryScope []func(*gorm.DB) *gorm.DB
-
-	isDebug bool
+	pageSizeRuntime int
+	pageNumRuntime  int
 }
 
 // QueryConfig query config
@@ -114,7 +118,7 @@ func (q *queryRepositoryImpl) handleFilter(k string, v []string) {
 			if q.isDebug {
 				fmt.Printf("where : %v  %v \n ", d.ConditionSQL(), d.ValueSQL())
 			}
-			q.queryScope = append(q.queryScope, newScope(d.ConditionSQL(), d.ValueSQL()))
+			q.queryScope = append(q.queryScope, NewScope(d.ConditionSQL(), d.ValueSQL()))
 		}
 
 	}
@@ -192,7 +196,10 @@ func (q *queryRepositoryImpl) handleOrderBy(k string, v []string) {
 
 func (q *queryRepositoryImpl) handlePagination(pageNum []string, pageSize []string, paginationOff []string) {
 	if len(paginationOff) != 0 {
-		return
+		IsOff, _ := strconv.ParseBool(paginationOff[0])
+		if IsOff {
+			return
+		}
 	}
 	var err error
 	PageNumFieldInt := 1
@@ -202,21 +209,23 @@ func (q *queryRepositoryImpl) handlePagination(pageNum []string, pageSize []stri
 			PageNumFieldInt = 1
 		}
 	}
+	q.pageNumRuntime = PageNumFieldInt
 	if len(pageSize) != 0 {
 		if PageSizeFieldInt, err = strconv.Atoi(pageSize[0]); err != nil || PageSizeFieldInt <= 0 {
 			PageSizeFieldInt = q.pageSize
 		}
 	}
+	q.pageSizeRuntime = PageSizeFieldInt
 	PageNumFieldInt = PageNumFieldInt - 1
 	offset := PageNumFieldInt * PageSizeFieldInt
 	limit := PageSizeFieldInt
 	if q.isDebug {
 		fmt.Printf("offset %v  limit %v \n ", offset, limit)
 	}
-	pagiScope := func(db *gorm.DB) *gorm.DB {
+	paginationScope := func(db *gorm.DB) *gorm.DB {
 		return db.Offset(offset).Limit(limit)
 	}
-	q.queryScope = append(q.queryScope, pagiScope)
+	q.queryScope = append(q.queryScope, paginationScope)
 
 }
 
@@ -250,6 +259,7 @@ func (q *queryRepositoryImpl) Handle(query string) []func(*gorm.DB) *gorm.DB {
 	q.handlePreload()
 	newQueryScope := make([]func(*gorm.DB) *gorm.DB, len(q.queryScope))
 	copy(newQueryScope, q.queryScope)
+	q.queryScope = nil
 	return newQueryScope
 
 }
@@ -258,7 +268,7 @@ func (q *queryRepositoryImpl) HandleWithPagination(query string) []func(*gorm.DB
 	q.query = query
 	q.decodeURL()
 	q.handleDBBackend()
-	q.handlePagination(q.queryMap[_pageNumKey], q.queryMap[_pageSizeKey], q.queryMap[_paginitionOff])
+	q.handlePagination(q.queryMap[_pageNumKey], q.queryMap[_pageSizeKey], q.queryMap[_paginationOff])
 
 	for k, v := range q.queryMap {
 		q.handleSearchBy(k, v)
@@ -268,10 +278,32 @@ func (q *queryRepositoryImpl) HandleWithPagination(query string) []func(*gorm.DB
 	q.handlePreload()
 	newQueryScope := make([]func(*gorm.DB) *gorm.DB, len(q.queryScope))
 	copy(newQueryScope, q.queryScope)
+	q.queryScope = nil
 	return newQueryScope
 }
 
-func newScope(conditionSQL string, valueSQL interface{}) func(*gorm.DB) *gorm.DB {
+func (q *queryRepositoryImpl) PageSize() int {
+	pageSizeRuntime := q.pageSizeRuntime
+	q.pageSizeRuntime = 0
+	return pageSizeRuntime
+}
+
+func (q *queryRepositoryImpl) PageNum() int {
+	pageNumRuntime := q.pageNumRuntime
+	q.pageNumRuntime = 0
+	return pageNumRuntime
+}
+
+func (q *queryRepositoryImpl) HandleDBBackend() []func(*gorm.DB) *gorm.DB {
+	q.handleDBBackend()
+	newQueryScope := make([]func(*gorm.DB) *gorm.DB, len(q.queryScope))
+	copy(newQueryScope, q.queryScope)
+	q.queryScope = nil
+	return newQueryScope
+}
+
+// NewScope create new scope
+func NewScope(conditionSQL string, valueSQL interface{}) func(*gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		return db.Where(conditionSQL, valueSQL)
 	}

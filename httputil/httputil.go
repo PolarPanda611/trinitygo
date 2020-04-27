@@ -2,10 +2,10 @@ package httputil
 
 // ResponseData response data
 type ResponseData struct {
-	Status  int         // the http response status  to return
-	Result  interface{} `json:"Result,omitempty"` // the response data  if req success
-	Error   interface{} `json:"Error,omitempty"`  // the response data  if req success
-	Runtime map[string]string
+	Status  int               `json:"status,omitempty"` // the http response status  to return
+	Result  interface{}       `json:"result,omitempty"` // the response data  if req success
+	Error   interface{}       `json:"error,omitempty"`  // the response data  if req success
+	Runtime map[string]string `json:"runtime,omitempty"`
 }
 
 // RequestMethod Supported Request Method

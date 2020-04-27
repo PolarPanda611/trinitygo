@@ -27,7 +27,7 @@ var (
 				return err
 			}
 			initHTTPFolder(sysPath)
-			pdata := map[string]interface{}{
+			pData := map[string]interface{}{
 				"PackageName": projectName,
 				"VersionNum":  versionNum,
 			}
@@ -41,7 +41,7 @@ var (
 					return err
 				}
 				tmpl, err := template.New(projectName).Parse(content)
-				if err = tmpl.Execute(pf, pdata); err != nil {
+				if err = tmpl.Execute(pf, pData); err != nil {
 					return err
 				}
 			}
