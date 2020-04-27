@@ -7,6 +7,7 @@ import (
 
 	"github.com/PolarPanda611/trinitygo/application"
 	"github.com/PolarPanda611/trinitygo/httputil"
+	"github.com/PolarPanda611/trinitygo/util"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc/codes"
@@ -35,6 +36,8 @@ type Config struct {
 	IsVerifySecretKey  bool
 	Claims             jwt.Claims
 	SuccessCallback    func(c *gin.Context, claim jwt.Claims)
+	MethodWhiteList    []string
+	PathWhiteList      []string
 }
 
 // DefaultConfig default jwt config
@@ -48,6 +51,8 @@ func DefaultConfig() *Config {
 		IsVerifyIssuer:     false,
 		IsVerifyExpireHour: false,
 		IsVerifySecretKey:  false,
+		MethodWhiteList:    []string{"OPTION"},
+		PathWhiteList:      []string{},
 	}
 
 }
@@ -101,10 +106,15 @@ func (m *JWTVerifierImpl) checkUnverifiedTokenValid(c *gin.Context) (jwt.Claims,
 // Middleware jwt middleware
 func (m *JWTVerifierImpl) Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if c.Request.Method == "OPTIONS" {
+		if util.StringInSlice(c.Request.Method, m.config.MethodWhiteList) {
 			c.Next()
 			return
 		}
+		if util.StringInSlice(c.Request.URL.Path, m.config.PathWhiteList) {
+			c.Next()
+			return
+		}
+
 		tokenClaims, err := m.checkUnverifiedTokenValid(c)
 		if err != nil {
 			c.AbortWithStatusJSON(401, httputil.ResponseData{
