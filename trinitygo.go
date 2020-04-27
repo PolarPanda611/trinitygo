@@ -138,7 +138,7 @@ func SetHealthCheckDefaultHandler(handler func(app application.Application) func
 }
 
 // SetIsLogSelfCheck set is log self check
-// bydefault , it is true
+// by default , it is true
 func SetIsLogSelfCheck(isLog bool) {
 	_logSelfCheck = isLog
 }
@@ -222,14 +222,14 @@ func (app *Application) ContextPool() *application.ContextPool {
 	return app.contextPool
 }
 
-// ControllerPool get all serviice pool
+// ControllerPool get all service pool
 func (app *Application) ControllerPool() *application.ControllerPool {
 	app.mu.RLock()
 	defer app.mu.RUnlock()
 	return app.controllerPool
 }
 
-// InstancePool get all serviice pool
+// InstancePool get all service pool
 func (app *Application) InstancePool() *application.InstancePool {
 	app.mu.RLock()
 	defer app.mu.RUnlock()
@@ -284,17 +284,37 @@ func RegisterController(controllerName string, instance interface{}, requestMaps
 
 // RegisterInstance bind instance
 func RegisterInstance(instance interface{}, tags ...string) {
-	if reflect.TypeOf(instance).Kind() != reflect.Struct {
-		log.Fatal("The instance should be struct ")
-	}
-	newInstance := bootingInstance{
-		instanceName: reflect.New(reflect.TypeOf(instance)).Type(),
-		instancePool: &sync.Pool{
-			New: func() interface{} {
-				return reflect.New(reflect.TypeOf(instance)).Interface()
+	var newInstance bootingInstance
+	fmt.Println(reflect.TypeOf(instance).Kind())
+	switch reflect.TypeOf(instance).Kind() {
+	case reflect.Struct:
+		newInstance = bootingInstance{
+			instanceName: reflect.New(reflect.TypeOf(instance)).Type(),
+			instancePool: &sync.Pool{
+				New: func() interface{} {
+					return reflect.New(reflect.TypeOf(instance)).Interface()
+				},
 			},
-		},
-		instanceTags: tags,
+			instanceTags: tags,
+		}
+		break
+	case reflect.Func:
+		f, ok := instance.(func() interface{})
+		if !ok {
+			log.Fatal("The instance func should be  func () interface{}")
+		}
+		newInstance = bootingInstance{
+			instanceName: reflect.TypeOf(f()),
+			instancePool: &sync.Pool{
+				New: func() interface{} {
+					return f()
+				},
+			},
+			instanceTags: tags,
+		}
+		break
+	default:
+		log.Fatal("The instance should be struct or func () interface{}")
 	}
 	_bootingInstances = append(_bootingInstances, newInstance)
 }
@@ -522,10 +542,10 @@ func (app *Application) ServeHTTP() {
 			app.config.GetServiceDiscoveryTimeout(),
 		)
 		if err != nil {
-			line = fmt.Sprintf("boooting http service deregistered failed !")
+			line = fmt.Sprintf("booting http service deRegistered failed !")
 			app.Logger().Error(line)
 		} else {
-			line = fmt.Sprintf("boooting http service deregistered successfully !")
+			line = fmt.Sprintf("booting http service deRegistered successfully !")
 			app.Logger().Info(line)
 		}
 
@@ -559,7 +579,7 @@ func (app *Application) ServeGRPC() {
 			); err != nil {
 				gErr <- err
 			}
-			line := fmt.Sprintf("boooting grpc service registered successfully !")
+			line := fmt.Sprintf("booting grpc service registered successfully !")
 			app.Logger().Info(line)
 		}
 
@@ -586,10 +606,10 @@ func (app *Application) ServeGRPC() {
 			app.config.GetServiceDiscoveryTimeout(),
 		)
 		if err != nil {
-			line = fmt.Sprintf("boooting grpc service deregistered failed !")
+			line = fmt.Sprintf("booting grpc service deRegistered failed !")
 			app.Logger().Error(line)
 		} else {
-			line = fmt.Sprintf("boooting grpc service deregistered successfully !")
+			line = fmt.Sprintf("booting grpc service deRegistered successfully !")
 			app.Logger().Info(line)
 		}
 

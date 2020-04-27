@@ -5,6 +5,7 @@ import (
 
 	"github.com/PolarPanda611/trinitygo"
 	"github.com/PolarPanda611/trinitygo/application"
+	"github.com/PolarPanda611/trinitygo/crud"
 	"github.com/PolarPanda611/trinitygo/example/http/domain/object"
 	"github.com/PolarPanda611/trinitygo/example/http/domain/repository"
 )
@@ -24,6 +25,7 @@ type UserService interface {
 type userServiceImpl struct {
 	UserRepo repository.UserRepository `autowired:"true"  resource:"UserRepository"`
 	Tctx     application.Context       `autowired:"true"`
+	crud     *crud.DefaultCRUD
 }
 
 func (s *userServiceImpl) GetUserByID(id int) (*object.User, error) {

@@ -6,14 +6,11 @@
 [![Release](https://img.shields.io/github/release/PolarPanda611/trinitygo.svg?style=flat-square)](https://github.com/PolarPanda611/trinitygo/releases)
 
 golang restframework plugin with gin+gorm, fast and high scalable    
-p.s: spring restframework like :)
 
 ## 安装
 
-打开终端输入
-
 ```bash
-$ go get -u github.com/PolarPanda611/trinitygo/trinitygo
+$ go get github.com/PolarPanda611/trinitygo/trinitygo
 $ trinitygo newhttp [Your Project Name]
 ```
 
