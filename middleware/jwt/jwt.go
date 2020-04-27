@@ -101,6 +101,10 @@ func (m *JWTVerifierImpl) checkUnverifiedTokenValid(c *gin.Context) (jwt.Claims,
 // Middleware jwt middleware
 func (m *JWTVerifierImpl) Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if c.Request.Method == "OPTION" {
+			c.Next()
+			return
+		}
 		tokenClaims, err := m.checkUnverifiedTokenValid(c)
 		if err != nil {
 			c.AbortWithStatusJSON(401, httputil.ResponseData{
