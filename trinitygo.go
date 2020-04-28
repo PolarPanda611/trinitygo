@@ -179,9 +179,7 @@ func DefaultGRPC() application.Application {
 // DefaultHTTP default http server
 func DefaultHTTP() application.Application {
 	app := New()
-	app.UseMiddleware(mlogger.New(app))
-	app.UseMiddleware(httprecovery.New(app))
-	app.UseMiddleware(mruntime.New(app))
+
 	return app
 }
 
@@ -453,15 +451,8 @@ func (app *Application) initHealthCheck() {
 func (app *Application) InitRouter() {
 	gin.DefaultWriter = ioutil.Discard
 	app.router = gin.New()
-
-	app.router.RedirectTrailingSlash = false
-	for _, v := range app.middlewares {
-		app.router.Use(v)
-	}
-	if _enableHealthCheckPath {
-		app.initHealthCheck()
-	}
-	app.router.GET(app.Conf().GetAppBaseURL()+"/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	app.router.Use(mlogger.New(app))
+	app.router.Use(httprecovery.New(app))
 	if app.Conf().GetCorsEnable() {
 		app.router.Use(cors.New(cors.Config{
 			AllowOrigins:     app.Conf().GetAllowOrigins(),
@@ -471,6 +462,17 @@ func (app *Application) InitRouter() {
 			AllowCredentials: app.Conf().GetAllowCredentials(),
 			MaxAge:           time.Duration(app.Conf().GetMaxAgeHour()) * time.Hour,
 		}))
+	}
+	app.router.GET(app.Conf().GetAppBaseURL()+"/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	for _, v := range app.middlewares {
+		app.router.Use(v)
+	}
+	app.router.Use(mruntime.New(app))
+	if _enableHealthCheckPath {
+		app.initHealthCheck()
+	}
+	for _, v := range app.middlewares {
+		app.router.Use(v)
 	}
 	for _, controllerName := range app.ControllerPool().GetControllerMap() {
 		controllerNameList := strings.Split(controllerName, "@")
