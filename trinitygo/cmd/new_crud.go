@@ -37,7 +37,7 @@ var (
 			}
 			pData := map[string]interface{}{
 				"ModelName":             modelName,
-				"ModelNamePrivate":      fmt.Sprint(strings.ToLower(modelName[0:1]) + modelName[1:len(modelName)]),
+				"ModelNamePrivate":      fmt.Sprint(strings.ToLower(modelName[0:1]) + modelName[1:]),
 				"ModelNameToUnderscore": modelNameWithUnderscore,
 			}
 			fmt.Println(pData)
