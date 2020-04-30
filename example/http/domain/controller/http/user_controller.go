@@ -1,91 +1,88 @@
 package http
 
 import (
-	"errors"
 	"strconv"
+
+	"github.com/PolarPanda611/trinitygo/example/http/domain/model"
+
+	"github.com/PolarPanda611/trinitygo/example/http/domain/service"
 
 	"github.com/PolarPanda611/trinitygo"
 	"github.com/PolarPanda611/trinitygo/application"
-	"github.com/PolarPanda611/trinitygo/example/http/domain/service"
+	"github.com/PolarPanda611/trinitygo/crud/util"
 	"github.com/PolarPanda611/trinitygo/httputil"
-	"github.com/PolarPanda611/trinitygo/util"
 )
 
 var _ UserController = new(userControllerImpl)
 
 func init() {
 	trinitygo.RegisterController("/users", userControllerImpl{},
-		application.NewRequestMapping(httputil.GET, "/:id", "GET"),
-		application.NewRequestMapping(httputil.GET, "", "Getsssss"),
+		application.NewRequestMapping(httputil.GET, "/:id", "GetUserByID"),
+		application.NewRequestMapping(httputil.GET, "", "GetUserList"),
+		application.NewRequestMapping(httputil.POST, "", "CreateUser"),
+		application.NewRequestMapping(httputil.PATCH, "/:id", "UpdateUserByID"),
+		application.NewRequestMapping(httputil.DELETE, "/:id", "DeleteUserByID"),
 	)
 }
 
 // UserController user controller
 type UserController interface {
-	GET()
-	Getsssss()
+	GetUserByID()
+	GetUserList()
+	CreateUser()
+	UpdateUserByID()
+	DeleteUserByID()
 }
 
-// UserController  test
 type userControllerImpl struct {
 	UserSrv service.UserService `autowired:"true" resource:"UserService"`
-	Tctx    application.Context `autowired:"true" transaction:"false"`
+	Tctx    application.Context `autowired:"true" transaction:"true"`
 }
 
-// GET get func
-// @Summary get user by id
-// @Description get user by id test
-// @accept  json
-// @Produce json
-// @Param   id     path    int64     true        "user id"
-// @Success 200 {string} json "{"Status":200,"Result":{},"Runtime":"ok"}"
-// @Failure 400 {string} json "{"Status":400,"Result":{},"Runtime":"ok"}"
-// @Router /users/{id} [get]
-func (s *userControllerImpl) GET() {
-	id, _ := strconv.Atoi(s.Tctx.GinCtx().Param("id"))
-	res, err := s.UserSrv.GetUserByID(id)
-	s.Tctx.HTTPResponseOk(res, err)
+func (c *userControllerImpl) GetUserByID() {
+	id, _ := strconv.ParseInt(c.Tctx.GinCtx().Params.ByName("id"), 10, 64)
+	res, err := c.UserSrv.GetUserByID(id)
+	c.Tctx.HTTPResponseOk(res, err)
 	return
 }
 
-var gValidator = func(tctx application.Context) {
-	id, _ := strconv.Atoi(tctx.GinCtx().Param("id"))
-	if id < 3 {
-		tctx.HTTPResponseUnauthorizedErr(errors.New("gValidator no permission"))
-	}
+func (c *userControllerImpl) GetUserList() {
+	res, err := c.UserSrv.GetUserList(c.Tctx.GinCtx().Request.URL.RawQuery)
+	c.Tctx.HTTPResponseOk(res, err)
 	return
 }
 
-var g1Validator = func(tctx application.Context) {
-	id, _ := strconv.Atoi(tctx.GinCtx().Param("id"))
-	if id > 3 {
-		tctx.HTTPResponseUnauthorizedErr(errors.New("g1Validator no permission"))
+func (c *userControllerImpl) CreateUser() {
+	var newUser model.User
+	if err := c.Tctx.GinCtx().BindJSON(&newUser); err != nil {
+		c.Tctx.HTTPResponseInternalErr(err)
+		return
 	}
+	res, err := c.UserSrv.CreateUser(&newUser)
+	c.Tctx.HTTPResponseOk(res, err)
 	return
 }
 
-// PermissionValidator example validator
-func PermissionValidator(requiredP []string) func(application.Context) {
-	return func(c application.Context) {
-		// c.GinCtx().Set("permission", []string{"employee"}) // no permission
-		c.GinCtx().Set("permission", []string{"employee", "manager"}) // ok
-		in := util.SliceInSlice(requiredP, c.GinCtx().GetStringSlice("permission"))
-		if !in {
-			c.HTTPResponseUnauthorizedErr(errors.New("np permission"))
-		}
+func (c *userControllerImpl) UpdateUserByID() {
+	change, dVersion, err := util.DecodeReqBodyToMap(c.Tctx.GinCtx())
+	if err != nil {
+		c.Tctx.HTTPResponseInternalErr(err)
+		return
 	}
+	id, _ := strconv.ParseInt(c.Tctx.GinCtx().Params.ByName("id"), 10, 64)
+	err = c.UserSrv.UpdateUserByID(id, dVersion, change)
+	c.Tctx.HTTPResponseOk(nil, err)
+	return
 }
 
-// Getsssss Method
-// @Summary get user list
-// @Description get user by id test
-// @accept  json
-// @Produce json
-// @Success 200 {string} json "{"Status":200,"Result":{},"Runtime":"ok"}"
-// @Failure 400 {string} json "{"Status":400,"Result":{},"Runtime":"ok"}"
-// @Router /users [get]
-func (s *userControllerImpl) Getsssss() {
-	res, err := s.UserSrv.GetUserList(s.Tctx.GinCtx().Request.URL.RawQuery)
-	s.Tctx.HTTPResponseOk(res, err)
+func (c *userControllerImpl) DeleteUserByID() {
+	_, dVersion, err := util.DecodeReqBodyToMap(c.Tctx.GinCtx())
+	if err != nil {
+		c.Tctx.HTTPResponseInternalErr(err)
+		return
+	}
+	id, _ := strconv.ParseInt(c.Tctx.GinCtx().Params.ByName("id"), 10, 64)
+	err = c.UserSrv.DeleteUserByID(id, dVersion)
+	c.Tctx.HTTPResponseOk(nil, err)
 	return
 }

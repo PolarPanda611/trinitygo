@@ -1,8 +1,11 @@
-package object
+package model
 
-// User model
+import "github.com/PolarPanda611/trinitygo/crud/model"
+
+// User model for User
 type User struct {
-	ID        uint       `json:"id" gorm:"primary_key"`
+	model.Model
+	// to add your customize param inside here
 	UserName  string     `json:"user_name"  gorm:"type:varchar(50);unique"`
 	NameLocal string     `json:"name_local"  gorm:"type:varchar(50)"`
 	Phone     string     `json:"phone"`

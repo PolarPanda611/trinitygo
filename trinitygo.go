@@ -283,7 +283,6 @@ func RegisterController(controllerName string, instance interface{}, requestMaps
 // RegisterInstance bind instance
 func RegisterInstance(instance interface{}, tags ...string) {
 	var newInstance bootingInstance
-	fmt.Println(reflect.TypeOf(instance).Kind())
 	switch reflect.TypeOf(instance).Kind() {
 	case reflect.Struct:
 		newInstance = bootingInstance{
