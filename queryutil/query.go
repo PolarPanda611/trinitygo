@@ -1,8 +1,10 @@
 package queryutil
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -23,11 +25,20 @@ var (
 // in query
 // out gorm scopes
 type QueryHandler interface {
+	RemotePreloadlist() []RemotePreloader
 	PageSize() int
 	PageNum() int
 	HandleDBBackend() []func(*gorm.DB) *gorm.DB
 	HandleWithPagination(query string) []func(*gorm.DB) *gorm.DB
 	Handle(query string) []func(*gorm.DB) *gorm.DB
+	HandleRemotePreloader(interface{}) error
+}
+
+// RemotePreloader  preload the model from remote resource
+type RemotePreloader struct {
+	Column      string
+	PreloadFunc func(args interface{}, Conditions ...string) (interface{}, error)
+	Condition   string
 }
 
 type queryRepositoryImpl struct {
@@ -38,6 +49,7 @@ type queryRepositoryImpl struct {
 	filterList          []string
 	orderByList         []string
 	preloadList         map[string]func(db *gorm.DB) *gorm.DB
+	remotePreloadlist   []RemotePreloader
 	filterCustomizeFunc map[string]interface{}
 	queryMap            url.Values
 	queryScope          []func(*gorm.DB) *gorm.DB
@@ -49,12 +61,13 @@ type queryRepositoryImpl struct {
 
 // QueryConfig query config
 type QueryConfig struct {
-	FilterBackend []func(db *gorm.DB) *gorm.DB
-	PageSize      int
-	SearchByList  []string
-	FilterList    []string
-	OrderByList   []string
-	PreloadList   map[string]func(db *gorm.DB) *gorm.DB
+	FilterBackend     []func(db *gorm.DB) *gorm.DB
+	PageSize          int
+	SearchByList      []string
+	FilterList        []string
+	OrderByList       []string
+	PreloadList       map[string]func(db *gorm.DB) *gorm.DB
+	RemotePreloadlist []RemotePreloader
 	// SetFilterCustomizeFunc
 	// run local
 	// option 1 : func(db *gorm.DB, queryValue string) *gorm.DB
@@ -94,6 +107,7 @@ func New(config *QueryConfig) QueryHandler {
 		filterList:          config.FilterList,
 		orderByList:         config.OrderByList,
 		preloadList:         config.PreloadList,
+		remotePreloadlist:   config.RemotePreloadlist,
 		searchByList:        config.SearchByList,
 		filterCustomizeFunc: config.FilterCustomizeFunc,
 		isDebug:             config.IsDebug,
@@ -282,6 +296,12 @@ func (q *queryRepositoryImpl) HandleWithPagination(query string) []func(*gorm.DB
 	return newQueryScope
 }
 
+func (q *queryRepositoryImpl) RemotePreloadlist() []RemotePreloader {
+	newRemotePreloader := make([]RemotePreloader, len(q.remotePreloadlist))
+	copy(newRemotePreloader, q.remotePreloadlist)
+	return newRemotePreloader
+}
+
 func (q *queryRepositoryImpl) PageSize() int {
 	pageSizeRuntime := q.pageSizeRuntime
 	q.pageSizeRuntime = 0
@@ -300,6 +320,50 @@ func (q *queryRepositoryImpl) HandleDBBackend() []func(*gorm.DB) *gorm.DB {
 	copy(newQueryScope, q.queryScope)
 	q.queryScope = nil
 	return newQueryScope
+}
+
+func (q *queryRepositoryImpl) HandleRemotePreloader(obj interface{}) error {
+	objType := reflect.TypeOf(obj)
+	if objType.Kind() != reflect.Ptr && objType.Kind() != reflect.Slice {
+		return errors.New("must be ptr or slice ")
+	}
+	var objVal reflect.Value
+	if objType.Kind() == reflect.Ptr {
+		objVal = reflect.Indirect(reflect.ValueOf(obj))
+	}
+	if objType.Kind() == reflect.Slice {
+		objVal = reflect.ValueOf(obj)
+	}
+
+	fmt.Println(objType.Kind())
+	switch objVal.Kind() {
+	case reflect.Struct:
+		for _, v := range q.remotePreloadlist {
+			structField, _ := objType.Elem().FieldByName(v.Column)
+			fmt.Println(structField.Name)
+			fmt.Println(structField.Tag.Get("remote_resource"))
+			fmt.Println(structField.Tag.Get("remote_condition"))
+			targetVal := objVal.FieldByName(v.Column)
+			fmt.Println(targetVal.Type()) //PTR
+			targetKeyVal := objVal.FieldByName(v.Column + "ID")
+			fmt.Println(targetKeyVal.Interface())
+			res, err := v.PreloadFunc(targetKeyVal.Interface())
+			if err != nil {
+				return err
+			}
+			if !targetVal.CanSet() {
+				return errors.New("must be public ")
+			}
+			targetVal.Set(reflect.ValueOf(res))
+		}
+		break
+	case reflect.Slice:
+		break
+	default:
+		return errors.New("must be ptr of struct or slice ")
+	}
+	return nil
+
 }
 
 // NewScope create new scope

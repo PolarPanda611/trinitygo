@@ -18,7 +18,7 @@ func New(app application.Application) gin.HandlerFunc {
 				if v.GetRequired() {
 					c.AbortWithStatusJSON(400, httputil.ResponseData{
 						Status: 400,
-						Error: map[string]string{
+						Err: map[string]string{
 							"code":    codes.Internal.String(),
 							"message": fmt.Sprintf("runtime key %v is required ", v.GetKeyName()),
 						},

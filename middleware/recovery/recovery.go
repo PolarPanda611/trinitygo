@@ -22,7 +22,7 @@ func New(app application.Application) gin.HandlerFunc {
 				app.Logger().Warn(logMessage)
 				c.AbortWithStatusJSON(400, httputil.ResponseData{
 					Status: 400,
-					Error: map[string]string{
+					Err: map[string]string{
 						"code":    codes.Internal.String(),
 						"message": fmt.Sprintf("Internal err : %v", err),
 					},

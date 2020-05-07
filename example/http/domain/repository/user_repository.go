@@ -21,6 +21,7 @@ var (
 		OrderByList:         []string{},
 		SearchByList:        []string{},
 		PreloadList:         map[string]func(db *gorm.DB) *gorm.DB{},
+		RemotePreloadlist:   []queryutil.RemotePreloader{},
 		FilterCustomizeFunc: map[string]interface{}{},
 	}
 )
@@ -28,9 +29,11 @@ var (
 func init() {
 	trinitygo.RegisterInstance(func() interface{} {
 		repo := new(userRepositoryImpl)
-		repo.queryHandler = queryutil.New(_userConfig)
 		return repo
 	}, "UserRepository")
+	trinitygo.RegisterInstance(func() interface{} {
+		return queryutil.New(_userConfig)
+	}, "UserQueryHandler")
 }
 
 // UserRepository user repository
@@ -44,14 +47,14 @@ type UserRepository interface {
 }
 
 type userRepositoryImpl struct {
-	Tctx         application.Context `autowired:"true" `
-	queryHandler queryutil.QueryHandler
+	Tctx         application.Context    `autowired:"true" `
+	QueryHandler queryutil.QueryHandler `autowired:"true" resource:"UserQueryHandler"`
 }
 
 func (r *userRepositoryImpl) GetUserByID(id int64) (*model.User, error) {
 	var user model.User
 	if err := r.Tctx.DB().Scopes(
-		r.queryHandler.HandleDBBackend()...,
+		r.QueryHandler.HandleDBBackend()...,
 	).Where("id = ?", id).First(&user).Error; err != nil {
 		return nil, err
 	}
@@ -61,7 +64,7 @@ func (r *userRepositoryImpl) GetUserByID(id int64) (*model.User, error) {
 func (r *userRepositoryImpl) GetUserList(query string) ([]model.User, error) {
 	var userList []model.User
 	if err := r.Tctx.DB().Scopes(
-		r.queryHandler.HandleWithPagination(query)...,
+		r.QueryHandler.HandleWithPagination(query)...,
 	).Find(&userList).Error; err != nil {
 		return nil, err
 	}
@@ -70,11 +73,11 @@ func (r *userRepositoryImpl) GetUserList(query string) ([]model.User, error) {
 
 func (r *userRepositoryImpl) GetUserCount(query string) (count uint, currentPage int, totalPage int, err error) {
 	if err := r.Tctx.DB().Scopes(
-		r.queryHandler.HandleWithPagination(query)...,
+		r.QueryHandler.HandleWithPagination(query)...,
 	).Model(&model.User{}).Limit(-1).Offset(-1).Count(&count).Error; err != nil {
 		return 0, 0, 0, err
 	}
-	return count, r.queryHandler.PageNum(), int(math.Ceil(float64(count) / float64(r.queryHandler.PageSize()))), nil
+	return count, r.QueryHandler.PageNum(), int(math.Ceil(float64(count) / float64(r.QueryHandler.PageSize()))), nil
 }
 
 func (r *userRepositoryImpl) CreateUser(newUser *model.User) (*model.User, error) {
@@ -88,7 +91,7 @@ func (r *userRepositoryImpl) CreateUser(newUser *model.User) (*model.User, error
 func (r *userRepositoryImpl) UpdateUserByID(id int64, dVersion string, change map[string]interface{}) error {
 
 	updateQuery := r.Tctx.DB().Scopes(
-		r.queryHandler.HandleDBBackend()...,
+		r.QueryHandler.HandleDBBackend()...,
 	).Where("id = ? ", id).Where("d_version = ? ", dVersion).Model(&model.User{}).Update(change)
 	if err := updateQuery.Error; err != nil {
 		return err
@@ -101,7 +104,7 @@ func (r *userRepositoryImpl) UpdateUserByID(id int64, dVersion string, change ma
 }
 func (r *userRepositoryImpl) DeleteUserByID(id int64, dVersion string) error {
 	deleteQuery := r.Tctx.DB().Scopes(
-		r.queryHandler.HandleDBBackend()...,
+		r.QueryHandler.HandleDBBackend()...,
 	).Where("id = ? ", id).Where("d_version = ? ", dVersion).Delete(&model.User{})
 	if err := deleteQuery.Error; err != nil {
 		return err

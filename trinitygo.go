@@ -63,7 +63,7 @@ var (
 			if err != nil {
 				c.AbortWithStatusJSON(400, httputil.ResponseData{
 					Status: 400,
-					Error:  err,
+					Err:    err,
 				})
 				return
 			}

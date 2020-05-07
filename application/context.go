@@ -1,7 +1,9 @@
 package application
 
 import (
+	"fmt"
 	"net/http"
+	"runtime/debug"
 
 	"github.com/PolarPanda611/trinitygo/httputil"
 	"github.com/PolarPanda611/trinitygo/util"
@@ -139,9 +141,11 @@ func (c *ContextImpl) HTTPResponseErr(status int, err error) {
 			c.SafeRollback()
 		}
 		_, resErr := util.HTTPErrDecoder(err)
+		c.c.Error(fmt.Errorf("%v", err))
+		c.c.Error(fmt.Errorf("%v", string(debug.Stack())))
 		c.c.AbortWithStatusJSON(status, httputil.ResponseData{
 			Status:  status,
-			Error:   resErr,
+			Err:     resErr,
 			Runtime: c.runtime,
 		})
 		return

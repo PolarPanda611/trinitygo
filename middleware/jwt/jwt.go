@@ -119,7 +119,7 @@ func (m *JWTVerifierImpl) Middleware() gin.HandlerFunc {
 		if err != nil {
 			c.AbortWithStatusJSON(401, httputil.ResponseData{
 				Status: 401,
-				Error: map[string]string{
+				Err: map[string]string{
 					"code":    codes.Unauthenticated.String(),
 					"message": fmt.Sprintf("Unauthenticated header"),
 				},

@@ -224,6 +224,14 @@ func (l *loggerImpl) Middleware() gin.HandlerFunc {
 			line += fmt.Sprintf("%v ", string(request))
 		}
 
+		if l.config.Error && c.Errors != nil {
+			for _, e := range c.Errors.Errors() {
+				errLine := line
+				errLine += fmt.Sprintf("%v %v ", "Error", e)
+				l.app.Logger().Info(errLine)
+			}
+		}
+
 		l.app.Logger().Info(line)
 	}
 }
