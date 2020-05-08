@@ -17,6 +17,8 @@ import (
 	"github.com/PolarPanda611/trinitygo/httputil"
 	truntime "github.com/PolarPanda611/trinitygo/runtime"
 	"github.com/PolarPanda611/trinitygo/util"
+	"github.com/casbin/casbin/v2"
+	gormadapter "github.com/casbin/gorm-adapter/v2"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
@@ -52,6 +54,7 @@ var (
 	_app                       *Application
 	_initApp                   sync.Once
 	_configPath                string = "./config/"
+	_casbinConfPath            string = "./config/casbin.conf"
 	_bootingControllers        []bootingController
 	_bootingInstances          []bootingInstance
 	_healthCheckPath           string                                                 = "/ping"
@@ -103,6 +106,7 @@ type Application struct {
 	once           sync.Once
 	mu             sync.RWMutex
 	db             *gorm.DB
+	enforcer       *casbin.Enforcer
 	controllerPool *application.ControllerPool
 	instancePool   *application.InstancePool
 
@@ -122,6 +126,11 @@ type Application struct {
 // SetConfigPath set config path
 func SetConfigPath(path string) {
 	_configPath = path
+}
+
+// SetCasbinConfPath set config path
+func SetCasbinConfPath(path string) {
+	_casbinConfPath = path
 }
 
 // EnableHealthCheckURL set config path
@@ -405,7 +414,7 @@ func (app *Application) initSD() {
 				app.config.GetServiceDiscoveryPort(),
 			)
 			if err != nil {
-				app.logger.Fatal("get service mesh client err")
+				app.logger.Fatal("get service mesh client err", err)
 			}
 			app.serviceMesh = c
 			break
@@ -414,11 +423,27 @@ func (app *Application) initSD() {
 		}
 	}
 }
+func (app *Application) initCasbin() {
+	// adapter, err := gormadapter.NewAdapterByDBUsePrefix(app.db, app.Conf().GetDBTablePrefix())
+	adapter, err := gormadapter.NewAdapter("postgres", "host=127.0.0.1 port=60901 user=casbin password=123456 sslmode=disable", true) // Your driver and data source.
+	if err != nil {
+		app.logger.Fatal("create casbin adapter err ", err)
+	}
+	app.enforcer, err = casbin.NewEnforcer(_casbinConfPath, adapter)
+	if err != nil {
+		app.logger.Fatal("create casbin enforcer err ", err)
+	}
+	err = app.enforcer.LoadPolicy()
+	if err != nil {
+		app.logger.Fatal("load casbin enforcer err ", err)
+	}
+}
 
 // InitTrinity serve grpc
 func (app *Application) InitTrinity() {
 	app.initRuntime()
 	app.initDB()
+	app.initCasbin()
 	app.initPool()
 	app.initSD()
 }

@@ -16,7 +16,7 @@ import (
 // NilLogger nil logger
 type NilLogger struct{}
 
-// Print nil logger do noothing
+// Print nil logger do nothing
 func (l *NilLogger) Print(v ...interface{}) {
 
 }

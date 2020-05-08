@@ -7,6 +7,8 @@ require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/bwmarrin/snowflake v0.3.0
+	github.com/casbin/casbin/v2 v2.4.1
+	github.com/casbin/gorm-adapter/v2 v2.1.0
 	github.com/coreos/etcd v3.3.19+incompatible
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
