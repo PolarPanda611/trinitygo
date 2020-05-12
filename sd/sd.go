@@ -2,12 +2,17 @@ package sd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
+	"github.com/PolarPanda611/trinitygo/httputil"
 	"github.com/PolarPanda611/trinitygo/util"
 	"github.com/coreos/etcd/clientv3"
 	etcdnaming "github.com/coreos/etcd/clientv3/naming"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/naming"
 )
@@ -35,7 +40,6 @@ func NewEtcdRegister(address string, port int) (ServiceMesh, error) {
 		Address: address,
 		Port:    port,
 	}
-
 	cli, err := clientv3.NewFromURL(fmt.Sprintf("http://%v:%v", s.Address, s.Port))
 
 	if err != nil {
@@ -75,6 +79,7 @@ func (s *ServiceMeshEtcdImpl) DeRegService(projectName string, projectVersion st
 }
 
 // NewEtcdClientConn new etcd client connection
+// for grpc
 func NewEtcdClientConn(address string, port int, serviceName string, timeout int) (*grpc.ClientConn, error) {
 	cli, err := clientv3.NewFromURL(fmt.Sprintf("http://%v:%v", address, port))
 	if err != nil {
@@ -90,4 +95,47 @@ func NewEtcdClientConn(address string, port int, serviceName string, timeout int
 		return nil, err
 	}
 	return conn, nil
+}
+
+// NewEtcdHTTPClient new etcd http client
+func NewEtcdHTTPClient(address string, port int, serviceName string, timeout int) (*httputil.ServiceClient, error) {
+	cli, err := clientv3.NewFromURL(fmt.Sprintf("http://%v:%v", address, port))
+	if err != nil {
+		return nil, fmt.Errorf("failed to conn etcd client , %v", err)
+	}
+	ctx, cel := context.WithTimeout(context.Background(), time.Second*time.Duration(timeout))
+	defer cel()
+	res, err := cli.Get(ctx, serviceName, clientv3.WithPrefix())
+	if err != nil {
+		return nil, fmt.Errorf("failed to get service , %v", err)
+	}
+	clients := extractAddrs(res)
+	client, err := NewRoundRobin(clients).Client()
+	if err != nil {
+		return nil, nil
+	}
+	return client, nil
+}
+
+func extractAddrs(resp *clientv3.GetResponse) []httputil.ServiceClient {
+	addrs := make([]httputil.ServiceClient, 0)
+	if resp == nil || resp.Kvs == nil {
+		return nil
+	}
+	for i := range resp.Kvs {
+		if v := resp.Kvs[i].Value; v != nil {
+			var v naming.Update
+			if err := json.Unmarshal(resp.Kvs[i].Value, &v); err != nil {
+				panic(err)
+			}
+			addr := strings.Split(v.Addr, ":")[0]
+			port, _ := strconv.Atoi(strings.Split(v.Addr, ":")[1])
+			client := httputil.ServiceClient{
+				Addr: addr,
+				Port: port,
+			}
+			addrs = append(addrs, client)
+		}
+	}
+	return addrs
 }

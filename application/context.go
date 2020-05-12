@@ -6,6 +6,7 @@ import (
 	"runtime/debug"
 
 	"github.com/PolarPanda611/trinitygo/httputil"
+	"github.com/PolarPanda611/trinitygo/sd"
 	"github.com/PolarPanda611/trinitygo/util"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
@@ -13,6 +14,7 @@ import (
 
 // Context record all thing inside one request
 type Context interface {
+	NewHTTPServiceRequest(serviceName string, method httputil.RequestMethod, path string, body []byte) (interface{}, error)
 	Application() Application
 	setRuntime(map[string]string)
 	Runtime() map[string]string
@@ -25,6 +27,7 @@ type Context interface {
 	GinCtx() *gin.Context
 	setDB(*gorm.DB)
 	cleanRuntime()
+	GetCurrentUser() (interface{}, error)
 	HTTPResponseUnauthorizedErr(error)
 	HTTPResponseInternalErr(error)
 	HTTPResponseErr(int, error)
@@ -40,7 +43,8 @@ type ContextImpl struct {
 	db       *gorm.DB
 	dbTxOpen bool
 	// http
-	c *gin.Context
+	c               *gin.Context
+	funcToGetWhoAmI func(app Application, c *gin.Context, db *gorm.DB) (interface{}, error)
 }
 
 // Application get app
@@ -182,11 +186,38 @@ func (c *ContextImpl) HTTPResponse(status int, res interface{}, err error) {
 	return
 }
 
+// GetCurrentUser get current User
+func (c *ContextImpl) GetCurrentUser() (interface{}, error) {
+	if c.c == nil {
+		panic("gin context not set , please check ")
+	}
+	if c.app == nil {
+		panic("app not set , please check ")
+	}
+	if c.db == nil {
+		panic("db not set , please check ")
+	}
+	return c.funcToGetWhoAmI(c.app, c.c, c.db)
+}
+
+//NewHTTPServiceRequest new http service request
+func (c *ContextImpl) NewHTTPServiceRequest(serviceName string, method httputil.RequestMethod, path string, body []byte) (interface{}, error) {
+	client, err := sd.NewEtcdHTTPClient(c.app.Conf().GetServiceDiscoveryAddress(), c.app.Conf().GetServiceDiscoveryPort(), serviceName, c.app.Conf().GetAppIdleTimeout())
+	if err != nil {
+		return nil, err
+	}
+	header := map[string]string{
+		"Authorization": c.c.GetHeader("Authorization"),
+	}
+	return client.Request("GET", path, body, header)
+}
+
 // NewContext new contedt
-func NewContext(app Application) Context {
+func NewContext(app Application, funcToGetWhoAmI func(app Application, c *gin.Context, db *gorm.DB) (interface{}, error)) Context {
 	return &ContextImpl{
-		app:      app,
-		dbTxOpen: false,
+		app:             app,
+		dbTxOpen:        false,
+		funcToGetWhoAmI: funcToGetWhoAmI,
 	}
 }
 

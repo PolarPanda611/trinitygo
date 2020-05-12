@@ -6,10 +6,13 @@ import (
 	"path"
 
 	"github.com/PolarPanda611/trinitygo"
+	"github.com/PolarPanda611/trinitygo/application"
 	_ "github.com/PolarPanda611/trinitygo/example/http/domain/controller/http" // init controller
 	"github.com/PolarPanda611/trinitygo/example/http/infra"
 	truntime "github.com/PolarPanda611/trinitygo/runtime"
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/jinzhu/gorm"
 
 	_ "github.com/PolarPanda611/trinitygo/example/http/docs"
 )
@@ -35,6 +38,7 @@ func main() {
 	casbinPath := fmt.Sprintf(projectRootPath + "/config/rbac_with_domains_model.conf")
 	trinitygo.SetConfigPath(configPath)
 	trinitygo.SetCasbinConfPath(casbinPath)
+	trinitygo.SetFuncGetWhoAmI(getUser)
 	trinitygo.EnableHealthCheckURL()
 	t := trinitygo.DefaultHTTP()
 	t.RegRuntimeKey(truntime.NewRuntimeKey("trace_id", false, func() string { return uuid.New().String() }, true))
@@ -44,4 +48,8 @@ func main() {
 	infra.DB = t.DB()
 	infra.Migrate()
 	t.ServeHTTP()
+}
+
+func getUser(app application.Application, c *gin.Context, db *gorm.DB) (interface{}, error) {
+	return "dtan11", nil
 }

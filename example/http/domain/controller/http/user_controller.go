@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/PolarPanda611/trinitygo/example/http/domain/model"
@@ -41,6 +42,7 @@ type userControllerImpl struct {
 
 func (c *userControllerImpl) GetUserByID() {
 	id, _ := strconv.ParseInt(c.Tctx.GinCtx().Params.ByName("id"), 10, 64)
+	fmt.Println(c.Tctx.GetCurrentUser())
 	res, err := c.UserSrv.GetUserByID(id)
 	c.Tctx.HTTPResponseOk(res, err)
 	return

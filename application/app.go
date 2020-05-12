@@ -4,6 +4,7 @@ import (
 	"context"
 
 	truntime "github.com/PolarPanda611/trinitygo/runtime"
+	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
 
 	"github.com/PolarPanda611/trinitygo/conf"
@@ -22,6 +23,7 @@ type Application interface {
 	Conf() conf.Conf
 	ContextPool() *ContextPool
 	DB() *gorm.DB
+	Enforcer() *casbin.Enforcer
 	InstallDB(f func() *gorm.DB)
 	ControllerPool() *ControllerPool
 	InstancePool() *InstancePool

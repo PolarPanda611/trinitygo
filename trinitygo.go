@@ -50,16 +50,20 @@ import (
 )
 
 var (
-	_                          application.Application = new(Application)
-	_app                       *Application
-	_initApp                   sync.Once
-	_configPath                string = "./config/"
-	_casbinConfPath            string = "./config/casbin.conf"
-	_bootingControllers        []bootingController
-	_bootingInstances          []bootingInstance
-	_healthCheckPath           string                                                 = "/ping"
-	_enableHealthCheckPath     bool                                                   = false
-	_logSelfCheck              bool                                                   = true
+	_                      application.Application = new(Application)
+	_casbinEnable          bool                    = false
+	_app                   *Application
+	_initApp               sync.Once
+	_configPath            string = "./config/"
+	_casbinConfPath        string = "./config/casbin.conf"
+	_bootingControllers    []bootingController
+	_bootingInstances      []bootingInstance
+	_healthCheckPath       string                                                                              = "/ping"
+	_enableHealthCheckPath bool                                                                                = false
+	_logSelfCheck          bool                                                                                = true
+	_funcToGetWhoAmI       func(app application.Application, c *gin.Context, db *gorm.DB) (interface{}, error) = func(app application.Application, c *gin.Context, db *gorm.DB) (interface{}, error) {
+		return nil, nil
+	}
 	_defaultHealthCheckHandler func(app application.Application) func(c *gin.Context) = func(app application.Application) func(c *gin.Context) {
 		return func(c *gin.Context) {
 			err := app.DB().DB().Ping()
@@ -133,6 +137,11 @@ func SetCasbinConfPath(path string) {
 	_casbinConfPath = path
 }
 
+// SetFuncGetWhoAmI set _funcToGetWhoAmI
+func SetFuncGetWhoAmI(f func(app application.Application, c *gin.Context, db *gorm.DB) (interface{}, error)) {
+	_funcToGetWhoAmI = f
+}
+
 // EnableHealthCheckURL set config path
 func EnableHealthCheckURL(path ...string) {
 	if len(path) > 0 {
@@ -166,7 +175,7 @@ func New() application.Application {
 		_app.logger.SetTimeFormat("2006-01-02 15:04:05.000")
 
 		_app.contextPool = application.New(func() application.Context {
-			return application.NewContext(_app)
+			return application.NewContext(_app, _funcToGetWhoAmI)
 		})
 
 		_app.controllerPool = application.NewControllerPool()
@@ -178,9 +187,9 @@ func New() application.Application {
 // DefaultGRPC default grpc server
 func DefaultGRPC() application.Application {
 	app := New()
+	app.UseInterceptor(logger.New(app))
 	app.UseInterceptor(recovery.New(app))
 	app.UseInterceptor(runtime.New(app))
-	app.UseInterceptor(logger.New(app))
 	app.UseInterceptor(di.New(app))
 	return app
 }
@@ -424,8 +433,10 @@ func (app *Application) initSD() {
 	}
 }
 func (app *Application) initCasbin() {
-	// adapter, err := gormadapter.NewAdapterByDBUsePrefix(app.db, app.Conf().GetDBTablePrefix())
-	adapter, err := gormadapter.NewAdapter("postgres", "host=127.0.0.1 port=60901 user=casbin password=123456 sslmode=disable", true) // Your driver and data source.
+	if !_casbinEnable {
+		return
+	}
+	adapter, err := gormadapter.NewAdapterByDBUsePrefix(app.db, app.Conf().GetDBTablePrefix())
 	if err != nil {
 		app.logger.Fatal("create casbin adapter err ", err)
 	}
@@ -468,6 +479,14 @@ func (app *Application) initHealthCheck() {
 	app.router.GET(app.Conf().GetAppBaseURL()+_healthCheckPath, _defaultHealthCheckHandler(app))
 
 	app.Logger().Info(fmt.Sprintf("booting installing healthChecker : %v  -> %v ...installed", app.Conf().GetAppBaseURL()+_healthCheckPath, "_defaultHealthCheckHandler"))
+}
+
+// Enforcer get casbin enforcer instance
+func (app *Application) Enforcer() *casbin.Enforcer {
+	if app.enforcer == nil {
+		app.logger.Fatal("You need init casbin first ")
+	}
+	return app.enforcer
 }
 
 // InitRouter init router
