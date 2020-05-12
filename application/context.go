@@ -209,7 +209,7 @@ func (c *ContextImpl) NewHTTPServiceRequest(serviceName string, method httputil.
 	header := map[string]string{
 		"Authorization": c.c.GetHeader("Authorization"),
 	}
-	return client.Request("GET", path, body, header)
+	return client.Request(method, path, body, header)
 }
 
 // NewContext new contedt
