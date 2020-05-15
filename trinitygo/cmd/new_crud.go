@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"text/template"
 	"unicode"
@@ -30,12 +31,14 @@ var (
 			if err != nil {
 				return err
 			}
+			projectName := filepath.Base(currentPath)
 			charRune := []rune(modelName)
 			firstChar := charRune[0]
 			if !unicode.IsUpper(firstChar) {
 				return fmt.Errorf("first characters should be Upper case ")
 			}
 			pData := map[string]interface{}{
+				"ProjectName":           projectName,
 				"ModelName":             modelName,
 				"ModelNamePrivate":      fmt.Sprint(strings.ToLower(modelName[0:1]) + modelName[1:]),
 				"ModelNameToUnderscore": modelNameWithUnderscore,

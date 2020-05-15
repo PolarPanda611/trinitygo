@@ -11,7 +11,7 @@ package repository
 import (
 	"errors"
 	"math"
-	"metro_api/domain/model"
+	"{{.ProjectName}}/domain/model"
 
 	"github.com/PolarPanda611/trinitygo"
 	"github.com/PolarPanda611/trinitygo/application"

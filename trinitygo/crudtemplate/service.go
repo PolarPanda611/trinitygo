@@ -9,10 +9,10 @@ func genSrv() string {
 package service
 
 import (
-	"metro_api/domain/model"
+	"{{.ProjectName}}/domain/model"
 	"strconv"
 
-	"metro_api/domain/repository"
+	"{{.ProjectName}}/domain/repository"
 
 	"github.com/PolarPanda611/trinitygo"
 	"github.com/PolarPanda611/trinitygo/application"
