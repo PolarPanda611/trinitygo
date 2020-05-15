@@ -47,7 +47,7 @@ type {{.ModelName}}Repository interface {
 	Create{{.ModelName}}(*model.{{.ModelName}}) (*model.{{.ModelName}}, error)
 	Update{{.ModelName}}ByID(id int64, dVersion string, change map[string]interface{}) error
 	Delete{{.ModelName}}ByID(id int64, dVersion string) error
-	Get{{.ModelName}}Count(query string) (count uint, currentPage int, totalPage int, err error)
+	Get{{.ModelName}}Count(query string) (count uint, currentPage int, totalPage int,pageSize int,  err error)
 }
 
 type {{.ModelNamePrivate}}RepositoryImpl struct {
@@ -75,13 +75,13 @@ func (r *{{.ModelNamePrivate}}RepositoryImpl) Get{{.ModelName}}List(query string
 	return {{.ModelNamePrivate}}List, nil
 }
 
-func (r *{{.ModelNamePrivate}}RepositoryImpl) Get{{.ModelName}}Count(query string) (count uint, currentPage int, totalPage int, err error) {
+func (r *{{.ModelNamePrivate}}RepositoryImpl) Get{{.ModelName}}Count(query string) (count uint, currentPage int, totalPage int,pageSize int,  err error) {
 	if err := r.Tctx.DB().Scopes(
 		r.queryHandler.HandleWithPagination(query)...,
 	).Model(&model.{{.ModelName}}{}).Limit(-1).Offset(-1).Count(&count).Error; err != nil {
-		return 0, 0, 0, err
+		return 0, 0, 0, 0, err
 	}
-	return count, r.queryHandler.PageNum(), int(math.Ceil(float64(count) / float64(r.queryHandler.PageSize()))), nil
+	return count, r.queryHandler.PageNum(), int(math.Ceil(float64(count) / float64(r.queryHandler.PageSize()))),r.queryHandler.PageSize(), nil
 }
 
 func (r *{{.ModelNamePrivate}}RepositoryImpl) Create{{.ModelName}}(new{{.ModelName}} *model.{{.ModelName}}) (*model.{{.ModelName}}, error) {
@@ -89,7 +89,6 @@ func (r *{{.ModelNamePrivate}}RepositoryImpl) Create{{.ModelName}}(new{{.ModelNa
 		return nil, err
 	}
 	return new{{.ModelName}}, nil
-
 }
 
 func (r *{{.ModelNamePrivate}}RepositoryImpl) Update{{.ModelName}}ByID(id int64, dVersion string, change map[string]interface{}) error {
@@ -103,7 +102,6 @@ func (r *{{.ModelNamePrivate}}RepositoryImpl) Update{{.ModelName}}ByID(id int64,
 	if updateQuery.RowsAffected != 1 {
 		return errors.New("update affected zero lines , please refresh the data")
 	}
-
 	return nil
 }
 func (r *{{.ModelNamePrivate}}RepositoryImpl) Delete{{.ModelName}}ByID(id int64, dVersion string) error {
@@ -116,7 +114,6 @@ func (r *{{.ModelNamePrivate}}RepositoryImpl) Delete{{.ModelName}}ByID(id int64,
 	if deleteQuery.RowsAffected != 1 {
 		return errors.New("delete affected zero lines , please refresh the data")
 	}
-
 	return nil
 }
 

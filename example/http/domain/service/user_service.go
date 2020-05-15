@@ -19,6 +19,9 @@ func init() {
 
 // UserService  service interface
 type UserService interface {
+	//ServiceName
+	//Method
+	//Path
 	GetUserByID(id int64) (*model.User, error)
 	GetUserList(query string) (interface{}, error)
 	CreateUser(*model.User) (*model.User, error)
@@ -43,7 +46,7 @@ func (s *userServiceImpl) GetUserList(query string) (interface{}, error) {
 	if IsOff {
 		return res, nil
 	}
-	count, currentPage, totalPage, err := s.UserRepo.GetUserCount(query)
+	count, currentPage, totalPage, pageSize, err := s.UserRepo.GetUserCount(query)
 	if err != nil {
 		return nil, err
 	}
@@ -52,6 +55,7 @@ func (s *userServiceImpl) GetUserList(query string) (interface{}, error) {
 		"current_page": currentPage,
 		"total_count":  count,
 		"total_page":   totalPage,
+		"page_size":    pageSize,
 	}
 	return resWithPagination, nil
 }

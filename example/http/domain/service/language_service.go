@@ -43,7 +43,7 @@ func (s *languageServiceImpl) GetLanguageList(query string) (interface{}, error)
 	if IsOff {
 		return res, nil
 	}
-	count, currentPage, totalPage, err := s.LanguageRepo.GetLanguageCount(query)
+	count, currentPage, totalPage, pageSize, err := s.LanguageRepo.GetLanguageCount(query)
 	if err != nil {
 		return nil, err
 	}
@@ -52,6 +52,7 @@ func (s *languageServiceImpl) GetLanguageList(query string) (interface{}, error)
 		"current_page": currentPage,
 		"total_count":  count,
 		"total_page":   totalPage,
+		"page_size":    pageSize,
 	}
 	return resWithPagination, nil
 }

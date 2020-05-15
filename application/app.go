@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 
+	"github.com/PolarPanda611/trinitygo/keyword"
 	truntime "github.com/PolarPanda611/trinitygo/runtime"
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
@@ -21,6 +22,7 @@ type Application interface {
 	Logger() *golog.Logger
 	RuntimeKeys() []truntime.RuntimeKey
 	Conf() conf.Conf
+	Keyword() keyword.Keyword
 	ContextPool() *ContextPool
 	DB() *gorm.DB
 	Enforcer() *casbin.Enforcer
@@ -36,6 +38,7 @@ type Application interface {
 	GetGRPCServer() *grpc.Server
 	ServeGRPC()
 	ServeHTTP()
+	ResponseFactory() func(status int, res interface{}, runtime map[string]string) interface{}
 }
 
 // DecodeGRPCRuntimeKey  decode runtime key from ctx

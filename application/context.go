@@ -147,11 +147,17 @@ func (c *ContextImpl) HTTPResponseErr(status int, err error) {
 		_, resErr := util.HTTPErrDecoder(err)
 		c.c.Error(fmt.Errorf("%v", err))
 		c.c.Error(fmt.Errorf("%v", string(debug.Stack())))
-		c.c.AbortWithStatusJSON(status, httputil.ResponseData{
-			Status:  status,
-			Err:     resErr,
-			Runtime: c.runtime,
-		})
+
+		if c.app.ResponseFactory() != nil {
+			c.c.JSON(status, c.app.ResponseFactory()(status, resErr, c.runtime))
+		} else {
+			c.c.AbortWithStatusJSON(status, httputil.ResponseData{
+				Status:  status,
+				Err:     resErr,
+				Runtime: c.runtime,
+			})
+		}
+
 		return
 	}
 }
@@ -178,11 +184,16 @@ func (c *ContextImpl) HTTPResponse(status int, res interface{}, err error) {
 	if c.app.Conf().GetAtomicRequest() {
 		c.SafeCommit()
 	}
-	c.c.JSON(status, httputil.ResponseData{
-		Status:  status,
-		Result:  res,
-		Runtime: c.runtime,
-	})
+	if c.app.ResponseFactory() != nil {
+		c.c.JSON(status, c.app.ResponseFactory()(status, res, c.runtime))
+	} else {
+		c.c.JSON(status, httputil.ResponseData{
+			Status:  status,
+			Result:  res,
+			Runtime: c.runtime,
+		})
+	}
+
 	return
 }
 

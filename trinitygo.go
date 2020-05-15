@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/PolarPanda611/trinitygo/httputil"
+	"github.com/PolarPanda611/trinitygo/keyword"
 	truntime "github.com/PolarPanda611/trinitygo/runtime"
 	"github.com/PolarPanda611/trinitygo/util"
 	"github.com/casbin/casbin/v2"
@@ -50,6 +51,7 @@ import (
 )
 
 var (
+	_responseFactory       func(status int, res interface{}, runtime map[string]string) interface{}
 	_                      application.Application = new(Application)
 	_casbinEnable          bool                    = false
 	_app                   *Application
@@ -102,6 +104,7 @@ type bootingInstance struct {
 // Application core of trinity
 type Application struct {
 	config       conf.Conf
+	keyword      keyword.Keyword
 	logger       *golog.Logger
 	logSelfCheck bool
 	contextPool  *application.ContextPool
@@ -124,12 +127,23 @@ type Application struct {
 	router      *gin.Engine
 
 	//runtime
-	runtimeKeys []truntime.RuntimeKey
+	runtimeKeys     []truntime.RuntimeKey
+	responseFactory func(status int, res interface{}, runtime map[string]string) interface{}
+}
+
+// SetKeyword set keywork list
+func SetKeyword(k keyword.Keyword) {
+	keyword.SetKeyword(k)
 }
 
 // SetConfigPath set config path
 func SetConfigPath(path string) {
 	_configPath = path
+}
+
+// SetResponseFactory set response factory
+func SetResponseFactory(f func(status int, res interface{}, runtime map[string]string) interface{}) {
+	_responseFactory = f
 }
 
 // SetCasbinConfPath set config path
@@ -168,8 +182,8 @@ func New() application.Application {
 			logger:       golog.Default,
 			config:       conf.NewSetting(_configPath),
 			logSelfCheck: _logSelfCheck,
+			keyword:      keyword.GetKeyword(),
 		}
-
 		appPrefix := fmt.Sprintf("[%v@%v]", util.GetServiceName(_app.config.GetProjectName()), _app.config.GetProjectVersion())
 		_app.logger.SetPrefix(appPrefix)
 		_app.logger.SetTimeFormat("2006-01-02 15:04:05.000")
@@ -180,6 +194,9 @@ func New() application.Application {
 
 		_app.controllerPool = application.NewControllerPool()
 		_app.instancePool = application.NewInstancePool()
+		if _responseFactory != nil {
+			_app.responseFactory = _responseFactory
+		}
 	})
 	return _app
 }
@@ -224,11 +241,28 @@ func (app *Application) Conf() conf.Conf {
 	return app.config
 }
 
+// Keyword get key word list
+func (app *Application) Keyword() keyword.Keyword {
+	app.mu.RLock()
+	defer app.mu.RUnlock()
+	return app.keyword
+}
+
 // DB get db
 func (app *Application) DB() *gorm.DB {
 	app.mu.RLock()
 	defer app.mu.RUnlock()
 	return app.db
+}
+
+// ResponseFactory get response factory
+func (app *Application) ResponseFactory() func(status int, res interface{}, runtime map[string]string) interface{} {
+	app.mu.RLock()
+	defer app.mu.RUnlock()
+	if app.responseFactory != nil {
+		return app.responseFactory
+	}
+	return nil
 }
 
 // ContextPool get contextpoo;

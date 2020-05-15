@@ -40,7 +40,7 @@ type LanguageRepository interface {
 	CreateLanguage(*model.Language) (*model.Language, error)
 	UpdateLanguageByID(id int64, dVersion string, change map[string]interface{}) error
 	DeleteLanguageByID(id int64, dVersion string) error
-	GetLanguageCount(query string) (count uint, currentPage int, totalPage int, err error)
+	GetLanguageCount(query string) (count uint, currentPage int, totalPage int, pageSize int, err error)
 }
 
 type languageRepositoryImpl struct {
@@ -68,13 +68,13 @@ func (r *languageRepositoryImpl) GetLanguageList(query string) ([]model.Language
 	return languageList, nil
 }
 
-func (r *languageRepositoryImpl) GetLanguageCount(query string) (count uint, currentPage int, totalPage int, err error) {
+func (r *languageRepositoryImpl) GetLanguageCount(query string) (count uint, currentPage int, totalPage int, pageSize int, err error) {
 	if err := r.Tctx.DB().Scopes(
 		r.queryHandler.HandleWithPagination(query)...,
 	).Model(&model.Language{}).Limit(-1).Offset(-1).Count(&count).Error; err != nil {
-		return 0, 0, 0, err
+		return 0, 0, 0, 0, err
 	}
-	return count, r.queryHandler.PageNum(), int(math.Ceil(float64(count) / float64(r.queryHandler.PageSize()))), nil
+	return count, r.queryHandler.PageNum(), int(math.Ceil(float64(count) / float64(r.queryHandler.PageSize()))), r.queryHandler.PageSize(), nil
 }
 
 func (r *languageRepositoryImpl) CreateLanguage(newLanguage *model.Language) (*model.Language, error) {

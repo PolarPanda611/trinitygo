@@ -27,7 +27,9 @@ func DiSelfCheck(destName interface{}, pool *sync.Pool, logger *golog.Logger, in
 		var availableInjectType []reflect.Type
 		val := instanceVal.Field(index)
 		if !GetAutowiredTags(instance, index) {
-			logDIWarnf(objectName, logger, resultCount, "autowired tag not set")
+			if val.CanSet() {
+				logDIWarnf(objectName, logger, resultCount, "autowired tag not set")
+			}
 			continue
 		}
 		if !val.CanSet() {

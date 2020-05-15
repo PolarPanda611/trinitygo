@@ -9,17 +9,19 @@ import (
 	"strings"
 
 	"github.com/PolarPanda611/trinitygo/application"
+	"github.com/PolarPanda611/trinitygo/keyword"
 	"github.com/PolarPanda611/trinitygo/util"
 	"github.com/jinzhu/gorm"
 )
 
-var (
-	_searchByKey   string = "SearchBy"
-	_pageNumKey    string = "PageNum"
-	_pageSizeKey   string = "PageSize"
-	_orderByKey    string = "OrderBy"
-	_paginationOff string = "PaginationOff"
-)
+// KeyWord query utils key work definition
+type KeyWord struct {
+	SearchBy      string
+	PageNum       string
+	PageSize      string
+	OrderBy       string
+	PaginationOff string
+}
 
 // QueryHandler query handler
 // in query
@@ -42,6 +44,7 @@ type RemotePreloader struct {
 }
 
 type queryRepositoryImpl struct {
+	keyword             KeyWord
 	query               string
 	filterBackend       []func(db *gorm.DB) *gorm.DB
 	pageSize            int
@@ -52,9 +55,10 @@ type queryRepositoryImpl struct {
 	remotePreloadlist   []RemotePreloader
 	filterCustomizeFunc map[string]interface{}
 	queryMap            url.Values
-	queryScope          []func(*gorm.DB) *gorm.DB
 	isDebug             bool
 
+	// runtime
+	queryScope      []func(*gorm.DB) *gorm.DB
 	pageSizeRuntime int
 	pageNumRuntime  int
 }
@@ -102,6 +106,13 @@ func NewWithDefaultConfig(tCtx application.Context, query string) QueryHandler {
 // New query handler with customize handler config
 func New(config *QueryConfig) QueryHandler {
 	queryHandler := &queryRepositoryImpl{
+		keyword: KeyWord{
+			SearchBy:      keyword.GetKeyword().SearchBy,
+			PageNum:       keyword.GetKeyword().PageNum,
+			PageSize:      keyword.GetKeyword().PageSize,
+			OrderBy:       keyword.GetKeyword().OrderBy,
+			PaginationOff: keyword.GetKeyword().PaginationOff,
+		},
 		filterBackend:       config.FilterBackend,
 		pageSize:            config.PageSize,
 		filterList:          config.FilterList,
@@ -113,6 +124,11 @@ func New(config *QueryConfig) QueryHandler {
 		isDebug:             config.IsDebug,
 	}
 	return queryHandler
+}
+func (q *queryRepositoryImpl) cleanRuntime() {
+	q.queryScope = nil
+	q.pageSizeRuntime = 0
+	q.pageNumRuntime = 0
 }
 
 func (q *queryRepositoryImpl) decodeURL() {
@@ -150,7 +166,7 @@ func (q *queryRepositoryImpl) handleCustomizeFilter(k string, v []string) {
 	}
 }
 func (q *queryRepositoryImpl) handleSearchBy(k string, v []string) {
-	if k == _searchByKey {
+	if k == q.keyword.SearchBy {
 		if len(v) != 0 {
 			queryValue := v[0]
 			var queryString string
@@ -183,7 +199,7 @@ func (q *queryRepositoryImpl) handleSearchBy(k string, v []string) {
 }
 
 func (q *queryRepositoryImpl) handleOrderBy(k string, v []string) {
-	if k == _orderByKey {
+	if k == q.keyword.OrderBy {
 		ordercondition := ""
 		queryValue := strings.Join(v, ",")
 		for _, orderField := range strings.Split(queryValue, ",") {
@@ -262,6 +278,7 @@ func (q *queryRepositoryImpl) handlePreload() {
 
 func (q *queryRepositoryImpl) Handle(query string) []func(*gorm.DB) *gorm.DB {
 	q.query = query
+	q.cleanRuntime()
 	q.decodeURL()
 	q.handleDBBackend()
 	for k, v := range q.queryMap {
@@ -273,16 +290,16 @@ func (q *queryRepositoryImpl) Handle(query string) []func(*gorm.DB) *gorm.DB {
 	q.handlePreload()
 	newQueryScope := make([]func(*gorm.DB) *gorm.DB, len(q.queryScope))
 	copy(newQueryScope, q.queryScope)
-	q.queryScope = nil
 	return newQueryScope
 
 }
 
 func (q *queryRepositoryImpl) HandleWithPagination(query string) []func(*gorm.DB) *gorm.DB {
 	q.query = query
+	q.cleanRuntime()
 	q.decodeURL()
 	q.handleDBBackend()
-	q.handlePagination(q.queryMap[_pageNumKey], q.queryMap[_pageSizeKey], q.queryMap[_paginationOff])
+	q.handlePagination(q.queryMap[q.keyword.PageNum], q.queryMap[q.keyword.PageSize], q.queryMap[q.keyword.PaginationOff])
 
 	for k, v := range q.queryMap {
 		q.handleSearchBy(k, v)
@@ -292,7 +309,6 @@ func (q *queryRepositoryImpl) HandleWithPagination(query string) []func(*gorm.DB
 	q.handlePreload()
 	newQueryScope := make([]func(*gorm.DB) *gorm.DB, len(q.queryScope))
 	copy(newQueryScope, q.queryScope)
-	q.queryScope = nil
 	return newQueryScope
 }
 
@@ -304,21 +320,19 @@ func (q *queryRepositoryImpl) RemotePreloadlist() []RemotePreloader {
 
 func (q *queryRepositoryImpl) PageSize() int {
 	pageSizeRuntime := q.pageSizeRuntime
-	q.pageSizeRuntime = 0
 	return pageSizeRuntime
 }
 
 func (q *queryRepositoryImpl) PageNum() int {
 	pageNumRuntime := q.pageNumRuntime
-	q.pageNumRuntime = 0
 	return pageNumRuntime
 }
 
 func (q *queryRepositoryImpl) HandleDBBackend() []func(*gorm.DB) *gorm.DB {
+	q.cleanRuntime()
 	q.handleDBBackend()
 	newQueryScope := make([]func(*gorm.DB) *gorm.DB, len(q.queryScope))
 	copy(newQueryScope, q.queryScope)
-	q.queryScope = nil
 	return newQueryScope
 }
 

@@ -50,7 +50,7 @@ func (s *{{.ModelNamePrivate}}ServiceImpl) Get{{.ModelName}}List(query string) (
 	if IsOff {
 		return res, nil
 	}
-	count, currentPage, totalPage, err := s.{{.ModelName}}Repo.Get{{.ModelName}}Count(query)
+	count, currentPage, totalPage,pageSize, err := s.{{.ModelName}}Repo.Get{{.ModelName}}Count(query)
 	if err != nil {
 		return nil, err
 	}
@@ -59,6 +59,7 @@ func (s *{{.ModelNamePrivate}}ServiceImpl) Get{{.ModelName}}List(query string) (
 		"current_page": currentPage,
 		"total_count":  count,
 		"total_page":   totalPage,
+		"page_size: 	pageSize,
 	}
 	return resWithPagination, nil
 }
