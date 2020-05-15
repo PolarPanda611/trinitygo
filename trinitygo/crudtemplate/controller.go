@@ -110,7 +110,7 @@ func (c *{{.ModelNamePrivate}}ControllerImpl) Create{{.ModelName}}() {
 // @Produce json
 // @Param   id     path    int64     true        "id"
 // @Param  q  query string false "name search by q" Format(email)
-// @Success 201 {string} json "{"Status":201,"Result":{},"Runtime":"ok"}"
+// @Success 200 {string} json "{"Status":200,"Result":{},"Runtime":"ok"}"
 // @Failure 400 {string} json "{"Status":400,"Result":{},"Runtime":"ok"}"
 // @Security ApiKeyAuth
 // @Router /{{.ProjectName}}/{{.ModelNameToUnderscore}}s/{id} [patch]
@@ -133,7 +133,7 @@ func (c *{{.ModelNamePrivate}}ControllerImpl) Update{{.ModelName}}ByID() {
 // @Produce json
 // @Param   id     path    int64     true        "id"
 // @Param  q  query string false "name search by q" Format(email)
-// @Success 201 {string} json "{"Status":201,"Result":{},"Runtime":"ok"}"
+// @Success 200 {string} json "{"Status":200,"Result":{},"Runtime":"ok"}"
 // @Failure 400 {string} json "{"Status":400,"Result":{},"Runtime":"ok"}"
 // @Security ApiKeyAuth
 // @Router /{{.ProjectName}}/{{.ModelNameToUnderscore}}s/{id} [delete]
@@ -155,7 +155,7 @@ func (c *{{.ModelNamePrivate}}ControllerImpl) Delete{{.ModelName}}ByID() {
 // @accept  json
 // @Produce json
 // @Param  q  query string false "name search by q" Format(email)
-// @Success 201 {string} json "{"Status":201,"Result":{},"Runtime":"ok"}"
+// @Success 200 {string} json "{"Status":200,"Result":{},"Runtime":"ok"}"
 // @Failure 400 {string} json "{"Status":400,"Result":{},"Runtime":"ok"}"
 // @Security ApiKeyAuth
 // @Router /{{.ProjectName}}/{{.ModelNameToUnderscore}}s [delete]
