@@ -16,6 +16,7 @@ import (
 
 	"github.com/PolarPanda611/trinitygo"
 	"github.com/PolarPanda611/trinitygo/application"
+	modelutil "github.com/PolarPanda611/trinitygo/crud/model"
 )
 
 var _ {{.ModelName}}Service = new({{.ModelNamePrivate}}ServiceImpl)
@@ -31,6 +32,7 @@ type {{.ModelName}}Service interface {
 	Create{{.ModelName}}(*model.{{.ModelName}}) (*model.{{.ModelName}}, error)
 	Update{{.ModelName}}ByID(id int64, dVersion string, change map[string]interface{}) error
 	Delete{{.ModelName}}ByID(id int64, dVersion string) error
+	MultiDelete{{.ModelName}}ByID([]modelutil.DeleteParam) error
 }
 
 type {{.ModelNamePrivate}}ServiceImpl struct {
@@ -76,7 +78,14 @@ func (s *{{.ModelNamePrivate}}ServiceImpl) Delete{{.ModelName}}ByID(id int64, dV
 	return s.{{.ModelName}}Repo.Delete{{.ModelName}}ByID(id, dVersion)
 }
 
-	
+func (s *{{.ModelNamePrivate}}ServiceImpl) MultiDelete{{.ModelName}}ByID(deleteParam []modelutil.DeleteParam) error {
+	for _, v := range deleteParam {
+		if err := s.Delete{{.ModelName}}ByID(v.Key, v.DVersion); err != nil {
+			return fmt.Errorf("line id %v deleted failed , %v", v.Key, err)
+		}
+	}
+	return nil
+}
 	
 	`
 }

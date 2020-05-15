@@ -16,6 +16,7 @@ import (
 
 	"github.com/PolarPanda611/trinitygo"
 	"github.com/PolarPanda611/trinitygo/application"
+	modelutil "github.com/PolarPanda611/trinitygo/crud/model"
 	"github.com/PolarPanda611/trinitygo/crud/util"
 	"github.com/PolarPanda611/trinitygo/httputil"
 )
@@ -29,6 +30,7 @@ func init() {
 		application.NewRequestMapping(httputil.POST, "", "Create{{.ModelName}}"),
 		application.NewRequestMapping(httputil.PATCH, "/:id", "Update{{.ModelName}}ByID"),
 		application.NewRequestMapping(httputil.DELETE, "/:id", "Delete{{.ModelName}}ByID"),
+		application.NewRequestMapping(httputil.DELETE, "", "MultiDelete{{.ModelName}}ByID"),
 	)
 }
 
@@ -39,6 +41,7 @@ type {{.ModelName}}Controller interface {
 	Create{{.ModelName}}()
 	Update{{.ModelName}}ByID()
 	Delete{{.ModelName}}ByID()
+	MultiDelete{{.ModelName}}ByID()
 }
 
 type {{.ModelNamePrivate}}ControllerImpl struct {
@@ -94,6 +97,16 @@ func (c *{{.ModelNamePrivate}}ControllerImpl) Delete{{.ModelName}}ByID() {
 	return
 }
 
+func (c *{{.ModelNamePrivate}}ControllerImpl) MultiDelete{{.ModelName}}ByID() {
+	var deleteBody []modelutil.DeleteParam
+	if err := c.Tctx.GinCtx().BindJSON(&deleteBody); err != nil {
+		c.Tctx.HTTPResponseInternalErr(err)
+		return
+	}
+	err := c.{{.ModelName}}Srv.MultiDelete{{.ModelName}}ByID(deleteBody)
+	c.Tctx.HTTPResponseOk(nil, err)
+	return
+}
 	
 	`
 }
