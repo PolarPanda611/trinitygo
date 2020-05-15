@@ -14,6 +14,7 @@ import (
 	"os"
 	
 	_ "{{.PackageName}}/domain/controller/http"
+	_ "{{.PackageName}}/docs"
 
 	"github.com/PolarPanda611/trinitygo"
 	truntime "github.com/PolarPanda611/trinitygo/runtime"

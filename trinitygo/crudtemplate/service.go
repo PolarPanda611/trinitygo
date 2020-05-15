@@ -61,7 +61,7 @@ func (s *{{.ModelNamePrivate}}ServiceImpl) Get{{.ModelName}}List(query string) (
 		"current_page": currentPage,
 		"total_count":  count,
 		"total_page":   totalPage,
-		"page_size: 	pageSize,
+		"page_size": 	pageSize,
 	}
 	return resWithPagination, nil
 }
