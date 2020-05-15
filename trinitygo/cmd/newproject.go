@@ -14,7 +14,7 @@ import (
 
 var (
 	newProjectCmd = &cobra.Command{
-		Use:   "newhttp",
+		Use:   "NewHttp",
 		Short: "New HTTP project which will be implemented the Trinity GO",
 		Long:  `This command will generate the basic fold structure `,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {

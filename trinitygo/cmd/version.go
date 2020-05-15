@@ -12,7 +12,7 @@ const (
 
 var (
 	versionCmd = &cobra.Command{
-		Use:   "version",
+		Use:   "Version",
 		Short: "Output current version number",
 		Long:  `Output current version number`,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {

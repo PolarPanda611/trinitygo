@@ -18,7 +18,7 @@ import (
 
 var (
 	newCRUDCmd = &cobra.Command{
-		Use:   "new_crud",
+		Use:   "NewCrud",
 		Short: "generate new crud code for model",
 		Long:  `This command will generate the crud code for your model name , first characters should be Upper case `,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
