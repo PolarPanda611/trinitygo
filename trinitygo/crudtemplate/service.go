@@ -9,6 +9,7 @@ func genSrv() string {
 package service
 
 import (
+	"fmt"
 	"{{.ProjectName}}/domain/model"
 	"strconv"
 
