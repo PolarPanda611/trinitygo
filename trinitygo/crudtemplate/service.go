@@ -45,12 +45,11 @@ func (s *{{.ModelNamePrivate}}ServiceImpl) Get{{.ModelName}}ByID(id int64) (*mod
 	return s.{{.ModelName}}Repo.Get{{.ModelName}}ByID(id)
 }
 func (s *{{.ModelNamePrivate}}ServiceImpl) Get{{.ModelName}}List(query string) (interface{}, error) {
-	res, err := s.{{.ModelName}}Repo.Get{{.ModelName}}List(query)
+	res,isPaginationOff, err := s.{{.ModelName}}Repo.Get{{.ModelName}}List(query)
 	if err != nil {
 		return nil, err
 	}
-	IsOff, _ := strconv.ParseBool(s.Tctx.GinCtx().Query("PaginationOff"))
-	if IsOff {
+	if isPaginationOff {
 		return res, nil
 	}
 	count, currentPage, totalPage,pageSize, err := s.{{.ModelName}}Repo.Get{{.ModelName}}Count(query)
