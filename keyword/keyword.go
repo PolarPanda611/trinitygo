@@ -37,12 +37,6 @@ func SetKeyword(k Keyword) {
 
 // GetKeyword get keyword list
 func GetKeyword() Keyword {
-	return Keyword{
-		SearchBy:      _searchByKey,
-		PageNum:       _pageNumKey,
-		PageSize:      _pageSizeKey,
-		OrderBy:       _orderByKey,
-		PaginationOff: _paginationOff,
-	}
+	return _defaultKeyword
 
 }

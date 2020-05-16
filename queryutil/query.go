@@ -148,7 +148,12 @@ func (q *queryRepositoryImpl) handleFilter(k string, v []string) {
 			if q.isDebug {
 				fmt.Printf("where : %v  %v \n ", d.ConditionSQL(), d.ValueSQL())
 			}
-			q.queryScope = append(q.queryScope, NewScope(d.ConditionSQL(), d.ValueSQL()))
+			if d.ValueSQL() != nil {
+				q.queryScope = append(q.queryScope, NewScope(d.ConditionSQL(), d.ValueSQL()))
+				return
+			}
+			q.queryScope = append(q.queryScope, NewScopeWithoutValue(d.ConditionSQL()))
+			return
 		}
 
 	}
@@ -384,5 +389,12 @@ func (q *queryRepositoryImpl) HandleRemotePreloader(obj interface{}) error {
 func NewScope(conditionSQL string, valueSQL interface{}) func(*gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		return db.Where(conditionSQL, valueSQL)
+	}
+}
+
+// NewScopeWithoutValue create new scope
+func NewScopeWithoutValue(conditionSQL string) func(*gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		return db.Where(conditionSQL)
 	}
 }

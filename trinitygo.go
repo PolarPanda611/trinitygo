@@ -538,6 +538,9 @@ func (app *Application) InitRouter() {
 			ExposeHeaders:    app.Conf().GetExposeHeaders(),
 			AllowCredentials: app.Conf().GetAllowCredentials(),
 			MaxAge:           time.Duration(app.Conf().GetMaxAgeHour()) * time.Hour,
+			AllowOriginFunc: func(origin string) bool {
+				return strings.Contains(origin, "127.0.0.1") || strings.Contains(origin, "localhost") || strings.Contains(origin, "http://192")
+			},
 		}))
 	}
 	app.router.GET(app.Conf().GetAppBaseURL()+"/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
