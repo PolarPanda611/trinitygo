@@ -12,9 +12,11 @@ golang restframework plugin with gin+gorm, fast and high scalable
 ```bash
 $ go get github.com/PolarPanda611/trinitygo/trinitygo
 $ trinitygo NewHttp [Your Project Name]
-
-
+$ cd [Your Project Name] 
 $ trinitygo NewCrud [Your Model Name]
+$ swag init
+
+// start your journey in Trintiy
 ```
 
 done.
@@ -29,6 +31,9 @@ done.
 * support automic request 
 * support customize validator ( API permission , data validation ...)
 * support URL query analyze (search , filter , order by , preload ...)
+* cmd to init Project folder
+* cmd to init Project CRUD Code && unit test template
+* cmd to init Swagger docs
 
 ## 文档
 
