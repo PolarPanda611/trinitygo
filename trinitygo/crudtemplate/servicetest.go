@@ -169,7 +169,7 @@ func Test{{.ModelName}}ServiceMultiDelete{{.ModelName}}ByID(t *testing.T) {
 	// case 2
 	{{.ModelName}}Repo.On("Delete{{.ModelName}}ByID", int64(1), "v1").Once().Return(nil)
 	{{.ModelName}}Repo.On("Delete{{.ModelName}}ByID", int64(2), "v1").Once().Return(errors.New("failed"))
-	testutil.Play(t, {{.ModelName}}Srv, "MultiDelete{{.ModelName}}ByID", deleteBody1).Match(fmt.Errorf("line id %v deleted failed , %v", int64(2), errors.New("failed")))
+	testutil.Play(t, {{.ModelName}}Srv, "MultiDelete{{.ModelName}}ByID", deleteBody1).Match(fmt.Errorf("e{{.ModelName}} id %v deleted failed , %v", int64(2), errors.New("failed")))
 }
 
 `
