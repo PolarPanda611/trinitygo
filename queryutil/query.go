@@ -30,6 +30,7 @@ type QueryHandler interface {
 	RemotePreloadlist() []RemotePreloader
 	PageSize() int
 	PageNum() int
+	IsPaginationOff() bool
 	HandleDBBackend() []func(*gorm.DB) *gorm.DB
 	HandleWithPagination(query string) []func(*gorm.DB) *gorm.DB
 	Handle(query string) []func(*gorm.DB) *gorm.DB
@@ -61,6 +62,7 @@ type queryRepositoryImpl struct {
 	queryScope      []func(*gorm.DB) *gorm.DB
 	pageSizeRuntime int
 	pageNumRuntime  int
+	isPaginationOff bool // true => off  , false => on
 }
 
 // QueryConfig query config
@@ -129,6 +131,7 @@ func (q *queryRepositoryImpl) cleanRuntime() {
 	q.queryScope = nil
 	q.pageSizeRuntime = 0
 	q.pageNumRuntime = 0
+	q.isPaginationOff = false
 }
 
 func (q *queryRepositoryImpl) decodeURL() {
@@ -231,8 +234,8 @@ func (q *queryRepositoryImpl) handleOrderBy(k string, v []string) {
 
 func (q *queryRepositoryImpl) handlePagination(pageNum []string, pageSize []string, paginationOff []string) {
 	if len(paginationOff) != 0 {
-		IsOff, _ := strconv.ParseBool(paginationOff[0])
-		if IsOff {
+		q.isPaginationOff, _ = strconv.ParseBool(paginationOff[0])
+		if q.isPaginationOff {
 			return
 		}
 	}
@@ -331,6 +334,11 @@ func (q *queryRepositoryImpl) PageSize() int {
 func (q *queryRepositoryImpl) PageNum() int {
 	pageNumRuntime := q.pageNumRuntime
 	return pageNumRuntime
+}
+
+func (q *queryRepositoryImpl) IsPaginationOff() bool {
+	isPaginationOffRuntime := q.isPaginationOff
+	return isPaginationOffRuntime
 }
 
 func (q *queryRepositoryImpl) HandleDBBackend() []func(*gorm.DB) *gorm.DB {

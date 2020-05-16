@@ -18,6 +18,7 @@ require (
 	github.com/gin-contrib/cors v1.3.0
 	github.com/gin-gonic/gin v1.5.0
 	github.com/go-sql-driver/mysql v1.5.0
+	github.com/gogo/protobuf v1.2.1
 	github.com/golang/protobuf v1.3.3
 	github.com/google/uuid v1.1.1
 	github.com/grpc-ecosystem/go-grpc-middleware v1.2.0
@@ -31,5 +32,6 @@ require (
 	github.com/swaggo/swag v1.5.1
 	golang.org/x/net v0.0.0-20200114155413-6afb5195e5aa
 	google.golang.org/grpc v1.26.0
+	gopkg.in/go-playground/assert.v1 v1.2.1
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )

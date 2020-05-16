@@ -43,11 +43,11 @@ func init() {
 // {{.ModelName}}Repository {{.ModelNamePrivate}} repository
 type {{.ModelName}}Repository interface {
 	Get{{.ModelName}}ByID(id int64) (*model.{{.ModelName}}, error)
-	Get{{.ModelName}}List(query string) ([]model.{{.ModelName}}, error)
+	Get{{.ModelName}}List(query string) ([]model.{{.ModelName}},bool, error)
 	Create{{.ModelName}}(*model.{{.ModelName}}) (*model.{{.ModelName}}, error)
 	Update{{.ModelName}}ByID(id int64, dVersion string, change map[string]interface{}) error
 	Delete{{.ModelName}}ByID(id int64, dVersion string) error
-	Get{{.ModelName}}Count(query string) (count uint, currentPage int, totalPage int,pageSize int,  err error)
+	Get{{.ModelName}}Count(query string) (count int, currentPage int, totalPage int,pageSize int,  err error)
 }
 
 type {{.ModelNamePrivate}}RepositoryImpl struct {
@@ -65,17 +65,17 @@ func (r *{{.ModelNamePrivate}}RepositoryImpl) Get{{.ModelName}}ByID(id int64) (*
 	return &{{.ModelNamePrivate}}, nil
 }
 
-func (r *{{.ModelNamePrivate}}RepositoryImpl) Get{{.ModelName}}List(query string) ([]model.{{.ModelName}}, error) {
+func (r *{{.ModelNamePrivate}}RepositoryImpl) Get{{.ModelName}}List(query string) ([]model.{{.ModelName}},bool ,  error) {
 	var {{.ModelNamePrivate}}List []model.{{.ModelName}}
 	if err := r.Tctx.DB().Scopes(
 		r.queryHandler.HandleWithPagination(query)...,
 	).Find(&{{.ModelNamePrivate}}List).Error; err != nil {
-		return nil, err
+		return nil, false, err
 	}
-	return {{.ModelNamePrivate}}List, nil
+	return {{.ModelNamePrivate}}List, r.queryHandler.IsPaginationOff(), nil
 }
 
-func (r *{{.ModelNamePrivate}}RepositoryImpl) Get{{.ModelName}}Count(query string) (count uint, currentPage int, totalPage int,pageSize int,  err error) {
+func (r *{{.ModelNamePrivate}}RepositoryImpl) Get{{.ModelName}}Count(query string) (count int, currentPage int, totalPage int,pageSize int,  err error) {
 	if err := r.Tctx.DB().Scopes(
 		r.queryHandler.HandleWithPagination(query)...,
 	).Model(&model.{{.ModelName}}{}).Limit(-1).Offset(-1).Count(&count).Error; err != nil {
