@@ -81,7 +81,7 @@ func (s *{{.ModelNamePrivate}}ServiceImpl) Delete{{.ModelName}}ByID(id int64, dV
 func (s *{{.ModelNamePrivate}}ServiceImpl) MultiDelete{{.ModelName}}ByID(deleteParam []modelutil.DeleteParam) error {
 	for _, v := range deleteParam {
 		if err := s.Delete{{.ModelName}}ByID(v.Key, v.DVersion); err != nil {
-			return fmt.Errorf("line id %v deleted failed , %v", v.Key, err)
+			return fmt.Errorf("{{.ModelName}} id %v deleted failed , %v", v.Key, err)
 		}
 	}
 	return nil
