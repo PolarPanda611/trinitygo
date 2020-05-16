@@ -6,7 +6,7 @@ func init() {
 
 func genRepoTest() string {
 	return `
-	package repository
+package repository
 
 import (
 	"{{.ProjectName}}/domain/model"
