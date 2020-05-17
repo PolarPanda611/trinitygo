@@ -57,11 +57,12 @@ func (s *{{.ModelNamePrivate}}ServiceImpl) Get{{.ModelName}}List(query string) (
 		return nil, err
 	}
 	resWithPagination := map[string]interface{}{
-		"data":         res,
-		"current_page": currentPage,
-		"total_count":  count,
-		"total_page":   totalPage,
-		"page_size": 	pageSize,
+		"data":       res,
+		"current":    currentPage,
+		"total":      count,
+		"pageSize":   pageSize,
+		"total_page": totalPage,
+		"success":    true,
 	}
 	return resWithPagination, nil
 }

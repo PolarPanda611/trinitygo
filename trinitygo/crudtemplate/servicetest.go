@@ -110,11 +110,12 @@ func Test{{.ModelName}}ServiceGet{{.ModelName}}List(t *testing.T) {
 	{{.ModelName}}Repo.On("Get{{.ModelName}}List", "t").Once().Return(test{{.ModelName}}List, false, nil)
 	{{.ModelName}}Repo.On("Get{{.ModelName}}Count", "t").Once().Return(20, 1, 2, 10, nil)
 	res := map[string]interface{}{
-		"data":         test{{.ModelName}}List,
-		"current_page": 1,
-		"total_count":  20,
-		"total_page":   2,
-		"page_size":    10,
+		"data":       test{{.ModelName}}List,
+		"current":    1,
+		"total":      20,
+		"pageSize":   10,
+		"total_page": 2,
+		"success":    true,
 	}
 	{{.ModelName}}Repo.On("Get{{.ModelName}}List", "t").Once().Return(test{{.ModelName}}List, false, nil)
 	testutil.Play(t, {{.ModelName}}Srv, "Get{{.ModelName}}List", "t").Match(res, nil)
