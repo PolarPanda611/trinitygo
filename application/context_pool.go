@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 )
 
 // ContextPool is the context pool, it's used inside router and the framework by itself.
@@ -30,11 +29,11 @@ func (c *ContextPool) Attach(newFunc func() Context) {
 
 // Acquire returns a Context from pool.
 // See Release.
-func (c *ContextPool) Acquire(app Application, runtime map[string]string, db *gorm.DB, ginCtx *gin.Context) Context {
+func (c *ContextPool) Acquire(app Application, runtime map[string]string, ginCtx *gin.Context) Context {
 	ctx := c.pool.Get().(Context)
 	ctx.setGinCTX(ginCtx)
 	ctx.setRuntime(runtime)
-	newDB := db.New()
+	newDB := app.DB().New()
 	newDB.SetLogger(NewDBLogger(app, runtime))
 	if v, ok := runtime["user_id"]; ok {
 		userIDInt64, _ := strconv.ParseInt(v, 10, 64)

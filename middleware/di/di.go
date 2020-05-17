@@ -13,7 +13,7 @@ func New(app application.Application) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		method := fmt.Sprintf("%v@%v", c.Request.Method, c.FullPath())
 		runtimeKeyMap := application.DecodeHTTPRuntimeKey(c, app.RuntimeKeys())
-		tContext := app.ContextPool().Acquire(app, runtimeKeyMap, app.DB(), c)
+		tContext := app.ContextPool().Acquire(app, runtimeKeyMap, c)
 		defer func() {
 			//release trinity go context obj
 			app.ContextPool().Release(tContext)
