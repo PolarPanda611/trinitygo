@@ -40,6 +40,14 @@ func main() {
 	currentPath, _ := os.Getwd()
 	configPath := fmt.Sprintf(currentPath + "/conf/conf.toml")
 	trinitygo.SetConfigPath(configPath)
+	trinitygo.SetResponseFactory(CustomizeResponseFactory)
+	trinitygo.SetKeyword(keyword.Keyword{
+		SearchBy:      "SearchBy",
+		PageNum:       "current",
+		PageSize:      "pageSize",
+		OrderBy:       "OrderBy",
+		PaginationOff: "PaginationOff",
+	})
 	trinitygo.EnableHealthCheckURL()
 	t := trinitygo.DefaultHTTP()
 	t.RegRuntimeKey(truntime.NewRuntimeKey("trace_id", false, func() string { return uuid.New().String() }, true))
@@ -47,6 +55,18 @@ func main() {
 	t.ServeHTTP()
 }
 
+func CustomizeResponseFactory(status int, res interface{}, runtime map[string]string) interface{} {
+	resMap, ok := res.(map[string]interface{})
+	if !ok {
+		resMap = make(map[string]interface{})
+		resMap["data"] = res
+	}
+	resMap["status"] = status
+	for k, v := range runtime {
+		resMap[k] = v
+	}
+	return resMap
+}
 	
 	`
 }
