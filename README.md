@@ -17,6 +17,7 @@ $ trinitygo NewCrud [Your Model Name]
 $ swag init
 
 // start your journey in Trintiy
+// you can check the demo under example folder 
 ```
 
 done.

@@ -1,0 +1,739 @@
+basePath: /metro_api/
+host: 127.0.0.1:8088
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: metro_api
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: metro_api
+  version: "1.0"
+paths:
+  /metro_api/groups:
+    delete:
+      consumes:
+      - application/json
+      description: function for GroupController  to MultiDelete Group
+      parameters:
+      - description: name search by q
+        format: email
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: MultiDelete Group
+    get:
+      consumes:
+      - application/json
+      description: function for GroupController  to get Group list By filter
+      parameters:
+      - description: name search by q
+        format: email
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Get Group list By filter
+    post:
+      consumes:
+      - application/json
+      description: function for GroupController  to create Group
+      parameters:
+      - description: name search by q
+        format: email
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: '{"Status":201,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Create Group
+  /metro_api/groups/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: function for GroupController  to delete Group
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: name search by q
+        format: email
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Delete Group
+    get:
+      consumes:
+      - application/json
+      description: function for GroupController  to get Group By ID
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Get Group By ID
+    patch:
+      consumes:
+      - application/json
+      description: function for GroupController  to Modify Group
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: name search by q
+        format: email
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Modify Group
+  /metro_api/v1/lines:
+    delete:
+      consumes:
+      - application/json
+      description: function for controller to multi delete Line list
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: multi delete Line by id
+    get:
+      consumes:
+      - application/json
+      description: function for controller to get Line list
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Get Line list
+    post:
+      consumes:
+      - application/json
+      description: function for controller to create Line list
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: '{"Status":201,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: create Line list
+  /metro_api/v1/lines/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: function for controller to delete Line list
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: delete Line by id
+    get:
+      consumes:
+      - application/json
+      description: function for controller to get Line By ID
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Get Line By ID
+    patch:
+      consumes:
+      - application/json
+      description: function for controller to create Line list
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: update Line by id
+  /metro_api/v1/metros:
+    delete:
+      consumes:
+      - application/json
+      description: function for MetroController  to MultiDelete Metro
+      parameters:
+      - description: name search by q
+        format: email
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: MultiDelete Metro
+    get:
+      consumes:
+      - application/json
+      description: function for MetroController  to get Metro list By filter
+      parameters:
+      - description: name search by q
+        format: email
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Get Metro list By filter
+    post:
+      consumes:
+      - application/json
+      description: function for MetroController  to create Metro
+      parameters:
+      - description: name search by q
+        format: email
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: '{"Status":201,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Create Metro
+  /metro_api/v1/metros/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: function for MetroController  to delete Metro
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: name search by q
+        format: email
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Delete Metro
+    get:
+      consumes:
+      - application/json
+      description: function for MetroController  to get Metro By ID
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Get Metro By ID
+    patch:
+      consumes:
+      - application/json
+      description: function for MetroController  to Modify Metro
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: name search by q
+        format: email
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Modify Metro
+  /metro_api/v1/run_histories:
+    get:
+      consumes:
+      - application/json
+      description: function for RunHistoryController  to get RunHistory list By filter
+      parameters:
+      - description: name search by q
+        format: email
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Get RunHistory list By filter
+    post:
+      consumes:
+      - application/json
+      description: function for RunHistoryController  to create RunHistory
+      parameters:
+      - description: name search by q
+        format: email
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: '{"Status":201,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Create RunHistory
+  /metro_api/v1/run_histories/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: function for RunHistoryController  to delete RunHistory
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: name search by q
+        format: email
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Delete RunHistory
+    get:
+      consumes:
+      - application/json
+      description: function for RunHistoryController  to get RunHistory By ID
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Get RunHistory By ID
+    patch:
+      consumes:
+      - application/json
+      description: function for RunHistoryController  to Modify RunHistory
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: name search by q
+        format: email
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Modify RunHistory
+  /metro_api/v1/stations:
+    get:
+      consumes:
+      - application/json
+      description: function for StationController  to get Station list By filter
+      parameters:
+      - description: name search by q
+        format: email
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Get Station list By filter
+    post:
+      consumes:
+      - application/json
+      description: function for StationController  to create Station
+      parameters:
+      - description: name search by q
+        format: email
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: '{"Status":201,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Create Station
+  /metro_api/v1/stations/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: function for StationController  to delete Station
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: name search by q
+        format: email
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Delete Station
+    get:
+      consumes:
+      - application/json
+      description: function for StationController  to get Station By ID
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Get Station By ID
+    patch:
+      consumes:
+      - application/json
+      description: function for StationController  to Modify Station
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: name search by q
+        format: email
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Modify Station
+  /metro_api/v1/users:
+    delete:
+      consumes:
+      - application/json
+      description: function for controller to multi delete user list
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: multi delete user by id
+swagger: "2.0"
