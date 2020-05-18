@@ -95,7 +95,7 @@ func (r *{{.ModelNamePrivate}}RepositoryImpl) Update{{.ModelName}}ByID(id int64,
 
 	updateQuery := r.Tctx.DB().Scopes(
 		r.queryHandler.HandleDBBackend()...,
-	).Where("id = ? ", id).Where("d_version = ? ", dVersion).Model(&model.{{.ModelName}}{}).Update(change)
+	).Where("id = ? ", id).Where("d_version = ? ", dVersion).Table(r.Tctx.DB().NewScope(&model.{{.ModelName}}{}).TableName()).Update(change)
 	if err := updateQuery.Error; err != nil {
 		return err
 	}
