@@ -99,7 +99,7 @@ func (c *{{.ModelNamePrivate}}ControllerImpl) Create{{.ModelName}}() {
 		return
 	}
 	res, err := c.{{.ModelName}}Srv.Create{{.ModelName}}(&new{{.ModelName}})
-	c.Tctx.HTTPResponseOk(res, err)
+	c.Tctx.HTTPResponseCreated(res, err)
 	return
 }
 
