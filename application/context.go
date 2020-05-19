@@ -33,6 +33,7 @@ type Context interface {
 	HTTPResponseErr(int, error)
 	HTTPResponseOk(interface{}, error)
 	HTTPResponseCreated(interface{}, error)
+	HTTPResponseDeleted(res interface{}, err error)
 	HTTPResponse(int, interface{}, error)
 }
 
@@ -170,6 +171,11 @@ func (c *ContextImpl) HTTPResponseOk(res interface{}, err error) {
 // HTTPResponseCreated handle http http.StatusCreated 201 response
 func (c *ContextImpl) HTTPResponseCreated(res interface{}, err error) {
 	c.HTTPResponse(http.StatusCreated, res, err)
+}
+
+// HTTPResponseDeleted handle http http.HTTPResponseDeleted 204 response
+func (c *ContextImpl) HTTPResponseDeleted(res interface{}, err error) {
+	c.HTTPResponse(http.StatusNoContent, res, err)
 }
 
 // HTTPResponse handle response

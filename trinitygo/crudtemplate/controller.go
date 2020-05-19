@@ -145,7 +145,7 @@ func (c *{{.ModelNamePrivate}}ControllerImpl) Delete{{.ModelName}}ByID() {
 	}
 	id, _ := strconv.ParseInt(c.Tctx.GinCtx().Params.ByName("id"), 10, 64)
 	err = c.{{.ModelName}}Srv.Delete{{.ModelName}}ByID(id, dVersion)
-	c.Tctx.HTTPResponseOk(nil, err)
+	c.Tctx.HTTPResponseDeleted(nil, err)
 	return
 }
 
@@ -166,7 +166,7 @@ func (c *{{.ModelNamePrivate}}ControllerImpl) MultiDelete{{.ModelName}}ByID() {
 		return
 	}
 	err := c.{{.ModelName}}Srv.MultiDelete{{.ModelName}}ByID(deleteBody)
-	c.Tctx.HTTPResponseOk(nil, err)
+	c.Tctx.HTTPResponseDeleted(nil, err)
 	return
 }
 	
