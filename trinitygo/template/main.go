@@ -17,6 +17,7 @@ import (
 	_ "{{.PackageName}}/docs"
 
 	"github.com/PolarPanda611/trinitygo"
+	"github.com/PolarPanda611/trinitygo/keyword"
 	truntime "github.com/PolarPanda611/trinitygo/runtime"
 	"github.com/google/uuid"
 
