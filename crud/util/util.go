@@ -24,7 +24,7 @@ func DecodeReqBodyToMap(c *gin.Context) (map[string]interface{}, string, error) 
 	}
 	dVersion, ok := dVersionInterface.(string)
 	if !ok {
-		return nil, "", err
+		return nil, "", errors.New("d_version invalid ")
 	}
 	delete(change, "d_version")
 
