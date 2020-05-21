@@ -97,4 +97,4 @@ func (c *ContextMock) HTTPResponseCreated(interface{}, error) {}
 func (c *ContextMock) HTTPResponse(int, interface{}, error) {}
 
 // HTTPResponseDeleted mock
-func (c *ContextMock) HTTPResponseDeleted(res interface{}, err error)
+func (c *ContextMock) HTTPResponseDeleted(res interface{}, err error) {}
