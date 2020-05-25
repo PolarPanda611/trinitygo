@@ -144,3 +144,13 @@ func New(app application.Application, config ...*Config) gin.HandlerFunc {
 	}
 	return jwt.Middleware()
 }
+
+// GenerateToken generate tokens used for auth
+func GenerateToken(app application.Application, claims jwt.Claims) (string, error) {
+	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token, err := tokenClaims.SignedString([]byte(app.Conf().GetJwtSecretKey()))
+	if err != nil {
+		return "", err
+	}
+	return token, nil
+}

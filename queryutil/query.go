@@ -136,6 +136,14 @@ func (q *queryRepositoryImpl) cleanRuntime() {
 
 func (q *queryRepositoryImpl) decodeURL() {
 	q.queryMap, _ = url.ParseQuery(q.query)
+	//remove value is nil
+	for k, v := range q.queryMap {
+		if len(v) == 0 || (len(v) == 1 && v[0] == "") {
+			delete(q.queryMap, k)
+		}
+	}
+	fmt.Println(q.queryMap)
+
 }
 func (q *queryRepositoryImpl) handleDBBackend() {
 	if len(q.filterBackend) != 0 {
