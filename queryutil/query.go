@@ -142,8 +142,6 @@ func (q *queryRepositoryImpl) decodeURL() {
 			delete(q.queryMap, k)
 		}
 	}
-	fmt.Println(q.queryMap)
-
 }
 func (q *queryRepositoryImpl) handleDBBackend() {
 	if len(q.filterBackend) != 0 {
