@@ -318,6 +318,7 @@ func (q *queryRepositoryImpl) HandleWithPagination(query string) []func(*gorm.DB
 	q.handlePagination(q.queryMap[q.keyword.PageNum], q.queryMap[q.keyword.PageSize], q.queryMap[q.keyword.PaginationOff])
 
 	for k, v := range q.queryMap {
+		q.handleOrderBy(k, v)
 		q.handleSearchBy(k, v)
 		q.handleCustomizeFilter(k, v)
 		q.handleFilter(k, v)
