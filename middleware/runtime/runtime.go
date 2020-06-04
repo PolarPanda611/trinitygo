@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/PolarPanda611/trinitygo/application"
-	"github.com/PolarPanda611/trinitygo/httputil"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc/codes"
 )
@@ -16,19 +15,28 @@ func New(app application.Application) gin.HandlerFunc {
 			keyValue := c.GetHeader(v.GetKeyName())
 			if keyValue == "" {
 				if v.GetRequired() {
-					c.AbortWithStatusJSON(400, httputil.ResponseData{
-						Status: 400,
-						Err: map[string]string{
+					if app.ResponseFactory() != nil {
+						c.JSON(400, app.ResponseFactory()(400, map[string]string{
 							"code":    codes.Internal.String(),
 							"message": fmt.Sprintf("runtime key %v is required ", v.GetKeyName()),
 						},
-					})
+							nil,
+						))
+					} else {
+						c.AbortWithStatusJSON(400, map[string]string{
+							"code":    codes.Internal.String(),
+							"message": fmt.Sprintf("runtime key %v is required ", v.GetKeyName()),
+						})
+					}
 					return
 				}
 				c.Set(v.GetKeyName(), v.GetDefaultValue())
 				if v.IsLog() {
 					c.Header(v.GetKeyName(), v.GetDefaultValue())
 				}
+			} else {
+				c.Set(v.GetKeyName(), keyValue)
+				c.Header(v.GetKeyName(), keyValue)
 			}
 		}
 		c.Next()

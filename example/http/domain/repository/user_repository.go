@@ -1,10 +1,10 @@
+
 package repository
 
 import (
 	"errors"
 	"math"
-
-	"github.com/PolarPanda611/trinitygo/example/http/domain/model"
+	"http/domain/model"
 
 	"github.com/PolarPanda611/trinitygo"
 	"github.com/PolarPanda611/trinitygo/application"
@@ -21,7 +21,6 @@ var (
 		OrderByList:         []string{},
 		SearchByList:        []string{},
 		PreloadList:         map[string]func(db *gorm.DB) *gorm.DB{},
-		RemotePreloadlist:   []queryutil.RemotePreloader{},
 		FilterCustomizeFunc: map[string]interface{}{},
 	}
 )
@@ -29,26 +28,24 @@ var (
 func init() {
 	trinitygo.RegisterInstance(func() interface{} {
 		repo := new(userRepositoryImpl)
+		repo.queryHandler = queryutil.New(_userConfig)
 		return repo
 	}, "UserRepository")
-	trinitygo.RegisterInstance(func() interface{} {
-		return queryutil.New(_userConfig)
-	}, "UserQueryHandler")
 }
 
 // UserRepository user repository
 type UserRepository interface {
 	GetUserByID(id int64) (*model.User, error)
-	GetUserList(query string) ([]model.User, error)
+	GetUserList(query string) ([]model.User,bool, error)
 	CreateUser(*model.User) (*model.User, error)
 	UpdateUserByID(id int64, dVersion string, change map[string]interface{}) error
 	DeleteUserByID(id int64, dVersion string) error
-	GetUserCount(query string) (count uint, currentPage int, totalPage int, pageSize int, err error)
+	GetUserCount(query string) (count int, currentPage int, totalPage int,pageSize int,  err error)
 }
 
 type userRepositoryImpl struct {
-	Tctx         application.Context    `autowired:"true" `
-	queryHandler queryutil.QueryHandler `autowired:"true" resource:"UserQueryHandler"`
+	Tctx         application.Context `autowired:"true" `
+	queryHandler queryutil.QueryHandler
 }
 
 func (r *userRepositoryImpl) GetUserByID(id int64) (*model.User, error) {
@@ -61,23 +58,23 @@ func (r *userRepositoryImpl) GetUserByID(id int64) (*model.User, error) {
 	return &user, nil
 }
 
-func (r *userRepositoryImpl) GetUserList(query string) ([]model.User, error) {
+func (r *userRepositoryImpl) GetUserList(query string) ([]model.User,bool ,  error) {
 	var userList []model.User
 	if err := r.Tctx.DB().Scopes(
 		r.queryHandler.HandleWithPagination(query)...,
 	).Find(&userList).Error; err != nil {
-		return nil, err
+		return nil, false, err
 	}
-	return userList, nil
+	return userList, r.queryHandler.IsPaginationOff(), nil
 }
 
-func (r *userRepositoryImpl) GetUserCount(query string) (count uint, currentPage int, totalPage int, pageSize int, err error) {
+func (r *userRepositoryImpl) GetUserCount(query string) (count int, currentPage int, totalPage int,pageSize int,  err error) {
 	if err := r.Tctx.DB().Scopes(
 		r.queryHandler.HandleWithPagination(query)...,
 	).Model(&model.User{}).Limit(-1).Offset(-1).Count(&count).Error; err != nil {
 		return 0, 0, 0, 0, err
 	}
-	return count, r.queryHandler.PageNum(), int(math.Ceil(float64(count) / float64(r.queryHandler.PageSize()))), r.queryHandler.PageSize(), nil
+	return count, r.queryHandler.PageNum(), int(math.Ceil(float64(count) / float64(r.queryHandler.PageSize()))),r.queryHandler.PageSize(), nil
 }
 
 func (r *userRepositoryImpl) CreateUser(newUser *model.User) (*model.User, error) {
@@ -85,21 +82,19 @@ func (r *userRepositoryImpl) CreateUser(newUser *model.User) (*model.User, error
 		return nil, err
 	}
 	return newUser, nil
-
 }
 
 func (r *userRepositoryImpl) UpdateUserByID(id int64, dVersion string, change map[string]interface{}) error {
 
 	updateQuery := r.Tctx.DB().Scopes(
 		r.queryHandler.HandleDBBackend()...,
-	).Where("id = ? ", id).Where("d_version = ? ", dVersion).Model(&model.User{}).Update(change)
+	).Where("id = ? ", id).Where("d_version = ? ", dVersion).Table(r.Tctx.DB().NewScope(&model.User{}).TableName()).Update(change)
 	if err := updateQuery.Error; err != nil {
 		return err
 	}
 	if updateQuery.RowsAffected != 1 {
-		return errors.New("update affected zero lines , please refresh the data")
+		return errors.New("update failed , affected zero lines , please refresh the data and retry")
 	}
-
 	return nil
 }
 func (r *userRepositoryImpl) DeleteUserByID(id int64, dVersion string) error {
@@ -112,6 +107,8 @@ func (r *userRepositoryImpl) DeleteUserByID(id int64, dVersion string) error {
 	if deleteQuery.RowsAffected != 1 {
 		return errors.New("delete affected zero lines , please refresh the data")
 	}
-
 	return nil
 }
+
+	
+	

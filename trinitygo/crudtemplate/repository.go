@@ -100,7 +100,7 @@ func (r *{{.ModelNamePrivate}}RepositoryImpl) Update{{.ModelName}}ByID(id int64,
 		return err
 	}
 	if updateQuery.RowsAffected != 1 {
-		return errors.New("update affected zero lines , please refresh the data")
+		return errors.New("update failed , affected zero lines , please refresh the data and retry")
 	}
 	return nil
 }

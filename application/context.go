@@ -152,11 +152,7 @@ func (c *ContextImpl) HTTPResponseErr(status int, err error) {
 		if c.app.ResponseFactory() != nil {
 			c.c.JSON(status, c.app.ResponseFactory()(status, resErr, c.runtime))
 		} else {
-			c.c.AbortWithStatusJSON(status, httputil.ResponseData{
-				Status:  status,
-				Err:     resErr,
-				Runtime: c.runtime,
-			})
+			c.c.AbortWithStatusJSON(status, resErr)
 		}
 
 		return
@@ -193,11 +189,7 @@ func (c *ContextImpl) HTTPResponse(status int, res interface{}, err error) {
 	if c.app.ResponseFactory() != nil {
 		c.c.JSON(status, c.app.ResponseFactory()(status, res, c.runtime))
 	} else {
-		c.c.JSON(status, httputil.ResponseData{
-			Status:  status,
-			Result:  res,
-			Runtime: c.runtime,
-		})
+		c.c.JSON(status, res)
 	}
 
 	return
@@ -226,6 +218,10 @@ func (c *ContextImpl) NewHTTPServiceRequest(serviceName string, method httputil.
 	header := map[string]string{
 		"Authorization": c.c.GetHeader("Authorization"),
 	}
+	for k, v := range c.Runtime() {
+		header[k] = v
+	}
+	c.app.Logger().Info(fmt.Sprintf("http call %v , %v , ", method, path))
 	return client.Request(method, path, body, header)
 }
 

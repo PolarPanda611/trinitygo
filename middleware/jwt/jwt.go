@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/PolarPanda611/trinitygo/application"
-	"github.com/PolarPanda611/trinitygo/httputil"
 	"github.com/PolarPanda611/trinitygo/util"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
@@ -117,13 +116,20 @@ func (m *JWTVerifierImpl) Middleware() gin.HandlerFunc {
 
 		tokenClaims, err := m.checkUnverifiedTokenValid(c)
 		if err != nil {
-			c.AbortWithStatusJSON(401, httputil.ResponseData{
-				Status: 401,
-				Err: map[string]string{
-					"code":    codes.Unauthenticated.String(),
+
+			if m.app.ResponseFactory() != nil {
+				c.JSON(401, m.app.ResponseFactory()(401, map[string]string{
+					"code":    codes.Internal.String(),
 					"message": fmt.Sprintf("Unauthenticated header"),
 				},
-			})
+					nil,
+				))
+			} else {
+				c.AbortWithStatusJSON(401, map[string]string{
+					"code":    codes.Internal.String(),
+					"message": fmt.Sprintf("Unauthenticated header"),
+				})
+			}
 			return
 		}
 

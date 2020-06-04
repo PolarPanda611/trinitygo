@@ -1,23 +1,29 @@
 basePath: /trinitygo/
-host: 127.0.0.1:8088
+host: address:port
 info:
   contact:
     email: support@swagger.io
     name: API Support
     url: http://www.swagger.io/support
-  description: This is a sample trinity http server
+  description: http
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: http://swagger.io/terms/
-  title: Trinity HTTP Example API
+  title: http
   version: "1.0"
 paths:
-  /users:
-    get:
+  /http/users:
+    delete:
       consumes:
       - application/json
-      description: get user by id test
+      description: function for UserController  to MultiDelete User
+      parameters:
+      - description: name search by q
+        format: email
+        in: query
+        name: q
+        type: string
       produces:
       - application/json
       responses:
@@ -29,14 +35,93 @@ paths:
           description: '{"Status":400,"Result":{},"Runtime":"ok"}'
           schema:
             type: string
-      summary: get user list
-  /users/{id}:
+      security:
+      - ApiKeyAuth: []
+      summary: MultiDelete User
     get:
       consumes:
       - application/json
-      description: get user by id test
+      description: function for UserController  to get User list By filter
       parameters:
-      - description: user id
+      - description: name search by q
+        format: email
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Get User list By filter
+    post:
+      consumes:
+      - application/json
+      description: function for UserController  to create User
+      parameters:
+      - description: name search by q
+        format: email
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: '{"Status":201,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Create User
+  /http/users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: function for UserController  to delete User
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: name search by q
+        format: email
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Delete User
+    get:
+      consumes:
+      - application/json
+      description: function for UserController  to get User By ID
+      parameters:
+      - description: id
         in: path
         name: id
         required: true
@@ -52,5 +137,36 @@ paths:
           description: '{"Status":400,"Result":{},"Runtime":"ok"}'
           schema:
             type: string
-      summary: get user by id
+      security:
+      - ApiKeyAuth: []
+      summary: Get User By ID
+    patch:
+      consumes:
+      - application/json
+      description: function for UserController  to Modify User
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: name search by q
+        format: email
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"Status":200,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+        "400":
+          description: '{"Status":400,"Result":{},"Runtime":"ok"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Modify User
 swagger: "2.0"

@@ -2,24 +2,21 @@ package main
 
 import (
 	"fmt"
+	_ "http/docs"
+	_ "http/domain/controller/http"
+	"http/infra/db"
+	"http/infra/migrate"
 	"os"
-	"path"
 
 	"github.com/PolarPanda611/trinitygo"
-	"github.com/PolarPanda611/trinitygo/application"
-	_ "github.com/PolarPanda611/trinitygo/example/http/domain/controller/http" // init controller
-	"github.com/PolarPanda611/trinitygo/example/http/infra"
+	"github.com/PolarPanda611/trinitygo/keyword"
 	truntime "github.com/PolarPanda611/trinitygo/runtime"
-	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/jinzhu/gorm"
-
-	_ "github.com/PolarPanda611/trinitygo/example/http/docs"
 )
 
-// @title Trinity HTTP Example API
+// @title http
 // @version 1.0
-// @description This is a sample trinity http server
+// @description  http
 // @termsOfService http://swagger.io/terms/
 
 // @contact.name API Support
@@ -29,27 +26,38 @@ import (
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @host 127.0.0.1:8088
+// @host address:port
 // @BasePath /trinitygo/
 func main() {
 	currentPath, _ := os.Getwd()
-	projectRootPath := path.Join(currentPath, "../")
-	configPath := fmt.Sprintf(projectRootPath + "/config/example.toml")
-	casbinPath := fmt.Sprintf(projectRootPath + "/config/rbac_with_domains_model.conf")
+	configPath := fmt.Sprintf(currentPath + "/conf/conf.toml")
 	trinitygo.SetConfigPath(configPath)
-	trinitygo.SetCasbinConfPath(casbinPath)
-	trinitygo.SetFuncGetWhoAmI(getUser)
+	trinitygo.SetResponseFactory(CustomizeResponseFactory)
+	trinitygo.SetKeyword(keyword.Keyword{
+		SearchBy:      "SearchBy",
+		PageNum:       "current",
+		PageSize:      "pageSize",
+		OrderBy:       "OrderBy",
+		PaginationOff: "PaginationOff",
+	})
 	trinitygo.EnableHealthCheckURL()
 	t := trinitygo.DefaultHTTP()
 	t.RegRuntimeKey(truntime.NewRuntimeKey("trace_id", false, func() string { return uuid.New().String() }, true))
-	t.RegRuntimeKey(truntime.NewRuntimeKey("user_id", false, func() string { return "" }, false))
-	t.RegRuntimeKey(truntime.NewRuntimeKey("user_name", false, func() string { return "" }, true))
 	t.InitHTTP()
-	infra.DB = t.DB()
-	infra.Migrate()
+	db.DB = t.DB()
+	migrate.Migrate()
 	t.ServeHTTP()
 }
 
-func getUser(app application.Application, c *gin.Context, db *gorm.DB) (interface{}, error) {
-	return "dtan11", nil
+func CustomizeResponseFactory(status int, res interface{}, runtime map[string]string) interface{} {
+	resMap, ok := res.(map[string]interface{})
+	if !ok {
+		resMap = make(map[string]interface{})
+		resMap["data"] = res
+	}
+	resMap["status"] = status
+	for k, v := range runtime {
+		resMap[k] = v
+	}
+	return resMap
 }

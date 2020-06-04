@@ -42,12 +42,12 @@ func (s *ServiceClient) Request(method RequestMethod, path string, body []byte, 
 	if err != nil {
 		return nil, err
 	}
-	var res ResponseData
+	var res map[string]interface{}
 	if resp.StatusCode >= 200 && resp.StatusCode <= 399 {
 		if err := json.Unmarshal(respBytes, &res); err != nil {
 			return nil, err
 		}
-		return res.Result, nil
+		return res, nil
 	}
 	return nil, errors.New(string(respBytes))
 }

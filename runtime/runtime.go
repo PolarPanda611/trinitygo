@@ -12,12 +12,12 @@ type runtimeKey struct {
 	key          string
 	required     bool
 	defaultValue func() string
-	islog        bool
+	isLog        bool
 }
 
 func (r *runtimeKey) GetKeyName() string { return r.key }
 func (r *runtimeKey) GetRequired() bool  { return r.required }
-func (r *runtimeKey) IsLog() bool        { return r.islog }
+func (r *runtimeKey) IsLog() bool        { return r.isLog }
 func (r *runtimeKey) GetDefaultValue() string {
 	if r.defaultValue == nil {
 		return ""
@@ -35,11 +35,11 @@ func (r *runtimeKey) GetDefaultValue() string {
 // p.s : the key should be lower case , because the grpc meta data will
 // transfer all the key too lower case , if you use the upcase you will not
 // find your runtime key in metadata
-func NewRuntimeKey(key string, required bool, newValueFunc func() string, islog bool) RuntimeKey {
+func NewRuntimeKey(key string, required bool, newValueFunc func() string, isLog bool) RuntimeKey {
 	return &runtimeKey{
 		key:          key,
 		required:     required,
 		defaultValue: newValueFunc,
-		islog:        islog,
+		isLog:        isLog,
 	}
 }

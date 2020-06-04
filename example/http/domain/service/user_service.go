@@ -1,14 +1,15 @@
+
 package service
 
 import (
-	"strconv"
+	"fmt"
+	"http/domain/model"
 
-	"github.com/PolarPanda611/trinitygo/example/http/domain/model"
-
-	"github.com/PolarPanda611/trinitygo/example/http/domain/repository"
+	"http/domain/repository"
 
 	"github.com/PolarPanda611/trinitygo"
 	"github.com/PolarPanda611/trinitygo/application"
+	modelutil "github.com/PolarPanda611/trinitygo/crud/model"
 )
 
 var _ UserService = new(userServiceImpl)
@@ -19,14 +20,12 @@ func init() {
 
 // UserService  service interface
 type UserService interface {
-	//ServiceName
-	//Method
-	//Path
 	GetUserByID(id int64) (*model.User, error)
 	GetUserList(query string) (interface{}, error)
 	CreateUser(*model.User) (*model.User, error)
 	UpdateUserByID(id int64, dVersion string, change map[string]interface{}) error
 	DeleteUserByID(id int64, dVersion string) error
+	MultiDeleteUserByID([]modelutil.DeleteParam) error
 }
 
 type userServiceImpl struct {
@@ -38,24 +37,24 @@ func (s *userServiceImpl) GetUserByID(id int64) (*model.User, error) {
 	return s.UserRepo.GetUserByID(id)
 }
 func (s *userServiceImpl) GetUserList(query string) (interface{}, error) {
-	res, err := s.UserRepo.GetUserList(query)
+	res,isPaginationOff, err := s.UserRepo.GetUserList(query)
 	if err != nil {
 		return nil, err
 	}
-	IsOff, _ := strconv.ParseBool(s.Tctx.GinCtx().Query("PaginationOff"))
-	if IsOff {
+	if isPaginationOff {
 		return res, nil
 	}
-	count, currentPage, totalPage, pageSize, err := s.UserRepo.GetUserCount(query)
+	count, currentPage, totalPage,pageSize, err := s.UserRepo.GetUserCount(query)
 	if err != nil {
 		return nil, err
 	}
 	resWithPagination := map[string]interface{}{
-		"data":         res,
-		"current_page": currentPage,
-		"total_count":  count,
-		"total_page":   totalPage,
-		"page_size":    pageSize,
+		"data":       res,
+		"current":    currentPage,
+		"total":      count,
+		"pageSize":   pageSize,
+		"total_page": totalPage,
+		"success":    true,
 	}
 	return resWithPagination, nil
 }
@@ -71,3 +70,14 @@ func (s *userServiceImpl) UpdateUserByID(id int64, dVersion string, change map[s
 func (s *userServiceImpl) DeleteUserByID(id int64, dVersion string) error {
 	return s.UserRepo.DeleteUserByID(id, dVersion)
 }
+
+func (s *userServiceImpl) MultiDeleteUserByID(deleteParam []modelutil.DeleteParam) error {
+	for _, v := range deleteParam {
+		if err := s.DeleteUserByID(v.Key, v.DVersion); err != nil {
+			return fmt.Errorf("User id %v deleted failed , %v", v.Key, err)
+		}
+	}
+	return nil
+}
+	
+	

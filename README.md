@@ -32,6 +32,7 @@ done.
 * support automic request 
 * support customize validator ( API permission , data validation ...)
 * support URL query analyze (search , filter , order by , preload ...)
+* full dependency injection support
 * cmd to init Project folder
 * cmd to init Project CRUD Code && unit test template
 * cmd to init Swagger docs
@@ -270,7 +271,68 @@ func PermissionValidator(requiredP []string) func(application.Context) {
 )
 
 
+* full dependency injection support
+    * path_param get value of path in your router 
+	example : 
+	case 1 : router: /api/user/:id          //path : id 
+			 realize: /api/user/1234
+			 using tag : ID int64 `path_param:"id"` to get ID with path value :1234
+```
+	//Controller 
+	func (c *userControllerImpl) GetUserByID(args struct {
+		ID int64 `path_param:"id"`
+	}) {
+		res, err := c.UserSrv.GetUserByID(args.ID)
+		c.Tctx.HTTPResponseOk(res, err)
+		return
+	}
 
+```
+
+	* query_param get value of query in your router 
+	example : 
+	case 1. router: /api/user    
+			 realize: /api/user/:id?name=xxx&phone=123
+			 using tag : Query string `query_param:""` to get full query with query value : Query =  "name=xxx&phone=123"
+
+	case 2. router: /api/user     
+			 realize: /api/user/:id?name=xxx&phone=123
+			 using tag : Name string `query_param:"name"` to get  query with query value of name : Query =  "xxx"
+			 using tag : Phone string `query_param:"phone"` to get  query with query value of phone : Query =  "123"
+```
+	//Controller 
+	func (c *userControllerImpl) GetUserList(args struct {
+		Query  string `query_param:""`
+		Name   string `query_param:"name"`
+		Phone  string `query_param:"phone"`
+	}) {
+		res, err := c.UserSrv.GetUserList(args.Query)
+		c.Tctx.HTTPResponseOk(res, err)
+		return
+	}
+
+```
+
+
+	* body_param get value of query in your router 
+	example : 
+	case 1. router: /api/user/:id     
+			 realize: /api/user/123  body :{"username":"123"}
+			 using tag : ID int64 `path_param:"id"`  to get full query with query value : ID =  "123"
+			 using tag : User model.User `body_param:""`  to get full body convert to struct with request body :User =  User{Username:"123"}
+			 using tag : Username string `body_param:"username"`  to get username with request body by body param key  : Username = "123"
+
+```
+	//Controller 
+	func (c *userControllerImpl) CreateUser(args struct {
+		User model.User `body_param:""`
+	}) {
+		res, err := c.UserSrv.CreateUser(&args.User)
+		c.Tctx.HTTPResponseCreated(res, err)
+		return
+	}
+
+```
 
 
 ## GRPC Server 
@@ -291,3 +353,4 @@ t.ServeGRPC()
 ```
 
 
+// More detail see the example 

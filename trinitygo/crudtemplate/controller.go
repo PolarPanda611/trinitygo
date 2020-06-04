@@ -10,14 +10,11 @@ package http
 
 import (
 	"{{.ProjectName}}/domain/model"
-	"strconv"
-
 	"{{.ProjectName}}/domain/service"
 
 	"github.com/PolarPanda611/trinitygo"
 	"github.com/PolarPanda611/trinitygo/application"
 	modelutil "github.com/PolarPanda611/trinitygo/crud/model"
-	"github.com/PolarPanda611/trinitygo/crud/util"
 	"github.com/PolarPanda611/trinitygo/httputil"
 )
 
@@ -36,12 +33,27 @@ func init() {
 
 // {{.ModelName}}Controller {{.ModelNamePrivate}} controller
 type {{.ModelName}}Controller interface {
-	Get{{.ModelName}}ByID()
-	Get{{.ModelName}}List()
-	Create{{.ModelName}}()
-	Update{{.ModelName}}ByID()
-	Delete{{.ModelName}}ByID()
-	MultiDelete{{.ModelName}}ByID()
+	Get{{.ModelName}}ByID(args struct {
+		ID int64 ` + "`" + `path_param:"id"` + "`" + `
+	})
+	Get{{.ModelName}}List(args struct {
+		Query string ` + "`" + `query_param:""` + "`" + `
+	})
+	Create{{.ModelName}}(args struct {
+		{{.ModelName}} model.{{.ModelName}} ` + "`" + `body_param:""` + "`" + `
+	})
+	Update{{.ModelName}}ByID(args struct {
+		ID       int64                  ` + "`" + `path_param:"id"` + "`" + `
+		Change   map[string]interface{} ` + "`" + `body_param:""` + "`" + `
+		DVersion string                 ` + "`" + `body_param:"d_version"` + "`" + `
+	})
+	Delete{{.ModelName}}ByID(args struct {
+		ID       int64  ` + "`" + `path_param:"id"` + "`" + `
+		DVersion string ` + "`" + `body_param:"d_version"` + "`" + `
+	})
+	MultiDelete{{.ModelName}}ByID(args struct {
+		DeleteParamList []modelutil.DeleteParam ` + "`" + `body_param:""` + "`" + `
+	})
 }
 
 type {{.ModelNamePrivate}}ControllerImpl struct {
@@ -59,9 +71,10 @@ type {{.ModelNamePrivate}}ControllerImpl struct {
 // @Failure 400 {string} json "{"Status":400,"Result":{},"Runtime":"ok"}"
 // @Security ApiKeyAuth
 // @Router /{{.ProjectName}}/{{.ModelNameToUnderscore}}s/{id} [get]
-func (c *{{.ModelNamePrivate}}ControllerImpl) Get{{.ModelName}}ByID() {
-	id, _ := strconv.ParseInt(c.Tctx.GinCtx().Params.ByName("id"), 10, 64)
-	res, err := c.{{.ModelName}}Srv.Get{{.ModelName}}ByID(id)
+func (c *{{.ModelNamePrivate}}ControllerImpl) Get{{.ModelName}}ByID(args struct {
+	ID int64 ` + "`" + `path_param:"id"` + "`" + `
+}) {
+	res, err := c.{{.ModelName}}Srv.Get{{.ModelName}}ByID(args.ID)
 	c.Tctx.HTTPResponseOk(res, err)
 	return
 }
@@ -76,8 +89,10 @@ func (c *{{.ModelNamePrivate}}ControllerImpl) Get{{.ModelName}}ByID() {
 // @Failure 400 {string} json "{"Status":400,"Result":{},"Runtime":"ok"}"
 // @Security ApiKeyAuth
 // @Router /{{.ProjectName}}/{{.ModelNameToUnderscore}}s [get]
-func (c *{{.ModelNamePrivate}}ControllerImpl) Get{{.ModelName}}List() {
-	res, err := c.{{.ModelName}}Srv.Get{{.ModelName}}List(c.Tctx.GinCtx().Request.URL.RawQuery)
+func (c *{{.ModelNamePrivate}}ControllerImpl) Get{{.ModelName}}List(args struct {
+	Query string ` + "`" + `query_param:""` + "`" + `
+}) {
+	res, err := c.{{.ModelName}}Srv.Get{{.ModelName}}List(args.Query)
 	c.Tctx.HTTPResponseOk(res, err)
 	return
 }
@@ -92,13 +107,10 @@ func (c *{{.ModelNamePrivate}}ControllerImpl) Get{{.ModelName}}List() {
 // @Failure 400 {string} json "{"Status":400,"Result":{},"Runtime":"ok"}"
 // @Security ApiKeyAuth
 // @Router /{{.ProjectName}}/{{.ModelNameToUnderscore}}s [post]
-func (c *{{.ModelNamePrivate}}ControllerImpl) Create{{.ModelName}}() {
-	var new{{.ModelName}} model.{{.ModelName}}
-	if err := c.Tctx.GinCtx().BindJSON(&new{{.ModelName}}); err != nil {
-		c.Tctx.HTTPResponseInternalErr(err)
-		return
-	}
-	res, err := c.{{.ModelName}}Srv.Create{{.ModelName}}(&new{{.ModelName}})
+func (c *{{.ModelNamePrivate}}ControllerImpl) Create{{.ModelName}}(args struct {
+	{{.ModelName}} model.{{.ModelName}} ` + "`" + `body_param:""` + "`" + `
+}) {
+	res, err := c.{{.ModelName}}Srv.Create{{.ModelName}}(&args.{{.ModelName}})
 	c.Tctx.HTTPResponseCreated(res, err)
 	return
 }
@@ -114,14 +126,12 @@ func (c *{{.ModelNamePrivate}}ControllerImpl) Create{{.ModelName}}() {
 // @Failure 400 {string} json "{"Status":400,"Result":{},"Runtime":"ok"}"
 // @Security ApiKeyAuth
 // @Router /{{.ProjectName}}/{{.ModelNameToUnderscore}}s/{id} [patch]
-func (c *{{.ModelNamePrivate}}ControllerImpl) Update{{.ModelName}}ByID() {
-	change, dVersion, err := util.DecodeReqBodyToMap(c.Tctx.GinCtx())
-	if err != nil {
-		c.Tctx.HTTPResponseInternalErr(err)
-		return
-	}
-	id, _ := strconv.ParseInt(c.Tctx.GinCtx().Params.ByName("id"), 10, 64)
-	err = c.{{.ModelName}}Srv.Update{{.ModelName}}ByID(id, dVersion, change)
+func (c *{{.ModelNamePrivate}}ControllerImpl) Update{{.ModelName}}ByID(args struct {
+	ID       int64                  ` + "`" + `path_param:"id"` + "`" + `
+	Change   map[string]interface{} ` + "`" + `body_param:""` + "`" + `
+	DVersion string                 ` + "`" + `body_param:"d_version"` + "`" + `
+}) {
+	err := c.{{.ModelName}}Srv.Update{{.ModelName}}ByID(args.ID, args.DVersion, args.Change)
 	c.Tctx.HTTPResponseOk(nil, err)
 	return
 }
@@ -137,14 +147,11 @@ func (c *{{.ModelNamePrivate}}ControllerImpl) Update{{.ModelName}}ByID() {
 // @Failure 400 {string} json "{"Status":400,"Result":{},"Runtime":"ok"}"
 // @Security ApiKeyAuth
 // @Router /{{.ProjectName}}/{{.ModelNameToUnderscore}}s/{id} [delete]
-func (c *{{.ModelNamePrivate}}ControllerImpl) Delete{{.ModelName}}ByID() {
-	_, dVersion, err := util.DecodeReqBodyToMap(c.Tctx.GinCtx())
-	if err != nil {
-		c.Tctx.HTTPResponseInternalErr(err)
-		return
-	}
-	id, _ := strconv.ParseInt(c.Tctx.GinCtx().Params.ByName("id"), 10, 64)
-	err = c.{{.ModelName}}Srv.Delete{{.ModelName}}ByID(id, dVersion)
+func (c *{{.ModelNamePrivate}}ControllerImpl) Delete{{.ModelName}}ByID(args struct {
+	ID       int64  ` + "`" + `path_param:"id"` + "`" + `
+	DVersion string ` + "`" + `body_param:"d_version"` + "`" + `
+}) {
+	err := c.{{.ModelName}}Srv.Delete{{.ModelName}}ByID(args.ID, args.DVersion)
 	c.Tctx.HTTPResponseDeleted(nil, err)
 	return
 }
@@ -159,13 +166,10 @@ func (c *{{.ModelNamePrivate}}ControllerImpl) Delete{{.ModelName}}ByID() {
 // @Failure 400 {string} json "{"Status":400,"Result":{},"Runtime":"ok"}"
 // @Security ApiKeyAuth
 // @Router /{{.ProjectName}}/{{.ModelNameToUnderscore}}s [delete]
-func (c *{{.ModelNamePrivate}}ControllerImpl) MultiDelete{{.ModelName}}ByID() {
-	var deleteBody []modelutil.DeleteParam
-	if err := c.Tctx.GinCtx().BindJSON(&deleteBody); err != nil {
-		c.Tctx.HTTPResponseInternalErr(err)
-		return
-	}
-	err := c.{{.ModelName}}Srv.MultiDelete{{.ModelName}}ByID(deleteBody)
+func (c *{{.ModelNamePrivate}}ControllerImpl) MultiDelete{{.ModelName}}ByID(args struct {
+	DeleteParamList []modelutil.DeleteParam ` + "`" + `body_param:""` + "`" + `
+}) {
+	err := c.{{.ModelName}}Srv.MultiDelete{{.ModelName}}ByID(args.DeleteParamList)
 	c.Tctx.HTTPResponseDeleted(nil, err)
 	return
 }
