@@ -109,7 +109,7 @@ func (m *JWTVerifierImpl) Middleware() gin.HandlerFunc {
 			c.Next()
 			return
 		}
-		if util.StringInSlice(c.Request.URL.Path, m.config.PathWhiteList) {
+		if util.StringContainsInSlice(c.Request.URL.Path, m.config.PathWhiteList) {
 			c.Next()
 			return
 		}

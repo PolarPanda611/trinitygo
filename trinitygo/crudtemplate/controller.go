@@ -143,7 +143,7 @@ func (c *{{.ModelNamePrivate}}ControllerImpl) Update{{.ModelName}}ByID(args stru
 // @Produce json
 // @Param   id     path    int64     true        "id"
 // @Param  q  query string false "name search by q" Format(email)
-// @Success 200 {string} json "{"Status":200,"Result":{},"Runtime":"ok"}"
+// @Success 204 {string} json "{"Status":204,"Result":{},"Runtime":"ok"}"
 // @Failure 400 {string} json "{"Status":400,"Result":{},"Runtime":"ok"}"
 // @Security ApiKeyAuth
 // @Router /{{.ProjectName}}/{{.ModelNameToUnderscore}}s/{id} [delete]
@@ -162,7 +162,7 @@ func (c *{{.ModelNamePrivate}}ControllerImpl) Delete{{.ModelName}}ByID(args stru
 // @accept  json
 // @Produce json
 // @Param  q  query string false "name search by q" Format(email)
-// @Success 200 {string} json "{"Status":200,"Result":{},"Runtime":"ok"}"
+// @Success 204 {string} json "{"Status":204,"Result":{},"Runtime":"ok"}"
 // @Failure 400 {string} json "{"Status":400,"Result":{},"Runtime":"ok"}"
 // @Security ApiKeyAuth
 // @Router /{{.ProjectName}}/{{.ModelNameToUnderscore}}s [delete]

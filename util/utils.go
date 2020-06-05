@@ -56,6 +56,16 @@ func StringInSlice(value string, stringSlice []string) bool {
 	return false
 }
 
+//StringContainsInSlice if value in stringlist
+func StringContainsInSlice(value string, stringSlice []string) bool {
+	for _, v := range stringSlice {
+		if strings.Contains(value, v) {
+			return true
+		}
+	}
+	return false
+}
+
 //SliceInSlice if slice in slice
 func SliceInSlice(sliceToCheck []string, slice []string) bool {
 	for _, v := range sliceToCheck {

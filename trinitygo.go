@@ -544,6 +544,8 @@ func (app *Application) InitRouter() {
 		}))
 	}
 	app.router.GET(app.Conf().GetAppBaseURL()+"/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	app.router.Static(app.Conf().GetAppBaseURL()+app.Conf().GetAppStaticURL(), app.Conf().GetAppStaticPath())
+	app.router.Static(app.Conf().GetAppBaseURL()+app.Conf().GetAppMediaURL(), app.Conf().GetAppMediaPath())
 	for _, v := range app.middlewares {
 		app.router.Use(v)
 	}
