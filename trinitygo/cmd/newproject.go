@@ -41,6 +41,9 @@ var (
 					return err
 				}
 				tmpl, err := template.New(projectName).Parse(content)
+				if err != nil {
+					return err
+				}
 				if err = tmpl.Execute(pf, pData); err != nil {
 					return err
 				}

@@ -49,6 +49,7 @@ func main() {
 	t.ServeHTTP()
 }
 
+// CustomizeResponseFactory customize response formatter
 func CustomizeResponseFactory(status int, res interface{}, runtime map[string]string) interface{} {
 	resMap, ok := res.(map[string]interface{})
 	if !ok {

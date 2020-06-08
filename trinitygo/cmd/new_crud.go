@@ -59,6 +59,9 @@ var (
 					return err
 				}
 				tmpl, err := template.New(modelName).Parse(content)
+				if err != nil {
+					return err
+				}
 				if err = tmpl.Execute(pf, pData); err != nil {
 					return err
 				}

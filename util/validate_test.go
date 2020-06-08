@@ -21,7 +21,7 @@ func TestValueIsZeroValue(t *testing.T) {
 	v.Load(&int64test)
 	assert.Equal(t, false, v.IfHasNilValue(), "wrong ")
 
-	var int64nil int64 = 0
+	var int64nil int64
 	v.Load(int64nil)
 	assert.Equal(t, true, v.IfHasNilValue(), "wrong ")
 	v.Load(&int64nil)

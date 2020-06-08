@@ -93,12 +93,14 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
+// Response response struct
 type Response struct {
 	Status  int         `json:"status"`
 	Data    interface{} `json:"data"`
 	Runtime interface{} `json:"runtime"`
 }
 
+// CustomizeResponseFactory response customize formatter factory
 func CustomizeResponseFactory(status int, res interface{}, runtime map[string]string) interface{} {
 	resMap, ok := res.(map[string]interface{})
 	if !ok {

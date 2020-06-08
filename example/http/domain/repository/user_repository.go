@@ -1,10 +1,9 @@
-
 package repository
 
 import (
 	"errors"
-	"math"
 	"http/domain/model"
+	"math"
 
 	"github.com/PolarPanda611/trinitygo"
 	"github.com/PolarPanda611/trinitygo/application"
@@ -36,11 +35,11 @@ func init() {
 // UserRepository user repository
 type UserRepository interface {
 	GetUserByID(id int64) (*model.User, error)
-	GetUserList(query string) ([]model.User,bool, error)
+	GetUserList(query string) ([]model.User, bool, error)
 	CreateUser(*model.User) (*model.User, error)
 	UpdateUserByID(id int64, dVersion string, change map[string]interface{}) error
 	DeleteUserByID(id int64, dVersion string) error
-	GetUserCount(query string) (count int, currentPage int, totalPage int,pageSize int,  err error)
+	GetUserCount(query string) (count int, currentPage int, totalPage int, pageSize int, err error)
 }
 
 type userRepositoryImpl struct {
@@ -58,7 +57,7 @@ func (r *userRepositoryImpl) GetUserByID(id int64) (*model.User, error) {
 	return &user, nil
 }
 
-func (r *userRepositoryImpl) GetUserList(query string) ([]model.User,bool ,  error) {
+func (r *userRepositoryImpl) GetUserList(query string) ([]model.User, bool, error) {
 	var userList []model.User
 	if err := r.Tctx.DB().Scopes(
 		r.queryHandler.HandleWithPagination(query)...,
@@ -68,13 +67,13 @@ func (r *userRepositoryImpl) GetUserList(query string) ([]model.User,bool ,  err
 	return userList, r.queryHandler.IsPaginationOff(), nil
 }
 
-func (r *userRepositoryImpl) GetUserCount(query string) (count int, currentPage int, totalPage int,pageSize int,  err error) {
+func (r *userRepositoryImpl) GetUserCount(query string) (count int, currentPage int, totalPage int, pageSize int, err error) {
 	if err := r.Tctx.DB().Scopes(
 		r.queryHandler.HandleWithPagination(query)...,
 	).Model(&model.User{}).Limit(-1).Offset(-1).Count(&count).Error; err != nil {
 		return 0, 0, 0, 0, err
 	}
-	return count, r.queryHandler.PageNum(), int(math.Ceil(float64(count) / float64(r.queryHandler.PageSize()))),r.queryHandler.PageSize(), nil
+	return count, r.queryHandler.PageNum(), int(math.Ceil(float64(count) / float64(r.queryHandler.PageSize()))), r.queryHandler.PageSize(), nil
 }
 
 func (r *userRepositoryImpl) CreateUser(newUser *model.User) (*model.User, error) {
@@ -109,6 +108,3 @@ func (r *userRepositoryImpl) DeleteUserByID(id int64, dVersion string) error {
 	}
 	return nil
 }
-
-	
-	

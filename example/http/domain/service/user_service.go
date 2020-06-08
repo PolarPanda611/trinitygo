@@ -1,4 +1,3 @@
-
 package service
 
 import (
@@ -37,14 +36,14 @@ func (s *userServiceImpl) GetUserByID(id int64) (*model.User, error) {
 	return s.UserRepo.GetUserByID(id)
 }
 func (s *userServiceImpl) GetUserList(query string) (interface{}, error) {
-	res,isPaginationOff, err := s.UserRepo.GetUserList(query)
+	res, isPaginationOff, err := s.UserRepo.GetUserList(query)
 	if err != nil {
 		return nil, err
 	}
 	if isPaginationOff {
 		return res, nil
 	}
-	count, currentPage, totalPage,pageSize, err := s.UserRepo.GetUserCount(query)
+	count, currentPage, totalPage, pageSize, err := s.UserRepo.GetUserCount(query)
 	if err != nil {
 		return nil, err
 	}
@@ -79,5 +78,3 @@ func (s *userServiceImpl) MultiDeleteUserByID(deleteParam []modelutil.DeletePara
 	}
 	return nil
 }
-	
-	

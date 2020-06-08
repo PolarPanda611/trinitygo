@@ -1,4 +1,3 @@
-
 package repository
 
 import (
@@ -46,4 +45,3 @@ func (r *UserRepositoryMock) GetUserCount(query string) (count int, currentPage 
 	args := r.Called(query)
 	return args.Get(0).(int), args.Get(1).(int), args.Get(2).(int), args.Get(3).(int), args.Error(4)
 }
-
