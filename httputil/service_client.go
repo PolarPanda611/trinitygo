@@ -18,11 +18,11 @@ type ServiceClient struct {
 }
 
 // Request send request
-func (s *ServiceClient) Request(method RequestMethod, path string, body []byte, header map[string]string) (interface{}, error) {
+func (s *ServiceClient) Request(method RequestMethod, path string, body []byte, header map[string]string) (int, interface{}, error) {
 	url := fmt.Sprintf("http://%v:%v%v", s.Addr, s.Port, path)
 	request, err := http.NewRequest(string(method), url, bytes.NewReader(body))
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 	//set default header
 	request.Header.Set("Content-Type", "application/json;charset=UTF-8")
@@ -36,18 +36,21 @@ func (s *ServiceClient) Request(method RequestMethod, path string, body []byte, 
 	defer cancel()
 	resp, err := client.Do(request.WithContext(ctx)) //发送请求
 	if err != nil {
-		return nil, err
+		return resp.StatusCode, nil, err
 	}
 	respBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return resp.StatusCode, nil, err
+	}
+	if len(respBytes) == 0 {
+		return resp.StatusCode, nil, nil
 	}
 	var res interface{}
 	if resp.StatusCode >= 200 && resp.StatusCode <= 399 {
 		if err := json.Unmarshal(respBytes, &res); err != nil {
-			return nil, err
+			return resp.StatusCode, nil, err
 		}
-		return res, nil
+		return resp.StatusCode, res, nil
 	}
-	return nil, errors.New(string(respBytes))
+	return resp.StatusCode, nil, errors.New(string(respBytes))
 }

@@ -17,9 +17,9 @@ type ContextMock struct {
 }
 
 // NewHTTPServiceRequest Mock
-func (c *ContextMock) NewHTTPServiceRequest(serviceName string, method httputil.RequestMethod, path string, body []byte) (interface{}, error) {
+func (c *ContextMock) NewHTTPServiceRequest(serviceName string, method httputil.RequestMethod, path string, body []byte) (int, interface{}, error) {
 	args := c.Called(serviceName, method, path, body)
-	return args.Get(0), args.Error(1)
+	return args.Int(0), args.Get(1), args.Error(2)
 }
 
 // Application application mock

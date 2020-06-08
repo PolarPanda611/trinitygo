@@ -14,7 +14,7 @@ import (
 
 // Context record all thing inside one request
 type Context interface {
-	NewHTTPServiceRequest(serviceName string, method httputil.RequestMethod, path string, body []byte) (interface{}, error)
+	NewHTTPServiceRequest(serviceName string, method httputil.RequestMethod, path string, body []byte) (int, interface{}, error)
 	Application() Application
 	setRuntime(map[string]string)
 	Runtime() map[string]string
@@ -189,7 +189,12 @@ func (c *ContextImpl) HTTPResponse(status int, res interface{}, err error) {
 	if c.app.ResponseFactory() != nil {
 		c.c.JSON(status, c.app.ResponseFactory()(status, res, c.runtime))
 	} else {
-		c.c.JSON(status, res)
+		if res != nil {
+			c.c.JSON(status, res)
+		} else {
+			c.c.Status(status)
+		}
+
 	}
 
 	return
@@ -210,10 +215,10 @@ func (c *ContextImpl) GetCurrentUser() (interface{}, error) {
 }
 
 //NewHTTPServiceRequest new http service request
-func (c *ContextImpl) NewHTTPServiceRequest(serviceName string, method httputil.RequestMethod, path string, body []byte) (interface{}, error) {
+func (c *ContextImpl) NewHTTPServiceRequest(serviceName string, method httputil.RequestMethod, path string, body []byte) (int, interface{}, error) {
 	client, err := sd.NewEtcdHTTPClient(c.app.Conf().GetServiceDiscoveryAddress(), c.app.Conf().GetServiceDiscoveryPort(), serviceName, c.app.Conf().GetAppIdleTimeout())
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 	header := map[string]string{
 		"Authorization": c.c.GetHeader("Authorization"),
