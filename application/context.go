@@ -152,7 +152,7 @@ func (c *ContextImpl) HTTPResponseErr(status int, err error) {
 		if c.app.ResponseFactory() != nil {
 			c.c.JSON(status, c.app.ResponseFactory()(status, resErr, c.runtime))
 		} else {
-			if res != nil {
+			if resErr != nil {
 				c.c.AbortWithStatusJSON(status, resErr)
 			} else {
 				c.c.AbortWithStatus(status)
