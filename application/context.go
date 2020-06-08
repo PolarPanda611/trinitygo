@@ -219,7 +219,11 @@ func (c *ContextImpl) NewHTTPServiceRequest(serviceName string, method httputil.
 		"Authorization": c.c.GetHeader("Authorization"),
 	}
 	for k, v := range c.Runtime() {
-		header[k] = v
+		if kValue := c.c.GetString(k); kValue != v {
+			header[k] = kValue
+		} else {
+			header[k] = v
+		}
 	}
 	c.app.Logger().Info(fmt.Sprintf("http call %v , %v , ", method, path))
 	return client.Request(method, path, body, header)

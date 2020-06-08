@@ -201,12 +201,19 @@ func New(app application.Application) gin.HandlerFunc {
 								val.Set(reflect.ValueOf(string(respBytes)))
 								break
 							case reflect.Struct, reflect.Slice:
-								targetVal := reflect.New(currentMethod.Type.In(i).Field(index).Type).Interface()
-								if err := c.BindJSON(targetVal); err != nil {
-									panic(err)
+								// if is []byte
+								if fmt.Sprintf("%v", currentMethod.Type.In(i).Field(index).Type) == "[]uint8" {
+									val.Set(reflect.Indirect(reflect.ValueOf(respBytes)))
+									break
+								} else {
+									targetVal := reflect.New(currentMethod.Type.In(i).Field(index).Type).Interface()
+									if err := c.BindJSON(targetVal); err != nil {
+										panic(err)
+									}
+									val.Set(reflect.Indirect(reflect.ValueOf(targetVal)))
+									break
 								}
-								val.Set(reflect.Indirect(reflect.ValueOf(targetVal)))
-								break
+
 							case reflect.Map:
 								if fmt.Sprintf("%v", currentMethod.Type.In(i).Field(index).Type) != "map[string]interface {}" {
 									panic("map only support map[string]interface{}")
@@ -228,8 +235,9 @@ func New(app application.Application) gin.HandlerFunc {
 								}
 								val.Set(reflect.ValueOf(bodyVal))
 								break
+
 							default:
-								panic("Unsupported type , only support string , struct ,Slice ,  map[string]interface{} , interface{}")
+								panic("Unsupported type , only support string , struct ,Slice ,  map[string]interface{} , interface{} , []byte")
 							}
 						} else {
 							bodyVal := make(map[string]interface{})

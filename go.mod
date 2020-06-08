@@ -5,7 +5,6 @@ go 1.13
 require (
 	github.com/8treenet/freedom v1.6.5 // indirect
 	github.com/BurntSushi/toml v0.3.1
-	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/casbin/casbin v1.9.1 // indirect
 	github.com/casbin/casbin/v2 v2.4.1
@@ -27,7 +26,6 @@ require (
 	github.com/spf13/cobra v1.0.0
 	github.com/stretchr/testify v1.4.0
 	github.com/swaggo/gin-swagger v1.2.0
-	github.com/swaggo/swag v1.5.1
 	golang.org/x/net v0.0.0-20200114155413-6afb5195e5aa
 	google.golang.org/grpc v1.26.0
 	sigs.k8s.io/yaml v1.2.0 // indirect
