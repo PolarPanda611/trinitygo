@@ -8,7 +8,15 @@ func genModel() string {
 	return `
 package model
 
-import "github.com/PolarPanda611/trinitygo/crud/model"
+import (
+	"github.com/PolarPanda611/trinitygo"
+	"github.com/PolarPanda611/trinitygo/crud/model"
+)
+
+func init() {
+	trinitygo.RegisterModel(&{{.ModelName}}{})
+}
+
 
 // {{.ModelName}} model for {{.ModelName}}
 type {{.ModelName}} struct {

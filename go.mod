@@ -22,6 +22,7 @@ require (
 	github.com/jinzhu/gorm v1.9.12
 	github.com/kataras/golog v0.0.10
 	github.com/lib/pq v1.1.1
+	github.com/mbndr/figlet4go v0.0.0-20190224160619-d6cef5b186ea
 	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/cobra v1.0.0
 	github.com/stretchr/testify v1.4.0

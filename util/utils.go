@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/snowflake"
+	"github.com/mbndr/figlet4go"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -211,4 +212,19 @@ func HTTPErrDecoder(err error) (bool, map[string]string) {
 		return true, newErr
 	}
 	return false, nil
+}
+
+// GenerateFiglet generate figlet
+func GenerateFiglet(word string) string {
+	ascii := figlet4go.NewAsciiRender()
+	options := figlet4go.NewRenderOptions()
+	options.FontColor = []figlet4go.Color{
+		// Colors can be given by default ansi color codes...
+		figlet4go.ColorGreen,
+		figlet4go.ColorCyan,
+		figlet4go.ColorYellow,
+	}
+	// The underscore would be an error
+	renderStr, _ := ascii.RenderOpts(word, options)
+	return renderStr
 }

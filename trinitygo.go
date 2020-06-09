@@ -60,6 +60,7 @@ var (
 	_casbinConfPath        string = "./config/casbin.conf"
 	_bootingControllers    []bootingController
 	_bootingInstances      []bootingInstance
+	_bootingModels         []bootingModel
 	_healthCheckPath       string                                                                              = "/ping"
 	_enableHealthCheckPath bool                                                                                = false
 	_logSelfCheck          bool                                                                                = true
@@ -88,6 +89,11 @@ var (
 		}
 	}
 )
+
+type bootingModel struct {
+	modelInstance interface{}
+	defaultValues []interface{}
+}
 
 type bootingController struct {
 	controllerName string
@@ -322,7 +328,22 @@ func (app *Application) IsLogSelfCheck() bool {
 	return app.logSelfCheck
 }
 
-// RegisterController bind service
+// RegisterModel register model
+// @instance should be ptr instance
+// @defaultValues should be ptr instance
+// default value will create the instance and will not update .
+func RegisterModel(instance interface{}, defaultValues ...interface{}) {
+	newModel := bootingModel{
+		modelInstance: instance,
+	}
+	newModel.defaultValues = defaultValues
+	_bootingModels = append(_bootingModels, newModel)
+}
+
+// RegisterController register service
+// @controllerName basic request path of the controller
+// @instance controller instance  ,should be ptr
+// @requestMaps optional ,register the request based on the basic path of controller
 func RegisterController(controllerName string, instance interface{}, requestMaps ...*application.RequestMap) {
 	newController := bootingController{
 		controllerName: controllerName,
@@ -332,7 +353,9 @@ func RegisterController(controllerName string, instance interface{}, requestMaps
 	_bootingControllers = append(_bootingControllers, newController)
 }
 
-// RegisterInstance bind instance
+// RegisterInstance register instance
+// @instance instance of the class , should be ptr
+// @tags the tags for the instance to specify
 func RegisterInstance(instance interface{}, tags ...string) {
 	var newInstance bootingInstance
 	switch reflect.TypeOf(instance).Kind() {
@@ -368,6 +391,47 @@ func RegisterInstance(instance interface{}, tags ...string) {
 	_bootingInstances = append(_bootingInstances, newInstance)
 }
 
+// init model and init default value
+func (app *Application) initModel() {
+	app.logger.Info("booting installing model start")
+	// no model register , skip
+	if len(_bootingModels) == 0 {
+		return
+	}
+	// db not initialize , skip
+	if app.db == nil {
+		return
+	}
+	// sync model structure to db
+	for _, bootingModel := range _bootingModels {
+		instanceKind := reflect.TypeOf(bootingModel.modelInstance).Kind()
+		if instanceKind != reflect.Ptr {
+			app.logger.Fatalf("booting installing model : %v failed , kind %v ,  should be ptr , ", reflect.TypeOf(bootingModel.modelInstance), instanceKind)
+		}
+		if err := app.db.AutoMigrate(bootingModel.modelInstance).Error; err != nil {
+			app.logger.Fatalf("booting installing model : %v failed , err : %v , ", reflect.TypeOf(bootingModel.modelInstance), err)
+		}
+		app.logger.Infof("booting installing model : %v  , ...installed , ", reflect.TypeOf(bootingModel.modelInstance))
+		if bootingModel.defaultValues != nil {
+			for _, defaultValue := range bootingModel.defaultValues {
+				fmt.Println(defaultValue)
+				defaultValueKind := reflect.TypeOf(defaultValue).Kind()
+				switch defaultValueKind {
+				case reflect.Ptr:
+					if err := app.db.FirstOrCreate(defaultValue, defaultValue).Error; err != nil {
+						app.logger.Fatalf("booting installing model : %v , set default value %v  , err : %v , ", reflect.TypeOf(bootingModel.modelInstance), defaultValue, err)
+					}
+					break
+				default:
+					app.logger.Fatalf("booting installing model : %v , set default value %v  type %v , err : %v , ", reflect.TypeOf(bootingModel.modelInstance), defaultValue, defaultValueKind, "default value only support ptr ")
+				}
+			}
+		}
+	}
+	app.logger.Info("booting installing model end")
+}
+
+// initControllerPool initial controller pool
 func (app *Application) initControllerPool() {
 	app.Logger().Info(fmt.Sprintf("booting installing controller start"))
 	for _, controller := range _bootingControllers {
@@ -392,6 +456,7 @@ func (app *Application) initControllerPool() {
 	app.Logger().Info(line)
 }
 
+// initInstancePool initial instance pool
 func (app *Application) initInstancePool() {
 	for _, instance := range _bootingInstances {
 		if len(instance.instanceTags) > 0 && len(app.instancePool.GetInstanceType(instance.instanceTags[0])) > 0 {
@@ -413,6 +478,7 @@ func (app *Application) initSelfCheck() {
 	app.instancePool.InstanceDISelfCheck(app)
 }
 func (app *Application) initPool() {
+	app.initModel()
 	app.initControllerPool()
 	app.initInstancePool()
 	app.initSelfCheck()
@@ -603,6 +669,7 @@ func (app *Application) ServeHTTP() {
 			IdleTimeout:       time.Duration(app.config.GetAppIdleTimeout()) * time.Second,
 			MaxHeaderBytes:    app.config.GetAppMaxHeaderBytes(),
 		}
+		app.Logger().Info("\n" + util.GenerateFiglet(app.config.GetProjectName()))
 		line := fmt.Sprintf("booted http service listen at %v started ", addr)
 		app.Logger().Info(line)
 		gErr <- s.ListenAndServe()
@@ -666,7 +733,7 @@ func (app *Application) ServeGRPC() {
 			line := fmt.Sprintf("booting grpc service registered successfully !")
 			app.Logger().Info(line)
 		}
-
+		app.Logger().Info("\n" + util.GenerateFiglet(app.config.GetProjectName()))
 		line := fmt.Sprintf("booted grpc service listen at %v started", addr)
 		app.Logger().Info(line)
 		gErr <- app.grpcServer.Serve(lis)
