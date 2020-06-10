@@ -67,40 +67,8 @@ func New(app application.Application) gin.HandlerFunc {
 					// check if header param
 					if headerParam, isExist := currentMethod.Type.In(i).Field(index).Tag.Lookup("header_param"); isExist {
 						headerValString := c.GetHeader(headerParam)
-						switch currentMethod.Type.In(i).Field(index).Type.Kind() {
-						case reflect.Int64:
-							headerVal, err := strconv.ParseInt(headerValString, 10, 64)
-							if err != nil {
-								panic(err)
-							}
-							val.Set(reflect.ValueOf(headerVal))
-							break
-						case reflect.Int32:
-							headerVal, err := strconv.ParseInt(headerValString, 10, 32)
-							if err != nil {
-								panic(err)
-							}
-							val.Set(reflect.ValueOf(headerVal))
-							break
-						case reflect.Int16:
-							headerVal, err := strconv.ParseInt(headerValString, 10, 16)
-							if err != nil {
-								panic(err)
-							}
-							val.Set(reflect.ValueOf(headerVal))
-							break
-						case reflect.Int:
-							headerVal, err := strconv.Atoi(headerValString)
-							if err != nil {
-								panic(err)
-							}
-							val.Set(reflect.ValueOf(headerVal))
-							break
-						case reflect.String:
-							val.Set(reflect.ValueOf(headerValString))
-							break
-						default:
-							panic("Unsupported type, only support int64 , int32 , int16 , int , string ")
+						if err := stringConverter(headerValString, &val); err != nil {
+							panic(err)
 						}
 					}
 					// check if path param
@@ -109,39 +77,14 @@ func New(app application.Application) gin.HandlerFunc {
 						if !ok {
 							panic(fmt.Sprintf("%v param not exist ", pathParam))
 						}
-						switch currentMethod.Type.In(i).Field(index).Type.Kind() {
-						case reflect.Int64:
-							paramVal, err := strconv.ParseInt(paramValString, 10, 64)
-							if err != nil {
-								panic(err)
-							}
-							val.Set(reflect.ValueOf(paramVal))
-							break
-						case reflect.Int32:
-							paramVal, err := strconv.ParseInt(paramValString, 10, 32)
-							if err != nil {
-								panic(err)
-							}
-							val.Set(reflect.ValueOf(paramVal))
-							break
-						case reflect.Int:
-							paramVal, err := strconv.Atoi(paramValString)
-							if err != nil {
-								panic(err)
-							}
-							val.Set(reflect.ValueOf(paramVal))
-							break
-						case reflect.String:
-							val.Set(reflect.ValueOf(paramValString))
-							break
-						default:
-							panic("Unsupported type")
+						if err := stringConverter(paramValString, &val); err != nil {
+							panic(err)
 						}
 					}
 					// check if query param
 					if queryParam, isExist := currentMethod.Type.In(i).Field(index).Tag.Lookup("query_param"); isExist {
 						if queryParam == "" {
-							switch currentMethod.Type.In(i).Field(index).Type.Kind() {
+							switch val.Type().Kind() {
 							case reflect.String:
 								val.Set(reflect.ValueOf(c.Request.URL.RawQuery))
 								break
@@ -150,43 +93,10 @@ func New(app application.Application) gin.HandlerFunc {
 							}
 						} else {
 							queryValString := c.Query(queryParam)
-							switch currentMethod.Type.In(i).Field(index).Type.Kind() {
-							case reflect.Int64:
-								queryVal, err := strconv.ParseInt(queryValString, 10, 64)
-								if err != nil {
-									panic(err)
-								}
-								val.Set(reflect.ValueOf(queryVal))
-								break
-							case reflect.Int32:
-								queryVal, err := strconv.ParseInt(queryValString, 10, 32)
-								if err != nil {
-									panic(err)
-								}
-								val.Set(reflect.ValueOf(queryVal))
-								break
-							case reflect.Int16:
-								queryVal, err := strconv.ParseInt(queryValString, 10, 16)
-								if err != nil {
-									panic(err)
-								}
-								val.Set(reflect.ValueOf(queryVal))
-								break
-							case reflect.Int:
-								queryVal, err := strconv.Atoi(queryValString)
-								if err != nil {
-									panic(err)
-								}
-								val.Set(reflect.ValueOf(queryVal))
-								break
-							case reflect.String:
-								val.Set(reflect.ValueOf(queryValString))
-								break
-							default:
-								panic("Unsupported type , only support int64 , int32 , int16 , int , string ")
+							if err := stringConverter(queryValString, &val); err != nil {
+								panic(err)
 							}
 						}
-
 					}
 					// check if body param
 					if bodyParam, isExist := currentMethod.Type.In(i).Field(index).Tag.Lookup("body_param"); isExist {
@@ -196,7 +106,7 @@ func New(app application.Application) gin.HandlerFunc {
 							panic(err)
 						}
 						if bodyParam == "" {
-							switch currentMethod.Type.In(i).Field(index).Type.Kind() {
+							switch val.Type().Kind() {
 							case reflect.String:
 								val.Set(reflect.ValueOf(string(respBytes)))
 								break
@@ -261,6 +171,52 @@ func New(app application.Application) gin.HandlerFunc {
 		}
 
 	}
+}
+
+func stringConverter(word string, destVal *reflect.Value) error {
+	switch destVal.Type().Kind() {
+	case reflect.Int64:
+		paramVal, err := strconv.ParseInt(word, 10, 64)
+		if err != nil {
+			return err
+		}
+		destVal.Set(reflect.ValueOf(paramVal))
+		break
+	case reflect.Int32:
+		paramVal, err := strconv.ParseInt(word, 10, 32)
+		if err != nil {
+			return err
+		}
+		destVal.Set(reflect.ValueOf(paramVal))
+		break
+	case reflect.Int16:
+		paramVal, err := strconv.ParseInt(word, 10, 16)
+		if err != nil {
+			return err
+		}
+		destVal.Set(reflect.ValueOf(paramVal))
+		break
+	case reflect.Int:
+		paramVal, err := strconv.Atoi(word)
+		if err != nil {
+			return err
+		}
+		destVal.Set(reflect.ValueOf(paramVal))
+		break
+	case reflect.Bool:
+		paramVal, err := strconv.ParseBool(word)
+		if err != nil {
+			return err
+		}
+		destVal.Set(reflect.ValueOf(paramVal))
+		break
+	case reflect.String:
+		destVal.Set(reflect.ValueOf(word))
+		break
+	default:
+		return fmt.Errorf("Unsupported type")
+	}
+	return nil
 }
 
 func bodyParamConverter(destName string, destType reflect.Type, parentVal map[string]interface{}) (interface{}, error) {
