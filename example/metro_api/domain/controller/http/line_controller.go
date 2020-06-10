@@ -89,7 +89,7 @@ func (c *lineControllerImpl) CreateLine() {
 		return
 	}
 	res, err := c.LineSrv.CreateLine(&newLine)
-	c.Tctx.HTTPResponseCreated(res, err)
+	c.Tctx.httpResponseCreated(res, err)
 	return
 }
 

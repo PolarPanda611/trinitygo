@@ -112,7 +112,7 @@ func NewEtcdHTTPClient(address string, port int, serviceName string, timeout int
 	clients := extractAddrs(res)
 	client, err := NewRoundRobin(clients).Client()
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 	return client, nil
 }

@@ -111,7 +111,7 @@ func (c *{{.ModelNamePrivate}}ControllerImpl) Create{{.ModelName}}(args struct {
 	{{.ModelName}} model.{{.ModelName}} ` + "`" + `body_param:""` + "`" + `
 }) {
 	res, err := c.{{.ModelName}}Srv.Create{{.ModelName}}(&args.{{.ModelName}})
-	c.Tctx.HTTPResponseCreated(res, err)
+	c.Tctx.httpResponseCreated(res, err)
 	return
 }
 
@@ -152,7 +152,7 @@ func (c *{{.ModelNamePrivate}}ControllerImpl) Delete{{.ModelName}}ByID(args stru
 	DVersion string ` + "`" + `body_param:"d_version"` + "`" + `
 }) {
 	err := c.{{.ModelName}}Srv.Delete{{.ModelName}}ByID(args.ID, args.DVersion)
-	c.Tctx.HTTPResponseDeleted(nil, err)
+	c.Tctx.httpResponseDeleted(nil, err)
 	return
 }
 
@@ -170,7 +170,7 @@ func (c *{{.ModelNamePrivate}}ControllerImpl) MultiDelete{{.ModelName}}ByID(args
 	DeleteParamList []modelutil.DeleteParam ` + "`" + `body_param:""` + "`" + `
 }) {
 	err := c.{{.ModelName}}Srv.MultiDelete{{.ModelName}}ByID(args.DeleteParamList)
-	c.Tctx.HTTPResponseDeleted(nil, err)
+	c.Tctx.httpResponseDeleted(nil, err)
 	return
 }
 	

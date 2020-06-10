@@ -12,6 +12,8 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+var _ Context = new(ContextImpl)
+
 // Context record all thing inside one request
 type Context interface {
 	NewHTTPServiceRequest(serviceName string, method httputil.RequestMethod, path string, body []byte) (int, interface{}, error)
@@ -28,13 +30,14 @@ type Context interface {
 	setDB(*gorm.DB)
 	cleanRuntime()
 	GetCurrentUser() (interface{}, error)
-	HTTPResponseUnauthorizedErr(error)
+	HTTPStatus(code int)
+	httpResponseUnauthorizedErr(error)
 	HTTPResponseInternalErr(error)
-	HTTPResponseErr(int, error)
+	httpResponseErr(error)
 	HTTPResponseOk(interface{}, error)
-	HTTPResponseCreated(interface{}, error)
-	HTTPResponseDeleted(res interface{}, err error)
-	HTTPResponse(int, interface{}, error)
+	httpResponseCreated(interface{}, error)
+	httpResponseDeleted(interface{}, error)
+	HTTPResponse(interface{}, error)
 }
 
 // ContextImpl Context impl
@@ -46,6 +49,7 @@ type ContextImpl struct {
 	// http
 	c               *gin.Context
 	funcToGetWhoAmI func(app Application, c *gin.Context, db *gorm.DB) (interface{}, error)
+	status          int
 }
 
 // Application get app
@@ -125,20 +129,31 @@ func (c *ContextImpl) cleanRuntime() {
 	c.db = nil
 }
 
-// HTTPResponseUnauthorizedErr handle http 400 response
-func (c *ContextImpl) HTTPResponseUnauthorizedErr(err error) {
-	c.HTTPResponseErr(401, err)
+// HTTPStatus set http status
+func (c *ContextImpl) HTTPStatus(code int) {
+	c.status = code
+}
+
+// httpResponseUnauthorizedErr handle http 400 response
+func (c *ContextImpl) httpResponseUnauthorizedErr(err error) {
+	c.HTTPStatus(http.StatusUnauthorized)
+	c.httpResponseErr(err)
 }
 
 // HTTPResponseInternalErr handle http 400 response
 func (c *ContextImpl) HTTPResponseInternalErr(err error) {
-	c.HTTPResponseErr(400, err)
+	c.HTTPStatus(http.StatusBadRequest)
+	c.httpResponseErr(err)
 }
 
-// HTTPResponseErr handle http 400 response
-func (c *ContextImpl) HTTPResponseErr(status int, err error) {
+// httpResponseErr handle http 400 response
+func (c *ContextImpl) httpResponseErr(err error) {
 	if c.c == nil {
 		panic("gin context not set , please if the func is used in http request handle")
+	}
+	if c.status == 0 {
+		// default status 400
+		c.status = 400
 	}
 	err = util.HTTPErrEncoder(err)
 	if err != nil {
@@ -150,36 +165,38 @@ func (c *ContextImpl) HTTPResponseErr(status int, err error) {
 		c.c.Error(fmt.Errorf("%v", string(debug.Stack())))
 
 		if c.app.ResponseFactory() != nil {
-			c.c.JSON(status, c.app.ResponseFactory()(status, resErr, c.runtime))
+			c.c.JSON(c.status, c.app.ResponseFactory()(c.status, resErr, c.runtime))
 		} else {
 			if resErr != nil {
-				c.c.AbortWithStatusJSON(status, resErr)
+				c.c.AbortWithStatusJSON(c.status, resErr)
 			} else {
-				c.c.AbortWithStatus(status)
+				c.c.AbortWithStatus(c.status)
 			}
 		}
-
 		return
 	}
 }
 
 // HTTPResponseOk handle http http.StatusOK 200 response
 func (c *ContextImpl) HTTPResponseOk(res interface{}, err error) {
-	c.HTTPResponse(http.StatusOK, res, err)
+	c.HTTPStatus(http.StatusOK)
+	c.HTTPResponse(res, err)
 }
 
-// HTTPResponseCreated handle http http.StatusCreated 201 response
-func (c *ContextImpl) HTTPResponseCreated(res interface{}, err error) {
-	c.HTTPResponse(http.StatusCreated, res, err)
+// httpResponseCreated handle http http.StatusCreated 201 response
+func (c *ContextImpl) httpResponseCreated(res interface{}, err error) {
+	c.HTTPStatus(http.StatusCreated)
+	c.HTTPResponse(res, err)
 }
 
-// HTTPResponseDeleted handle http http.HTTPResponseDeleted 204 response
-func (c *ContextImpl) HTTPResponseDeleted(res interface{}, err error) {
-	c.HTTPResponse(http.StatusNoContent, res, err)
+// httpResponseDeleted handle http http.httpResponseDeleted 204 response
+func (c *ContextImpl) httpResponseDeleted(res interface{}, err error) {
+	c.HTTPStatus(http.StatusNoContent)
+	c.HTTPResponse(res, err)
 }
 
 // HTTPResponse handle response
-func (c *ContextImpl) HTTPResponse(status int, res interface{}, err error) {
+func (c *ContextImpl) HTTPResponse(res interface{}, err error) {
 	if c.c == nil {
 		panic("gin context not set , please if the func is used in http request handle")
 	}
@@ -187,16 +204,19 @@ func (c *ContextImpl) HTTPResponse(status int, res interface{}, err error) {
 		c.HTTPResponseInternalErr(err)
 		return
 	}
+	if c.status == 0 {
+		c.status = http.StatusOK
+	}
 	if c.app.Conf().GetAtomicRequest() {
 		c.SafeCommit()
 	}
 	if c.app.ResponseFactory() != nil {
-		c.c.JSON(status, c.app.ResponseFactory()(status, res, c.runtime))
+		c.c.JSON(c.status, c.app.ResponseFactory()(c.status, res, c.runtime))
 	} else {
 		if res != nil {
-			c.c.JSON(status, res)
+			c.c.JSON(c.status, res)
 		} else {
-			c.c.Status(status)
+			c.c.Status(c.status)
 		}
 
 	}

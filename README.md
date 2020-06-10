@@ -213,20 +213,20 @@ type userControllerImpl struct {
 application.NewRequestMapping(httputil.GET, "/:id", "GET", PermissionValidator([]string{"manager"}), gValidator, g1Validator),
 
 
-var gValidator = func(tctx application.Context) {
+var gValidator = func(tctx application.Context) error {
 	id, _ := strconv.Atoi(tctx.GinCtx().Param("id"))
 	if id < 3 {
-		tctx.HTTPResponseUnauthorizedErr(errors.New("gValidator no permission"))
+		return errors.New("gValidator no permission")
 	}
-	return
+	return nil 
 }
 
 var g1Validator = func(tctx application.Context) {
 	id, _ := strconv.Atoi(tctx.GinCtx().Param("id"))
 	if id > 3 {
-		tctx.HTTPResponseUnauthorizedErr(errors.New("g1Validator no permission"))
+		return errors.New("g1Validator no permission")
 	}
-	return
+	return nil 
 }
 
 // PermissionValidator example validator
@@ -236,7 +236,7 @@ func PermissionValidator(requiredP []string) func(application.Context) {
 		c.GinCtx().Set("permission", []string{"employee", "manager"}) // ok
 		in := util.SliceInSlice(requiredP, c.GinCtx().GetStringSlice("permission"))
 		if !in {
-			c.HTTPResponseUnauthorizedErr(errors.New("np permission"))
+			c.httpResponseUnauthorizedErr(errors.New("np permission"))
 		}
 	}
 }
@@ -328,7 +328,7 @@ func PermissionValidator(requiredP []string) func(application.Context) {
 		User model.User `body_param:""`
 	}) {
 		res, err := c.UserSrv.CreateUser(&args.User)
-		c.Tctx.HTTPResponseCreated(res, err)
+		c.Tctx.httpResponseCreated(res, err)
 		return
 	}
 

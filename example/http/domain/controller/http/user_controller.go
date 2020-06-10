@@ -104,7 +104,7 @@ func (c *userControllerImpl) CreateUser(args struct {
 	User model.User `body_param:""`
 }) {
 	res, err := c.UserSrv.CreateUser(&args.User)
-	c.Tctx.HTTPResponseCreated(res, err)
+	c.Tctx.httpResponseCreated(res, err)
 	return
 }
 
@@ -145,7 +145,7 @@ func (c *userControllerImpl) DeleteUserByID(args struct {
 	DVersion string `body_param:"d_version"`
 }) {
 	err := c.UserSrv.DeleteUserByID(args.ID, args.DVersion)
-	c.Tctx.HTTPResponseDeleted(nil, err)
+	c.Tctx.httpResponseDeleted(nil, err)
 	return
 }
 
@@ -163,6 +163,6 @@ func (c *userControllerImpl) MultiDeleteUserByID(args struct {
 	DeleteParamList []modelutil.DeleteParam `body_param:""`
 }) {
 	err := c.UserSrv.MultiDeleteUserByID(args.DeleteParamList)
-	c.Tctx.HTTPResponseDeleted(nil, err)
+	c.Tctx.httpResponseDeleted(nil, err)
 	return
 }

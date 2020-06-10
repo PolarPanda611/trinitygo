@@ -36,7 +36,7 @@ func (s *ServiceClient) Request(method RequestMethod, path string, body []byte, 
 	defer cancel()
 	resp, err := client.Do(request.WithContext(ctx)) //发送请求
 	if err != nil {
-		return resp.StatusCode, nil, err
+		return http.StatusBadGateway, nil, err
 	}
 	respBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

@@ -24,4 +24,4 @@ func NewRequestMapping(method httputil.RequestMethod, path string, funcName stri
 }
 
 // Validator to validator request
-type Validator func(Context)
+type Validator func(Context) error

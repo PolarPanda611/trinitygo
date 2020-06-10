@@ -91,7 +91,7 @@ func (c *resourceControllerImpl) CreateResource() {
 		return
 	}
 	res, err := c.ResourceSrv.CreateResource(&newResource)
-	c.Tctx.HTTPResponseCreated(res, err)
+	c.Tctx.httpResponseCreated(res, err)
 	return
 }
 

@@ -91,7 +91,7 @@ func (c *metroControllerImpl) CreateMetro() {
 		return
 	}
 	res, err := c.MetroSrv.CreateMetro(&newMetro)
-	c.Tctx.HTTPResponseCreated(res, err)
+	c.Tctx.httpResponseCreated(res, err)
 	return
 }
 

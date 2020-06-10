@@ -91,7 +91,7 @@ func (c *groupControllerImpl) CreateGroup() {
 		return
 	}
 	res, err := c.GroupSrv.CreateGroup(&newGroup)
-	c.Tctx.HTTPResponseCreated(res, err)
+	c.Tctx.httpResponseCreated(res, err)
 	return
 }
 

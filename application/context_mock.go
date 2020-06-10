@@ -78,23 +78,26 @@ func (c *ContextMock) GetCurrentUser() (interface{}, error) {
 	return args.Get(0), args.Error(1)
 }
 
-// HTTPResponseUnauthorizedErr mock
-func (c *ContextMock) HTTPResponseUnauthorizedErr(error) {}
+// HTTPStatus mock
+func (c *ContextMock) HTTPStatus(code int) {}
+
+// httpResponseUnauthorizedErr mock
+func (c *ContextMock) httpResponseUnauthorizedErr(error) {}
 
 // HTTPResponseInternalErr mock
 func (c *ContextMock) HTTPResponseInternalErr(error) {}
 
-// HTTPResponseErr mock
-func (c *ContextMock) HTTPResponseErr(int, error) {}
+// httpResponseErr mock
+func (c *ContextMock) httpResponseErr(error) {}
 
 // HTTPResponseOk mock
 func (c *ContextMock) HTTPResponseOk(interface{}, error) {}
 
-// HTTPResponseCreated mock
-func (c *ContextMock) HTTPResponseCreated(interface{}, error) {}
+// httpResponseCreated mock
+func (c *ContextMock) httpResponseCreated(interface{}, error) {}
 
 // HTTPResponse mock
-func (c *ContextMock) HTTPResponse(int, interface{}, error) {}
+func (c *ContextMock) HTTPResponse(interface{}, error) {}
 
-// HTTPResponseDeleted mock
-func (c *ContextMock) HTTPResponseDeleted(res interface{}, err error) {}
+// httpResponseDeleted mock
+func (c *ContextMock) httpResponseDeleted(res interface{}, err error) {}

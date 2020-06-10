@@ -38,7 +38,7 @@ func DefaultInstallGORM(
 	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
 		return fmt.Sprintf("%v%v", tablePrefix, defaultTableName)
 	}
-	db.SetLogger(&NilLogger{})
+	// db.SetLogger(&NilLogger{})
 	db.LogMode(debug)
 	db.SingularTable(singular)
 	db.Callback().Create().Replace("gorm:update_time_stamp", updateTimeStampAndUUIDForCreateCallback)

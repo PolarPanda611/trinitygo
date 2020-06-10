@@ -88,7 +88,7 @@ func (c *stationControllerImpl) CreateStation() {
 		return
 	}
 	res, err := c.StationSrv.CreateStation(&newStation)
-	c.Tctx.HTTPResponseCreated(res, err)
+	c.Tctx.httpResponseCreated(res, err)
 	return
 }
 

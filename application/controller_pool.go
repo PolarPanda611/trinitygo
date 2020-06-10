@@ -6,8 +6,6 @@ import (
 	"strings"
 	"sync"
 
-	"log"
-
 	"github.com/gin-gonic/gin"
 	"github.com/kataras/golog"
 )
@@ -88,12 +86,18 @@ func (s *ControllerPool) ControllerFuncSelfCheck(instancePool *InstancePool, isL
 		}
 		instance := pool.Get()
 		defer pool.Put(instance)
-		_, funcImpled := reflect.TypeOf(instance).MethodByName(funcName)
+		m, funcImpled := reflect.TypeOf(instance).MethodByName(funcName)
 		if !funcImpled {
-			log.Fatalf("booting self func checking controller %v , func %v not registered , self check failed ...", controllerName, funcName)
+			logger.Fatalf("booting self func checking controller %v , func %v not registered , self check failed ...", controllerName, funcName)
 		}
 		if isLog {
 			logger.Infof("booting self func checking controller %v , func %v checked ", controllerName, funcName)
+		}
+		if m.Type.NumIn() < -1 {
+			logger.Fatalf("booting self func checking controller %v , func %v should have at least 1 in args  , self check failed ...", controllerName, funcName)
+		}
+		if m.Type.NumOut() > 2 {
+			logger.Fatalf("booting self func checking controller %v , func %v should have at most 2 out args  , self check failed ...", controllerName, funcName)
 		}
 	}
 

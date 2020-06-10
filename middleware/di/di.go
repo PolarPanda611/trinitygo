@@ -12,6 +12,112 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// stringConverter
+/*
+	@word the word need to be converted
+	@destVal the target value need to convert to
+
+	stringConverter will convert to destVal according to
+	the type of destVal
+*/
+func stringConverter(word string, destVal *reflect.Value) error {
+	switch destVal.Type().Kind() {
+	case reflect.Int64:
+		paramVal, err := strconv.ParseInt(word, 10, 64)
+		if err != nil {
+			return err
+		}
+		destVal.Set(reflect.ValueOf(paramVal))
+		break
+	case reflect.Int32:
+		paramVal, err := strconv.ParseInt(word, 10, 32)
+		if err != nil {
+			return err
+		}
+		destVal.Set(reflect.ValueOf(paramVal))
+		break
+	case reflect.Int16:
+		paramVal, err := strconv.ParseInt(word, 10, 16)
+		if err != nil {
+			return err
+		}
+		destVal.Set(reflect.ValueOf(paramVal))
+		break
+	case reflect.Int:
+		paramVal, err := strconv.Atoi(word)
+		if err != nil {
+			return err
+		}
+		destVal.Set(reflect.ValueOf(paramVal))
+		break
+	case reflect.Bool:
+		paramVal, err := strconv.ParseBool(word)
+		if err != nil {
+			return err
+		}
+		destVal.Set(reflect.ValueOf(paramVal))
+		break
+	case reflect.String:
+		destVal.Set(reflect.ValueOf(word))
+		break
+	default:
+		return fmt.Errorf("Unsupported type")
+	}
+	return nil
+}
+
+// bodyParamConverter
+/*
+	@bodyVal the father val of
+	@key the key name of the parentVal
+	@destType the type of dest type
+	bodyParamConverter will get the key from the body value
+	and convert the value to the dest type value
+*/
+func bodyParamConverter(bodyVal map[string]interface{}, key string, destType reflect.Type) (interface{}, error) {
+	value, ok := bodyVal[key]
+	if !ok {
+		return nil, fmt.Errorf("key %v not exist", key)
+	}
+	switch destType.Kind() {
+	case reflect.Int64:
+		convertedValue, ok := value.(int64)
+		if !ok {
+			return nil, fmt.Errorf("key %v convert to int64 error ", key)
+		}
+		return convertedValue, nil
+	case reflect.Int32:
+		convertedValue, ok := value.(int32)
+		if !ok {
+			return nil, fmt.Errorf("key %v convert to int32 error ", key)
+		}
+		return convertedValue, nil
+	case reflect.Int:
+		convertedValue, ok := value.(int)
+		if !ok {
+			return nil, fmt.Errorf("key %v convert to int error ", key)
+		}
+		return convertedValue, nil
+	case reflect.String:
+		convertedValue, ok := value.(string)
+		if !ok {
+			return nil, fmt.Errorf("key %v convert to string error ", key)
+		}
+		return convertedValue, nil
+	case reflect.Struct:
+		c, _ := json.Marshal(value)
+		targetVal := reflect.New(destType).Interface()
+		decoder := json.NewDecoder(bytes.NewReader(c))
+		if err := decoder.Decode(targetVal); err != nil {
+			return nil, err
+		}
+		return reflect.Indirect(reflect.ValueOf(targetVal)).Interface(), nil
+	default:
+		return nil, fmt.Errorf("type %v not support", destType)
+	}
+
+}
+
 // New DI middleware
 func New(app application.Application) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -30,8 +136,8 @@ func New(app application.Application) gin.HandlerFunc {
 		}()
 		validators := app.ControllerPool().GetControllerValidators(method)
 		for _, v := range validators {
-			v(tContext)
-			if c.IsAborted() {
+			if err := v(tContext); err != nil {
+				tContext.HTTPResponseInternalErr(err)
 				return
 			}
 		}
@@ -44,12 +150,13 @@ func New(app application.Application) gin.HandlerFunc {
 			panic("controller has no method ")
 		}
 		// validation passed , run handler
+		var responseValue []reflect.Value
 		if currentMethod.Type.NumIn() < -1 {
 			panic("wrong method")
 		} else if currentMethod.Type.NumIn() == 1 {
 			var inParam []reflect.Value                            // 构造函数入参 ， 入参1 ， transport指针对象
 			inParam = append(inParam, reflect.ValueOf(controller)) // 传入transport对象
-			currentMethod.Func.Call(inParam)                       // 调用transport函数，传入参数
+			responseValue = currentMethod.Func.Call(inParam)       // 调用transport函数，传入参数
 		} else {
 			var inParam []reflect.Value                            // 构造函数入参 ， 入参1 ， transport指针对象
 			inParam = append(inParam, reflect.ValueOf(controller)) // 传入transport对象
@@ -156,7 +263,7 @@ func New(app application.Application) gin.HandlerFunc {
 									panic(err)
 								}
 							}
-							value, err := bodyParamConverter(bodyParam, currentMethod.Type.In(i).Field(index).Type, bodyVal)
+							value, err := bodyParamConverter(bodyVal, bodyParam, currentMethod.Type.In(i).Field(index).Type)
 							if err != nil {
 								panic(err)
 							}
@@ -167,98 +274,32 @@ func New(app application.Application) gin.HandlerFunc {
 				}
 				inParam = append(inParam, destVal)
 			}
-			currentMethod.Func.Call(inParam) // 调用transport函数，传入参数
+			responseValue = currentMethod.Func.Call(inParam) // 调用transport函数，传入参数
+		}
+		switch len(responseValue) {
+		case 0:
+			return
+		case 1:
+			if err, ok := responseValue[0].Interface().(error); ok {
+				if err != nil {
+					tContext.HTTPResponseInternalErr(err)
+					return
+				}
+			}
+			tContext.HTTPResponse(responseValue[0].Interface(), nil)
+			return
+		case 2:
+			if err, ok := responseValue[1].Interface().(error); ok {
+				if err != nil {
+					tContext.HTTPResponseInternalErr(err)
+					return
+				}
+			}
+			tContext.HTTPResponse(responseValue[0].Interface(), nil)
+			return
+		default:
+			panic("wrong res type , first out should be response value , second out should be error ")
 		}
 
 	}
-}
-
-func stringConverter(word string, destVal *reflect.Value) error {
-	switch destVal.Type().Kind() {
-	case reflect.Int64:
-		paramVal, err := strconv.ParseInt(word, 10, 64)
-		if err != nil {
-			return err
-		}
-		destVal.Set(reflect.ValueOf(paramVal))
-		break
-	case reflect.Int32:
-		paramVal, err := strconv.ParseInt(word, 10, 32)
-		if err != nil {
-			return err
-		}
-		destVal.Set(reflect.ValueOf(paramVal))
-		break
-	case reflect.Int16:
-		paramVal, err := strconv.ParseInt(word, 10, 16)
-		if err != nil {
-			return err
-		}
-		destVal.Set(reflect.ValueOf(paramVal))
-		break
-	case reflect.Int:
-		paramVal, err := strconv.Atoi(word)
-		if err != nil {
-			return err
-		}
-		destVal.Set(reflect.ValueOf(paramVal))
-		break
-	case reflect.Bool:
-		paramVal, err := strconv.ParseBool(word)
-		if err != nil {
-			return err
-		}
-		destVal.Set(reflect.ValueOf(paramVal))
-		break
-	case reflect.String:
-		destVal.Set(reflect.ValueOf(word))
-		break
-	default:
-		return fmt.Errorf("Unsupported type")
-	}
-	return nil
-}
-
-func bodyParamConverter(destName string, destType reflect.Type, parentVal map[string]interface{}) (interface{}, error) {
-	value, ok := parentVal[destName]
-	if !ok {
-		return nil, fmt.Errorf("key %v not exist", destName)
-	}
-	switch destType.Kind() {
-	case reflect.Int64:
-		convertedValue, ok := value.(int64)
-		if !ok {
-			return nil, fmt.Errorf("key %v convert to int64 error ", destName)
-		}
-		return convertedValue, nil
-	case reflect.Int32:
-		convertedValue, ok := value.(int32)
-		if !ok {
-			return nil, fmt.Errorf("key %v convert to int32 error ", destName)
-		}
-		return convertedValue, nil
-	case reflect.Int:
-		convertedValue, ok := value.(int)
-		if !ok {
-			return nil, fmt.Errorf("key %v convert to int error ", destName)
-		}
-		return convertedValue, nil
-	case reflect.String:
-		convertedValue, ok := value.(string)
-		if !ok {
-			return nil, fmt.Errorf("key %v convert to string error ", destName)
-		}
-		return convertedValue, nil
-	case reflect.Struct:
-		c, _ := json.Marshal(value)
-		targetVal := reflect.New(destType).Interface()
-		decoder := json.NewDecoder(bytes.NewReader(c))
-		if err := decoder.Decode(targetVal); err != nil {
-			return nil, err
-		}
-		return reflect.Indirect(reflect.ValueOf(targetVal)).Interface(), nil
-	default:
-		return nil, fmt.Errorf("type %v not support", destType)
-	}
-
 }

@@ -1,4 +1,3 @@
-
 package http
 
 import (
@@ -39,7 +38,7 @@ type AssetController interface {
 
 type assetControllerImpl struct {
 	AssetSrv service.AssetService `autowired:"true" resource:"AssetService"`
-	Tctx    application.Context `autowired:"true" transaction:"true"`
+	Tctx     application.Context  `autowired:"true" transaction:"true"`
 }
 
 // GetAssetByID Method
@@ -76,8 +75,8 @@ func (c *assetControllerImpl) GetAssetList() {
 }
 
 // CreateAsset Method
-// @Summary Create Asset 
-// @Description function for AssetController  to create Asset 
+// @Summary Create Asset
+// @Description function for AssetController  to create Asset
 // @accept  json
 // @Produce json
 // @Param  q  query string false "name search by q" Format(email)
@@ -92,13 +91,13 @@ func (c *assetControllerImpl) CreateAsset() {
 		return
 	}
 	res, err := c.AssetSrv.CreateAsset(&newAsset)
-	c.Tctx.HTTPResponseCreated(res, err)
+	c.Tctx.httpResponseCreated(res, err)
 	return
 }
 
 // UpdateAssetByID Method
-// @Summary Modify Asset 
-// @Description function for AssetController  to Modify Asset 
+// @Summary Modify Asset
+// @Description function for AssetController  to Modify Asset
 // @accept  json
 // @Produce json
 // @Param   id     path    int64     true        "id"
@@ -120,8 +119,8 @@ func (c *assetControllerImpl) UpdateAssetByID() {
 }
 
 // DeleteAssetByID Method
-// @Summary Delete Asset 
-// @Description function for AssetController  to delete Asset 
+// @Summary Delete Asset
+// @Description function for AssetController  to delete Asset
 // @accept  json
 // @Produce json
 // @Param   id     path    int64     true        "id"
@@ -143,8 +142,8 @@ func (c *assetControllerImpl) DeleteAssetByID() {
 }
 
 // MultiDeleteAssetByID Method
-// @Summary MultiDelete Asset 
-// @Description function for AssetController  to MultiDelete Asset 
+// @Summary MultiDelete Asset
+// @Description function for AssetController  to MultiDelete Asset
 // @accept  json
 // @Produce json
 // @Param  q  query string false "name search by q" Format(email)
@@ -162,5 +161,3 @@ func (c *assetControllerImpl) MultiDeleteAssetByID() {
 	c.Tctx.HTTPResponseOk(nil, err)
 	return
 }
-	
-	

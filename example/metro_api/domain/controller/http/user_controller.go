@@ -132,7 +132,7 @@ func (c *userControllerImpl) CreateUser() {
 		return
 	}
 	res, err := c.UserSrv.CreateUser(&newUser)
-	c.Tctx.HTTPResponseCreated(res, err)
+	c.Tctx.httpResponseCreated(res, err)
 	return
 }
 

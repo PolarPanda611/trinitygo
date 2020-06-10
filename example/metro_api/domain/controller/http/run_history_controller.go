@@ -88,7 +88,7 @@ func (c *runHistoryControllerImpl) CreateRunHistory() {
 		return
 	}
 	res, err := c.RunHistorySrv.CreateRunHistory(&newRunHistory)
-	c.Tctx.HTTPResponseCreated(res, err)
+	c.Tctx.httpResponseCreated(res, err)
 	return
 }
 
