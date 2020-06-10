@@ -35,25 +35,25 @@ func init() {
 type {{.ModelName}}Controller interface {
 	Get{{.ModelName}}ByID(args struct {
 		ID int64 ` + "`" + `path_param:"id"` + "`" + `
-	})
+	}) (*model.{{.ModelName}}, error)
 	Get{{.ModelName}}List(args struct {
 		Query string ` + "`" + `query_param:""` + "`" + `
-	})
+	}) (interface{}, error)
 	Create{{.ModelName}}(args struct {
 		{{.ModelName}} model.{{.ModelName}} ` + "`" + `body_param:""` + "`" + `
-	})
+	}) (*model.{{.ModelName}}, error)
 	Update{{.ModelName}}ByID(args struct {
 		ID       int64                  ` + "`" + `path_param:"id"` + "`" + `
 		Change   map[string]interface{} ` + "`" + `body_param:""` + "`" + `
 		DVersion string                 ` + "`" + `body_param:"d_version"` + "`" + `
-	})
+	}) error 
 	Delete{{.ModelName}}ByID(args struct {
 		ID       int64  ` + "`" + `path_param:"id"` + "`" + `
 		DVersion string ` + "`" + `body_param:"d_version"` + "`" + `
-	})
+	}) error
 	MultiDelete{{.ModelName}}ByID(args struct {
 		DeleteParamList []modelutil.DeleteParam ` + "`" + `body_param:""` + "`" + `
-	})
+	}) error 
 }
 
 type {{.ModelNamePrivate}}ControllerImpl struct {
@@ -73,10 +73,8 @@ type {{.ModelNamePrivate}}ControllerImpl struct {
 // @Router /{{.ProjectName}}/{{.ModelNameToUnderscore}}s/{id} [get]
 func (c *{{.ModelNamePrivate}}ControllerImpl) Get{{.ModelName}}ByID(args struct {
 	ID int64 ` + "`" + `path_param:"id"` + "`" + `
-}) {
-	res, err := c.{{.ModelName}}Srv.Get{{.ModelName}}ByID(args.ID)
-	c.Tctx.HTTPResponseOk(res, err)
-	return
+}) (*model.{{.ModelName}}, error) {
+	return c.{{.ModelName}}Srv.Get{{.ModelName}}ByID(args.ID)
 }
 
 // Get{{.ModelName}}List Method
@@ -91,10 +89,8 @@ func (c *{{.ModelNamePrivate}}ControllerImpl) Get{{.ModelName}}ByID(args struct 
 // @Router /{{.ProjectName}}/{{.ModelNameToUnderscore}}s [get]
 func (c *{{.ModelNamePrivate}}ControllerImpl) Get{{.ModelName}}List(args struct {
 	Query string ` + "`" + `query_param:""` + "`" + `
-}) {
-	res, err := c.{{.ModelName}}Srv.Get{{.ModelName}}List(args.Query)
-	c.Tctx.HTTPResponseOk(res, err)
-	return
+}) (interface{}, error) {
+	return c.{{.ModelName}}Srv.Get{{.ModelName}}List(args.Query)
 }
 
 // Create{{.ModelName}} Method
@@ -109,10 +105,9 @@ func (c *{{.ModelNamePrivate}}ControllerImpl) Get{{.ModelName}}List(args struct 
 // @Router /{{.ProjectName}}/{{.ModelNameToUnderscore}}s [post]
 func (c *{{.ModelNamePrivate}}ControllerImpl) Create{{.ModelName}}(args struct {
 	{{.ModelName}} model.{{.ModelName}} ` + "`" + `body_param:""` + "`" + `
-}) {
-	res, err := c.{{.ModelName}}Srv.Create{{.ModelName}}(&args.{{.ModelName}})
-	c.Tctx.httpResponseCreated(res, err)
-	return
+})  (*model.{{.ModelName}}, error) {
+	c.Tctx.HTTPStatus(201)
+	return c.{{.ModelName}}Srv.Create{{.ModelName}}(&args.{{.ModelName}})
 }
 
 // Update{{.ModelName}}ByID Method
@@ -130,10 +125,8 @@ func (c *{{.ModelNamePrivate}}ControllerImpl) Update{{.ModelName}}ByID(args stru
 	ID       int64                  ` + "`" + `path_param:"id"` + "`" + `
 	Change   map[string]interface{} ` + "`" + `body_param:""` + "`" + `
 	DVersion string                 ` + "`" + `body_param:"d_version"` + "`" + `
-}) {
-	err := c.{{.ModelName}}Srv.Update{{.ModelName}}ByID(args.ID, args.DVersion, args.Change)
-	c.Tctx.HTTPResponseOk(nil, err)
-	return
+}) error {
+	return c.{{.ModelName}}Srv.Update{{.ModelName}}ByID(args.ID, args.DVersion, args.Change)
 }
 
 // Delete{{.ModelName}}ByID Method
@@ -150,10 +143,9 @@ func (c *{{.ModelNamePrivate}}ControllerImpl) Update{{.ModelName}}ByID(args stru
 func (c *{{.ModelNamePrivate}}ControllerImpl) Delete{{.ModelName}}ByID(args struct {
 	ID       int64  ` + "`" + `path_param:"id"` + "`" + `
 	DVersion string ` + "`" + `body_param:"d_version"` + "`" + `
-}) {
-	err := c.{{.ModelName}}Srv.Delete{{.ModelName}}ByID(args.ID, args.DVersion)
-	c.Tctx.httpResponseDeleted(nil, err)
-	return
+}) error {
+	c.Tctx.HTTPStatus(204)
+	return c.{{.ModelName}}Srv.Delete{{.ModelName}}ByID(args.ID, args.DVersion)
 }
 
 // MultiDelete{{.ModelName}}ByID Method
@@ -168,10 +160,9 @@ func (c *{{.ModelNamePrivate}}ControllerImpl) Delete{{.ModelName}}ByID(args stru
 // @Router /{{.ProjectName}}/{{.ModelNameToUnderscore}}s [delete]
 func (c *{{.ModelNamePrivate}}ControllerImpl) MultiDelete{{.ModelName}}ByID(args struct {
 	DeleteParamList []modelutil.DeleteParam ` + "`" + `body_param:""` + "`" + `
-}) {
-	err := c.{{.ModelName}}Srv.MultiDelete{{.ModelName}}ByID(args.DeleteParamList)
-	c.Tctx.httpResponseDeleted(nil, err)
-	return
+}) error {
+	c.Tctx.HTTPStatus(204)
+	return c.{{.ModelName}}Srv.MultiDelete{{.ModelName}}ByID(args.DeleteParamList)
 }
 	
 	`
