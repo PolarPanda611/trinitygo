@@ -1,3 +1,4 @@
+
 package service
 
 import (
@@ -164,3 +165,4 @@ func TestUserServiceMultiDeleteUserByID(t *testing.T) {
 	UserRepo.On("DeleteUserByID", int64(2), "v1").Once().Return(errors.New("failed"))
 	testutil.Play(t, UserSrv, "MultiDeleteUserByID", deleteBody1).Match(fmt.Errorf("User id %v deleted failed , %v", int64(2), errors.New("failed")))
 }
+

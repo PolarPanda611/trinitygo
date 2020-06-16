@@ -2,7 +2,6 @@ package http
 
 import (
 	"http/domain/model"
-
 	"http/domain/service"
 
 	"github.com/PolarPanda611/trinitygo"
@@ -22,31 +21,35 @@ func init() {
 		application.NewRequestMapping(httputil.DELETE, "/:id", "DeleteUserByID"),
 		application.NewRequestMapping(httputil.DELETE, "", "MultiDeleteUserByID"),
 	)
+	trinitygo.RegisterController("/benchmark", userControllerImpl{},
+		application.NewRequestMapping(httputil.GET, "", "Benchmark"),
+	)
 }
 
 // UserController user controller
 type UserController interface {
 	GetUserByID(args struct {
 		ID int64 `path_param:"id"`
-	})
+	}) (*model.User, error)
 	GetUserList(args struct {
 		Query string `query_param:""`
-	})
+	}) (interface{}, error)
 	CreateUser(args struct {
 		User model.User `body_param:""`
-	})
+	}) (*model.User, error)
 	UpdateUserByID(args struct {
 		ID       int64                  `path_param:"id"`
 		Change   map[string]interface{} `body_param:""`
 		DVersion string                 `body_param:"d_version"`
-	})
+	}) error
 	DeleteUserByID(args struct {
 		ID       int64  `path_param:"id"`
 		DVersion string `body_param:"d_version"`
-	})
+	}) error
 	MultiDeleteUserByID(args struct {
 		DeleteParamList []modelutil.DeleteParam `body_param:""`
-	})
+	}) error
+	Benchmark() error
 }
 
 type userControllerImpl struct {
@@ -66,10 +69,8 @@ type userControllerImpl struct {
 // @Router /http/users/{id} [get]
 func (c *userControllerImpl) GetUserByID(args struct {
 	ID int64 `path_param:"id"`
-}) {
-	res, err := c.UserSrv.GetUserByID(args.ID)
-	c.Tctx.HTTPResponseOk(res, err)
-	return
+}) (*model.User, error) {
+	return c.UserSrv.GetUserByID(args.ID)
 }
 
 // GetUserList Method
@@ -84,10 +85,8 @@ func (c *userControllerImpl) GetUserByID(args struct {
 // @Router /http/users [get]
 func (c *userControllerImpl) GetUserList(args struct {
 	Query string `query_param:""`
-}) {
-	res, err := c.UserSrv.GetUserList(args.Query)
-	c.Tctx.HTTPResponseOk(res, err)
-	return
+}) (interface{}, error) {
+	return c.UserSrv.GetUserList(args.Query)
 }
 
 // CreateUser Method
@@ -102,10 +101,9 @@ func (c *userControllerImpl) GetUserList(args struct {
 // @Router /http/users [post]
 func (c *userControllerImpl) CreateUser(args struct {
 	User model.User `body_param:""`
-}) {
-	res, err := c.UserSrv.CreateUser(&args.User)
-	c.Tctx.httpResponseCreated(res, err)
-	return
+}) (*model.User, error) {
+	c.Tctx.HTTPStatus(201)
+	return c.UserSrv.CreateUser(&args.User)
 }
 
 // UpdateUserByID Method
@@ -123,10 +121,8 @@ func (c *userControllerImpl) UpdateUserByID(args struct {
 	ID       int64                  `path_param:"id"`
 	Change   map[string]interface{} `body_param:""`
 	DVersion string                 `body_param:"d_version"`
-}) {
-	err := c.UserSrv.UpdateUserByID(args.ID, args.DVersion, args.Change)
-	c.Tctx.HTTPResponseOk(nil, err)
-	return
+}) error {
+	return c.UserSrv.UpdateUserByID(args.ID, args.DVersion, args.Change)
 }
 
 // DeleteUserByID Method
@@ -136,17 +132,16 @@ func (c *userControllerImpl) UpdateUserByID(args struct {
 // @Produce json
 // @Param   id     path    int64     true        "id"
 // @Param  q  query string false "name search by q" Format(email)
-// @Success 200 {string} json "{"Status":200,"Result":{},"Runtime":"ok"}"
+// @Success 204 {string} json "{"Status":204,"Result":{},"Runtime":"ok"}"
 // @Failure 400 {string} json "{"Status":400,"Result":{},"Runtime":"ok"}"
 // @Security ApiKeyAuth
 // @Router /http/users/{id} [delete]
 func (c *userControllerImpl) DeleteUserByID(args struct {
 	ID       int64  `path_param:"id"`
 	DVersion string `body_param:"d_version"`
-}) {
-	err := c.UserSrv.DeleteUserByID(args.ID, args.DVersion)
-	c.Tctx.httpResponseDeleted(nil, err)
-	return
+}) error {
+	c.Tctx.HTTPStatus(204)
+	return c.UserSrv.DeleteUserByID(args.ID, args.DVersion)
 }
 
 // MultiDeleteUserByID Method
@@ -155,14 +150,17 @@ func (c *userControllerImpl) DeleteUserByID(args struct {
 // @accept  json
 // @Produce json
 // @Param  q  query string false "name search by q" Format(email)
-// @Success 200 {string} json "{"Status":200,"Result":{},"Runtime":"ok"}"
+// @Success 204 {string} json "{"Status":204,"Result":{},"Runtime":"ok"}"
 // @Failure 400 {string} json "{"Status":400,"Result":{},"Runtime":"ok"}"
 // @Security ApiKeyAuth
 // @Router /http/users [delete]
 func (c *userControllerImpl) MultiDeleteUserByID(args struct {
 	DeleteParamList []modelutil.DeleteParam `body_param:""`
-}) {
-	err := c.UserSrv.MultiDeleteUserByID(args.DeleteParamList)
-	c.Tctx.httpResponseDeleted(nil, err)
-	return
+}) error {
+	c.Tctx.HTTPStatus(204)
+	return c.UserSrv.MultiDeleteUserByID(args.DeleteParamList)
+}
+
+func (c *userControllerImpl) Benchmark() error {
+	return nil
 }
