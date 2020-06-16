@@ -164,3 +164,18 @@ func (c *userControllerImpl) MultiDeleteUserByID(args struct {
 func (c *userControllerImpl) Benchmark() error {
 	return nil
 }
+
+/*
+
+daniel@Daniels-MacBook-Pro ~ % wrk -d 10s -c 1024 -t 8 http://127.0.0.1:8088/http/benchmark
+Running 10s test @ http://127.0.0.1:8088/http/benchmark
+  8 threads and 1024 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    15.95ms   21.73ms 298.84ms   96.62%
+    Req/Sec     2.11k     1.46k   10.80k    77.37%
+  167263 requests in 10.03s, 39.56MB read
+  Socket errors: connect 779, read 116, write 0, timeout 0
+Requests/sec:  16675.59
+Transfer/sec:      3.94MB
+
+*/
