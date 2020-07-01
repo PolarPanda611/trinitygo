@@ -7,7 +7,7 @@
 
 golang restframework plugin with gin+gorm, fast and high scalable    
 
-## 安装
+## Installation
 
 ```bash
 $ go get github.com/PolarPanda611/trinitygo/trinitygo
@@ -22,7 +22,7 @@ $ swag init
 
 done.
 
-## 特性
+## Feature
 
 * integrate gorm
 * integrate gin
@@ -37,7 +37,7 @@ done.
 * cmd to init Project CRUD Code && unit test template
 * cmd to init Swagger docs
 
-## 文档
+## Docs
 
 ## Http Server 
 
