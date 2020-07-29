@@ -16,7 +16,7 @@ $ cd [Your Project Name]
 $ trinitygo NewCrud [Your Model Name]
 $ swag init
 
-// start your journey in Trintiy
+// start your journey in Trinity
 // you can check the demo under example folder 
 ```
 
@@ -29,7 +29,7 @@ done.
 * fast register router
 * customize middleware
 * customize runtime (Tracing Analysis, user authentication , event bus ...)
-* support automic request 
+* support atomic request 
 * support customize validator ( API permission , data validation ...)
 * support URL query analyze (search , filter , order by , preload ...)
 * full dependency injection support

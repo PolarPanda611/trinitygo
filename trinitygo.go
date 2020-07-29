@@ -14,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/PolarPanda611/bar"
 	"github.com/PolarPanda611/trinitygo/httputil"
 	"github.com/PolarPanda611/trinitygo/keyword"
 	truntime "github.com/PolarPanda611/trinitygo/runtime"
@@ -109,6 +110,7 @@ type bootingInstance struct {
 
 // Application core of trinity
 type Application struct {
+	b            *bar.Bar
 	config       conf.Conf
 	keyword      keyword.Keyword
 	logger       *golog.Logger
@@ -190,19 +192,23 @@ func New() application.Application {
 			logSelfCheck: _logSelfCheck,
 			keyword:      keyword.GetKeyword(),
 		}
+		_app.b = bar.NewBar(0, 100)
 		appPrefix := fmt.Sprintf("[%v@%v]", util.GetServiceName(_app.config.GetProjectName()), _app.config.GetProjectVersion())
 		_app.logger.SetPrefix(appPrefix)
 		_app.logger.SetTimeFormat("2006-01-02 15:04:05.000")
-
+		_app.setProgress(2, 1000, "init logger")
 		_app.contextPool = application.New(func() application.Context {
 			return application.NewContext(_app, _funcToGetWhoAmI)
 		})
-
+		_app.setProgress(4, 1000, "init context pool ")
 		_app.controllerPool = application.NewControllerPool()
+		_app.setProgress(6, 1000, "init controller pool ")
 		_app.instancePool = application.NewInstancePool()
+		_app.setProgress(8, 1000, "init instance pool ")
 		if _responseFactory != nil {
 			_app.responseFactory = _responseFactory
 		}
+		_app.setProgress(10, 1000, "init response factory ")
 	})
 	return _app
 }
@@ -222,6 +228,16 @@ func DefaultHTTP() application.Application {
 	app := New()
 
 	return app
+}
+
+// Logger get logger
+func (app *Application) setProgress(progress, latency int64, message string) {
+	// time.Sleep(time.Duration(latency) * time.Millisecond)
+	app.b.Cur <- bar.CurrentStep{
+		Cur:      progress,
+		Message:  message,
+		IsReturn: true,
+	}
 }
 
 // Logger get logger
@@ -429,6 +445,7 @@ func (app *Application) initModel() {
 		}
 	}
 	app.logger.Info("booting installing model end")
+	app.setProgress(30, 1000, "init model")
 }
 
 // initControllerPool initial controller pool
@@ -454,6 +471,7 @@ func (app *Application) initControllerPool() {
 	}
 	line := fmt.Sprintf("booting installed %v controller pool successfully", len(app.controllerPool.GetControllerMap()))
 	app.Logger().Info(line)
+	app.setProgress(40, 1000, "init controller pool")
 }
 
 // initInstancePool initial instance pool
@@ -470,12 +488,14 @@ func (app *Application) initInstancePool() {
 	}
 	line := fmt.Sprintf("booting installed %v instance pool successfully", len(app.instancePool.GetInstanceType("")))
 	app.Logger().Info(line)
+	app.setProgress(50, 1000, "init instance pool")
 }
 
 func (app *Application) initSelfCheck() {
 	app.controllerPool.ControllerFuncSelfCheck(app.instancePool, app.IsLogSelfCheck(), app.logger)
 	app.Logger().Info("booting self func checking controller successfully ")
 	app.instancePool.InstanceDISelfCheck(app)
+	app.setProgress(60, 1000, "init instance pool")
 }
 func (app *Application) initPool() {
 	app.initModel()
@@ -493,6 +513,7 @@ func (app *Application) initRuntime() {
 	// runtime checking
 	line := fmt.Sprintf("booting detected %v runtime([%v]) ...installed", len(app.runtimeKeys), runtimeKey)
 	app.Logger().Info(line)
+	app.setProgress(12, 1000, "init runtime")
 }
 
 func (app *Application) initDB() {
@@ -512,6 +533,26 @@ func (app *Application) initDB() {
 		line := fmt.Sprintf("booting db instance with default install")
 		app.Logger().Info(line)
 	}
+	app.setProgress(14, 1000, "init db")
+}
+
+func (app *Application) initCasbin() {
+	if !_casbinEnable {
+		return
+	}
+	adapter, err := gormadapter.NewAdapterByDBUsePrefix(app.db, app.Conf().GetDBTablePrefix())
+	if err != nil {
+		app.logger.Fatal("create casbin adapter err ", err)
+	}
+	app.enforcer, err = casbin.NewEnforcer(_casbinConfPath, adapter)
+	if err != nil {
+		app.logger.Fatal("create casbin enforcer err ", err)
+	}
+	err = app.enforcer.LoadPolicy()
+	if err != nil {
+		app.logger.Fatal("load casbin enforcer err ", err)
+	}
+	app.setProgress(16, 1000, "init casbin")
 }
 
 func (app *Application) initSD() {
@@ -531,23 +572,7 @@ func (app *Application) initSD() {
 			app.logger.Fatal("wrong service mash type")
 		}
 	}
-}
-func (app *Application) initCasbin() {
-	if !_casbinEnable {
-		return
-	}
-	adapter, err := gormadapter.NewAdapterByDBUsePrefix(app.db, app.Conf().GetDBTablePrefix())
-	if err != nil {
-		app.logger.Fatal("create casbin adapter err ", err)
-	}
-	app.enforcer, err = casbin.NewEnforcer(_casbinConfPath, adapter)
-	if err != nil {
-		app.logger.Fatal("create casbin enforcer err ", err)
-	}
-	err = app.enforcer.LoadPolicy()
-	if err != nil {
-		app.logger.Fatal("load casbin enforcer err ", err)
-	}
+	app.setProgress(65, 1000, "init service discovery")
 }
 
 // InitTrinity serve grpc
@@ -594,8 +619,11 @@ func (app *Application) Enforcer() *casbin.Enforcer {
 func (app *Application) InitRouter() {
 	gin.DefaultWriter = ioutil.Discard
 	app.router = gin.New()
+	app.setProgress(70, 1000, "init gin router")
 	app.router.Use(mlogger.New(app))
+	app.setProgress(75, 1000, "init gin logger middleware")
 	app.router.Use(httprecovery.New(app))
+	app.setProgress(80, 1000, "init gin recovery middleware")
 	if app.Conf().GetCorsEnable() {
 		app.router.Use(cors.New(cors.Config{
 			AllowOrigins:     app.Conf().GetAllowOrigins(),
@@ -609,13 +637,18 @@ func (app *Application) InitRouter() {
 			},
 		}))
 	}
+	app.setProgress(83, 1000, "init gin cors middleware")
 	app.router.GET(app.Conf().GetAppBaseURL()+"/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	app.setProgress(85, 1000, "init swagger docs handler")
 	app.router.Static(app.Conf().GetAppBaseURL()+app.Conf().GetAppStaticURL(), app.Conf().GetAppStaticPath())
+	app.setProgress(87, 1000, "init static file handler")
 	app.router.Static(app.Conf().GetAppBaseURL()+app.Conf().GetAppMediaURL(), app.Conf().GetAppMediaPath())
+	app.setProgress(89, 1000, "init media file handler")
 	for _, v := range app.middlewares {
 		app.router.Use(v)
 	}
 	app.router.Use(mruntime.New(app))
+	app.setProgress(91, 1000, "init runtime middleware")
 	if _enableHealthCheckPath {
 		app.initHealthCheck()
 	}
@@ -626,6 +659,7 @@ func (app *Application) InitRouter() {
 		controllerNameList := strings.Split(controllerName, "@")
 		app.router.Handle(controllerNameList[0], controllerNameList[1], mdi.New(app))
 	}
+	app.setProgress(95, 1000, "init http handler")
 }
 
 // Router get router
@@ -659,6 +693,7 @@ func (app *Application) ServeHTTP() {
 			}
 			line := fmt.Sprintf("booting http service registered successfully !")
 			app.Logger().Info(line)
+			app.setProgress(97, 1000, "register service in SD")
 		}
 		s := &http.Server{
 			Addr:              addr,
@@ -670,6 +705,7 @@ func (app *Application) ServeHTTP() {
 			MaxHeaderBytes:    app.config.GetAppMaxHeaderBytes(),
 		}
 		app.Logger().Info("\n" + util.GenerateFiglet(app.config.GetProjectName()))
+		app.setProgress(100, 1000, "start http listener")
 		line := fmt.Sprintf("booted http service listen at %v started ", addr)
 		app.Logger().Info(line)
 		gErr <- s.ListenAndServe()
