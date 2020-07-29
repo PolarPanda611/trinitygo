@@ -1,3 +1,12 @@
+/**
+ * @ Author: Daniel Tan
+ * @ Date: 2020-04-07 09:41:11
+ * @ LastEditTime: 2020-07-29 19:03:26
+ * @ LastEditors: Daniel Tan
+ * @ Description:
+ * @ FilePath: /trinitygo/application/app.go
+ * @
+ */
 package application
 
 import (
