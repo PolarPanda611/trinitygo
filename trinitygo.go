@@ -638,11 +638,14 @@ func (app *Application) InitRouter() {
 	}
 	app.setProgress(83, _startupLatency, "init gin cors middleware")
 	app.router.GET(app.Conf().GetAppBaseURL()+"/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	startup.AppendRequestMapping("GET", app.Conf().GetAppBaseURL()+"/swagger/*any")
 	app.setProgress(85, _startupLatency, "init swagger docs handler")
 	app.router.Static(app.Conf().GetAppBaseURL()+app.Conf().GetAppStaticURL(), app.Conf().GetAppStaticPath())
+	startup.AppendRequestMapping("GET", app.Conf().GetAppBaseURL()+app.Conf().GetAppStaticURL())
 	app.setProgress(87, _startupLatency, "init static file handler")
 	app.router.Static(app.Conf().GetAppBaseURL()+app.Conf().GetAppMediaURL(), app.Conf().GetAppMediaPath())
 	app.setProgress(89, _startupLatency, "init media file handler")
+	startup.AppendRequestMapping("GET", app.Conf().GetAppBaseURL()+app.Conf().GetAppMediaURL())
 	for _, v := range app.middlewares {
 		app.router.Use(v)
 	}

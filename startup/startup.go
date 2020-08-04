@@ -1,7 +1,7 @@
 /**
  * @ Author: Daniel Tan
  * @ Date: 2020-08-04 14:57:51
- * @ LastEditTime: 2020-08-04 15:41:19
+ * @ LastEditTime: 2020-08-04 16:18:57
  * @ LastEditors: Daniel Tan
  * @ Description:
  * @ FilePath: /trinitygo/startup/startup.go
@@ -18,8 +18,13 @@ var (
 	_requestMapping      []string
 )
 
-func AppendRequestMapping(method, url, handler string) {
-	_requestMapping = append(_requestMapping, fmt.Sprintf("request mapping : %-6s  %-30s => %v", method, url, handler))
+func AppendRequestMapping(method, url string, handler ...string) {
+	if len(handler) == 0 {
+		_requestMapping = append(_requestMapping, fmt.Sprintf("request mapping : %-6s  %-30s ", method, url))
+	} else {
+		_requestMapping = append(_requestMapping, fmt.Sprintf("request mapping : %-6s  %-30s => %v", method, url, handler[0]))
+	}
+
 }
 func AppendStartupDebuggerInfo(msg string) {
 	_startupDebuggerInfo = append(_startupDebuggerInfo, msg)

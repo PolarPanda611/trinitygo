@@ -3,7 +3,7 @@ module http
 go 1.13
 
 require (
-	github.com/PolarPanda611/trinitygo v0.1.6
+	github.com/PolarPanda611/trinitygo v0.1.7
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/google/uuid v1.1.1
 	github.com/jinzhu/gorm v1.9.12
@@ -12,4 +12,4 @@ require (
 )
 
 
-replace github.com/PolarPanda611/trinitygo => /Users/daniel/Documents/workspace/trinitygo
+// replace github.com/PolarPanda611/trinitygo => /Users/daniel/Documents/workspace/trinitygo
