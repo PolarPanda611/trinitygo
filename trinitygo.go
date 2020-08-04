@@ -18,6 +18,7 @@ import (
 	"github.com/PolarPanda611/trinitygo/httputil"
 	"github.com/PolarPanda611/trinitygo/keyword"
 	truntime "github.com/PolarPanda611/trinitygo/runtime"
+	"github.com/PolarPanda611/trinitygo/startup"
 	"github.com/PolarPanda611/trinitygo/util"
 	"github.com/casbin/casbin/v2"
 	gormadapter "github.com/casbin/gorm-adapter/v2"
@@ -52,6 +53,7 @@ import (
 )
 
 var (
+	_startupLatency        int64 = 0
 	_responseFactory       func(status int, res interface{}, runtime map[string]string) interface{}
 	_                      application.Application = new(Application)
 	_casbinEnable          bool                    = false
@@ -184,7 +186,7 @@ func SetIsLogSelfCheck(isLog bool) {
 }
 
 // New new application
-func New() application.Application {
+func New(args ...bool) application.Application {
 	_initApp.Do(func() {
 		_app = &Application{
 			logger:       golog.Default,
@@ -196,19 +198,22 @@ func New() application.Application {
 		appPrefix := fmt.Sprintf("[%v@%v]", util.GetServiceName(_app.config.GetProjectName()), _app.config.GetProjectVersion())
 		_app.logger.SetPrefix(appPrefix)
 		_app.logger.SetTimeFormat("2006-01-02 15:04:05.000")
-		_app.setProgress(2, 1000, "init logger")
+		_app.setProgress(2, _startupLatency, "init logger")
 		_app.contextPool = application.New(func() application.Context {
 			return application.NewContext(_app, _funcToGetWhoAmI)
 		})
-		_app.setProgress(4, 1000, "init context pool ")
+		_app.setProgress(4, _startupLatency, "init context pool ")
 		_app.controllerPool = application.NewControllerPool()
-		_app.setProgress(6, 1000, "init controller pool ")
+		_app.setProgress(6, _startupLatency, "init controller pool ")
 		_app.instancePool = application.NewInstancePool()
-		_app.setProgress(8, 1000, "init instance pool ")
+		_app.setProgress(8, _startupLatency, "init instance pool ")
 		if _responseFactory != nil {
 			_app.responseFactory = _responseFactory
 		}
-		_app.setProgress(10, 1000, "init response factory ")
+		_app.setProgress(10, _startupLatency, "init response factory ")
+		if len(args) != 0 {
+			startup.SetStartupDebugger(args[0])
+		}
 	})
 	return _app
 }
@@ -224,19 +229,19 @@ func DefaultGRPC() application.Application {
 }
 
 // DefaultHTTP default http server
-func DefaultHTTP() application.Application {
-	app := New()
+func DefaultHTTP(args ...bool) application.Application {
+	app := New(args...)
 
 	return app
 }
 
 // Logger get logger
 func (app *Application) setProgress(progress, latency int64, message string) {
-	// time.Sleep(time.Duration(latency) * time.Millisecond)
+	time.Sleep(time.Duration(latency) * time.Millisecond)
 	app.b.Cur <- bar.CurrentStep{
 		Cur:      progress,
 		Message:  message,
-		IsReturn: true,
+		IsReturn: false,
 	}
 }
 
@@ -336,7 +341,7 @@ func (app *Application) InstallDB(f func() *gorm.DB) {
 	if err != nil {
 		app.Logger().Fatal("booting detected db initializer ...install failed ,err : ", err)
 	}
-	app.Logger().Info("booting detected db initializer ...install successfully , test passed ! ")
+	startup.AppendStartupDebuggerInfo("booting detected db initializer ...install successfully , test passed ! ")
 }
 
 // IsLogSelfCheck if log self check
@@ -409,7 +414,7 @@ func RegisterInstance(instance interface{}, tags ...string) {
 
 // init model and init default value
 func (app *Application) initModel() {
-	app.logger.Info("booting installing model start")
+	startup.AppendStartupDebuggerInfo("booting installing model start")
 	// no model register , skip
 	if len(_bootingModels) == 0 {
 		return
@@ -427,7 +432,7 @@ func (app *Application) initModel() {
 		if err := app.db.AutoMigrate(bootingModel.modelInstance).Error; err != nil {
 			app.logger.Fatalf("booting installing model : %v failed , err : %v , ", reflect.TypeOf(bootingModel.modelInstance), err)
 		}
-		app.logger.Infof("booting installing model : %v  , ...installed , ", reflect.TypeOf(bootingModel.modelInstance))
+		startup.AppendStartupDebuggerInfo(fmt.Sprintf("booting installing model : %v  , ...installed , ", reflect.TypeOf(bootingModel.modelInstance)))
 		if bootingModel.defaultValues != nil {
 			for _, defaultValue := range bootingModel.defaultValues {
 				fmt.Println(defaultValue)
@@ -444,18 +449,18 @@ func (app *Application) initModel() {
 			}
 		}
 	}
-	app.logger.Info("booting installing model end")
-	app.setProgress(30, 1000, "init model")
+	startup.AppendStartupDebuggerInfo("booting installing model end")
+	app.setProgress(30, _startupLatency, "init model")
 }
 
 // initControllerPool initial controller pool
 func (app *Application) initControllerPool() {
-	app.Logger().Info(fmt.Sprintf("booting installing controller start"))
+	startup.AppendStartupDebuggerInfo("booting installing controller start")
 	for _, controller := range _bootingControllers {
 		if len(controller.requestMaps) == 0 {
 			app.controllerPool.NewController(controller.controllerName, reflect.New(reflect.TypeOf(controller.instance)).Type())
 			RegisterInstance(controller.instance, controller.controllerName)
-			app.Logger().Info(fmt.Sprintf("booting installing controller : %v ...installed", controller.controllerName))
+			startup.AppendStartupDebuggerInfo(fmt.Sprintf("booting installing controller : %v ...installed", controller.controllerName))
 			continue
 		}
 		for _, request := range controller.requestMaps {
@@ -465,13 +470,12 @@ func (app *Application) initControllerPool() {
 			app.controllerPool.NewControllerFunc(newControllerName, request.FuncName)
 			app.controllerPool.NewControllerValidators(newControllerName, request.Validators...)
 			realControllerName := strings.Replace(newControllerName, "@", " ==> ", -1)
-			app.Logger().Info(fmt.Sprintf("booting installing controller : %v  -> %v ...installed", realControllerName, request.FuncName))
-
+			startup.AppendStartupDebuggerInfo(fmt.Sprintf("booting installing controller : %v  -> %v ...installed", realControllerName, request.FuncName))
+			startup.AppendRequestMapping(strings.Split(newControllerName, "@")[0], strings.Split(newControllerName, "@")[1], request.FuncName)
 		}
 	}
-	line := fmt.Sprintf("booting installed %v controller pool successfully", len(app.controllerPool.GetControllerMap()))
-	app.Logger().Info(line)
-	app.setProgress(40, 1000, "init controller pool")
+	startup.AppendStartupDebuggerInfo(fmt.Sprintf("booting installed %v controller pool successfully", len(app.controllerPool.GetControllerMap())))
+	app.setProgress(40, _startupLatency, "init controller pool")
 }
 
 // initInstancePool initial instance pool
@@ -484,18 +488,17 @@ func (app *Application) initInstancePool() {
 			continue
 		}
 		app.instancePool.NewInstance(instance.instanceName, instance.instancePool, instance.instanceTags)
-		app.Logger().Info(fmt.Sprintf("booting installing instance : %v ...installed", instance.instanceName))
+		startup.AppendStartupDebuggerInfo(fmt.Sprintf("booting installing instance : %v ...installed", instance.instanceName))
 	}
-	line := fmt.Sprintf("booting installed %v instance pool successfully", len(app.instancePool.GetInstanceType("")))
-	app.Logger().Info(line)
-	app.setProgress(50, 1000, "init instance pool")
+	startup.AppendStartupDebuggerInfo(fmt.Sprintf("booting installed %v instance pool successfully", len(app.instancePool.GetInstanceType(""))))
+	app.setProgress(50, _startupLatency, "init instance pool")
 }
 
 func (app *Application) initSelfCheck() {
 	app.controllerPool.ControllerFuncSelfCheck(app.instancePool, app.IsLogSelfCheck(), app.logger)
-	app.Logger().Info("booting self func checking controller successfully ")
+	startup.AppendStartupDebuggerInfo("booting self func checking controller successfully ")
 	app.instancePool.InstanceDISelfCheck(app)
-	app.setProgress(60, 1000, "init instance pool")
+	app.setProgress(60, _startupLatency, "init instance pool")
 }
 func (app *Application) initPool() {
 	app.initModel()
@@ -511,9 +514,8 @@ func (app *Application) initRuntime() {
 		runtimeKey += fmt.Sprintf("%v,", v.GetKeyName())
 	}
 	// runtime checking
-	line := fmt.Sprintf("booting detected %v runtime([%v]) ...installed", len(app.runtimeKeys), runtimeKey)
-	app.Logger().Info(line)
-	app.setProgress(12, 1000, "init runtime")
+	startup.AppendStartupDebuggerInfo(fmt.Sprintf("booting detected %v runtime([%v]) ...installed", len(app.runtimeKeys), runtimeKey))
+	app.setProgress(12, _startupLatency, "init runtime")
 }
 
 func (app *Application) initDB() {
@@ -530,10 +532,9 @@ func (app *Application) initDB() {
 			)
 		}
 		app.db = f()
-		line := fmt.Sprintf("booting db instance with default install")
-		app.Logger().Info(line)
+		startup.AppendStartupDebuggerInfo("booting db instance with default install")
 	}
-	app.setProgress(14, 1000, "init db")
+	app.setProgress(14, _startupLatency, "init db")
 }
 
 func (app *Application) initCasbin() {
@@ -552,7 +553,7 @@ func (app *Application) initCasbin() {
 	if err != nil {
 		app.logger.Fatal("load casbin enforcer err ", err)
 	}
-	app.setProgress(16, 1000, "init casbin")
+	app.setProgress(16, _startupLatency, "init casbin")
 }
 
 func (app *Application) initSD() {
@@ -572,7 +573,7 @@ func (app *Application) initSD() {
 			app.logger.Fatal("wrong service mash type")
 		}
 	}
-	app.setProgress(65, 1000, "init service discovery")
+	app.setProgress(65, _startupLatency, "init service discovery")
 }
 
 // InitTrinity serve grpc
@@ -594,16 +595,14 @@ func (app *Application) InitGRPC() {
 			app.interceptors...,
 		),
 	}
-	line := fmt.Sprintf("booting detected %v interceptors ...installed ", len(app.interceptors))
-	app.Logger().Info(line)
-
+	startup.AppendStartupDebuggerInfo(fmt.Sprintf("booting detected %v interceptors ...installed ", len(app.interceptors)))
 	app.grpcServer = grpc.NewServer(opts...)
 }
 
 func (app *Application) initHealthCheck() {
 	app.router.GET(app.Conf().GetAppBaseURL()+_healthCheckPath, _defaultHealthCheckHandler(app))
-
-	app.Logger().Info(fmt.Sprintf("booting installing healthChecker : %v  -> %v ...installed", app.Conf().GetAppBaseURL()+_healthCheckPath, "_defaultHealthCheckHandler"))
+	startup.AppendStartupDebuggerInfo(fmt.Sprintf("booting installing healthChecker : %v  -> %v ...installed", app.Conf().GetAppBaseURL()+_healthCheckPath, "_defaultHealthCheckHandler"))
+	startup.AppendRequestMapping("GET", app.Conf().GetAppBaseURL()+_healthCheckPath, "_defaultHealthCheckHandler")
 }
 
 // Enforcer get casbin enforcer instance
@@ -619,11 +618,11 @@ func (app *Application) Enforcer() *casbin.Enforcer {
 func (app *Application) InitRouter() {
 	gin.DefaultWriter = ioutil.Discard
 	app.router = gin.New()
-	app.setProgress(70, 1000, "init gin router")
+	app.setProgress(70, _startupLatency, "init gin router")
 	app.router.Use(mlogger.New(app))
-	app.setProgress(75, 1000, "init gin logger middleware")
+	app.setProgress(75, _startupLatency, "init gin logger middleware")
 	app.router.Use(httprecovery.New(app))
-	app.setProgress(80, 1000, "init gin recovery middleware")
+	app.setProgress(80, _startupLatency, "init gin recovery middleware")
 	if app.Conf().GetCorsEnable() {
 		app.router.Use(cors.New(cors.Config{
 			AllowOrigins:     app.Conf().GetAllowOrigins(),
@@ -637,18 +636,18 @@ func (app *Application) InitRouter() {
 			},
 		}))
 	}
-	app.setProgress(83, 1000, "init gin cors middleware")
+	app.setProgress(83, _startupLatency, "init gin cors middleware")
 	app.router.GET(app.Conf().GetAppBaseURL()+"/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	app.setProgress(85, 1000, "init swagger docs handler")
+	app.setProgress(85, _startupLatency, "init swagger docs handler")
 	app.router.Static(app.Conf().GetAppBaseURL()+app.Conf().GetAppStaticURL(), app.Conf().GetAppStaticPath())
-	app.setProgress(87, 1000, "init static file handler")
+	app.setProgress(87, _startupLatency, "init static file handler")
 	app.router.Static(app.Conf().GetAppBaseURL()+app.Conf().GetAppMediaURL(), app.Conf().GetAppMediaPath())
-	app.setProgress(89, 1000, "init media file handler")
+	app.setProgress(89, _startupLatency, "init media file handler")
 	for _, v := range app.middlewares {
 		app.router.Use(v)
 	}
 	app.router.Use(mruntime.New(app))
-	app.setProgress(91, 1000, "init runtime middleware")
+	app.setProgress(91, _startupLatency, "init runtime middleware")
 	if _enableHealthCheckPath {
 		app.initHealthCheck()
 	}
@@ -659,7 +658,7 @@ func (app *Application) InitRouter() {
 		controllerNameList := strings.Split(controllerName, "@")
 		app.router.Handle(controllerNameList[0], controllerNameList[1], mdi.New(app))
 	}
-	app.setProgress(95, 1000, "init http handler")
+	app.setProgress(95, _startupLatency, "init http handler")
 }
 
 // Router get router
@@ -691,9 +690,8 @@ func (app *Application) ServeHTTP() {
 			); err != nil {
 				gErr <- err
 			}
-			line := fmt.Sprintf("booting http service registered successfully !")
-			app.Logger().Info(line)
-			app.setProgress(97, 1000, "register service in SD")
+			startup.AppendStartupDebuggerInfo("booting http service registered successfully !")
+			app.setProgress(97, _startupLatency, "register service in SD")
 		}
 		s := &http.Server{
 			Addr:              addr,
@@ -704,10 +702,19 @@ func (app *Application) ServeHTTP() {
 			IdleTimeout:       time.Duration(app.config.GetAppIdleTimeout()) * time.Second,
 			MaxHeaderBytes:    app.config.GetAppMaxHeaderBytes(),
 		}
-		app.Logger().Info("\n" + util.GenerateFiglet(app.config.GetProjectName()))
-		app.setProgress(100, 1000, "start http listener")
-		line := fmt.Sprintf("booted http service listen at %v started ", addr)
-		app.Logger().Info(line)
+		app.setProgress(100, _startupLatency, fmt.Sprintf("http service listen at %v ", addr))
+		startup.AppendStartupDebuggerInfo("\n" + util.GenerateFiglet(app.config.GetProjectName()))
+		startup.AppendStartupDebuggerInfo(fmt.Sprintf("booted http service listen at %v started ", addr))
+		fmt.Println()
+		if startup.GetStartupDebugger() {
+
+			for _, v := range startup.GetStartupDebuggerInfo() {
+				app.Logger().Info(v)
+			}
+		}
+		for _, v := range startup.GetRequestMapping() {
+			app.Logger().Info(v)
+		}
 		gErr <- s.ListenAndServe()
 	}()
 
@@ -766,12 +773,10 @@ func (app *Application) ServeGRPC() {
 			); err != nil {
 				gErr <- err
 			}
-			line := fmt.Sprintf("booting grpc service registered successfully !")
-			app.Logger().Info(line)
+			startup.AppendStartupDebuggerInfo("booting grpc service registered successfully !")
 		}
-		app.Logger().Info("\n" + util.GenerateFiglet(app.config.GetProjectName()))
-		line := fmt.Sprintf("booted grpc service listen at %v started", addr)
-		app.Logger().Info(line)
+		startup.AppendStartupDebuggerInfo("\n" + util.GenerateFiglet(app.config.GetProjectName()))
+		startup.AppendStartupDebuggerInfo(fmt.Sprintf("booted grpc service listen at %v started", addr))
 		gErr <- app.grpcServer.Serve(lis)
 	}()
 
@@ -780,7 +785,6 @@ func (app *Application) ServeGRPC() {
 		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 		gErr <- fmt.Errorf("%s", <-c)
 	}()
-
 	line := fmt.Sprintf("booted grpc service listen at %v ,terminated err: %v ", addr, <-gErr)
 	app.Logger().Error(line)
 	app.db.Close()

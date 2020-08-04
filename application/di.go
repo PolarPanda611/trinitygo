@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/PolarPanda611/trinitygo/startup"
 	"github.com/gin-gonic/gin"
 	"github.com/kataras/golog"
 )
@@ -75,7 +76,7 @@ func DiSelfCheck(destName interface{}, pool *sync.Pool, logger *golog.Logger, in
 			continue
 		}
 	}
-	logger.Infof("booting self DI checking instance %v finished with info %v , warning %v", destName, resultCount.info, resultCount.warning)
+	startup.AppendStartupDebuggerInfo(fmt.Sprintf("booting self DI checking instance %v finished with info %v , warning %v", destName, resultCount.info, resultCount.warning))
 }
 
 // DiAllFields di service pool
@@ -202,7 +203,7 @@ func encodeObjectName(instance interface{}, index int) string {
 
 }
 func logDIInfof(objectName string, logger *golog.Logger, resultCount *diSelfCheckResultCount, instance reflect.Type, instanceMapping map[string]reflect.Type) {
-	logger.Infof("booting self DI checking Inject object: %v, with instance: %v,  ...injected ", objectName, instance)
+	startup.AppendStartupDebuggerInfo(fmt.Sprintf("booting self DI checking Inject object: %v, with instance: %v,  ...injected ", objectName, instance))
 	resultCount.info++
 	instanceMapping[objectName] = instance
 	return
