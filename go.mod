@@ -3,9 +3,9 @@ module github.com/PolarPanda611/trinitygo
 go 1.13
 
 require (
-	github.com/PolarPanda611/bar v0.0.7 // indirect
 	github.com/8treenet/freedom v1.6.5 // indirect
 	github.com/BurntSushi/toml v0.3.1
+	github.com/PolarPanda611/bar v0.0.7
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/casbin/casbin v1.9.1 // indirect
 	github.com/casbin/casbin/v2 v2.4.1

@@ -14,6 +14,8 @@ github.com/Joker/jade v1.0.0/go.mod h1:efZIdO0py/LtcJRSa/j2WEklMSAw84WV0zZVMxNTo
 github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible h1:1G1pk05UrOh0NlF1oeaaix1x8XzrfjIDK47TY0Zehcw=
 github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
+github.com/PolarPanda611/bar v0.0.7 h1:J1vtVsoJbNpQT06XQwyBX+6uRWs+86CR31gxTWA7Z5E=
+github.com/PolarPanda611/bar v0.0.7/go.mod h1:VgkindXIw8J/DKZt+PWyZrEcH9OVQlzZorpopvuo2OM=
 github.com/PolarPanda611/reflections v1.0.0/go.mod h1:5pyPQZ8UHvWCcGl4XuI4ASCXcMWJJ8jGSrSmJfsUKoc=
 github.com/PolarPanda611/trinity v1.13.1/go.mod h1:yB73DWzcygPwenlBBrY6GT9BgTxuWsfyaN6MVLtHA6I=
 github.com/PuerkitoBio/purell v1.1.0 h1:rmGxhojJlM0tuKtfdvliR84CFHljx9ag64t2xmVkjK4=
