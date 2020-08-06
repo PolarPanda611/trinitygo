@@ -127,7 +127,7 @@ func (c *ContextImpl) cleanRuntime() {
 	c.c = nil
 	c.runtime = nil
 	c.db = nil
-	c.status = 200
+	c.status = 0
 	c.dbTxOpen = false
 }
 
