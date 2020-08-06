@@ -100,7 +100,7 @@ func (c *ContextImpl) DBTx() *gorm.DB {
 func (c *ContextImpl) SafeCommit() {
 	if c.dbTxOpen {
 		c.db.Commit()
-		c.dbTxOpen = true
+		c.dbTxOpen = false
 	}
 }
 
@@ -127,6 +127,8 @@ func (c *ContextImpl) cleanRuntime() {
 	c.c = nil
 	c.runtime = nil
 	c.db = nil
+	c.status = 200
+	c.dbTxOpen = false
 }
 
 // HTTPStatus set http status
