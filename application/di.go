@@ -134,6 +134,9 @@ func DiFree(dest interface{}) {
 		if !GetAutowiredTags(dest, index) {
 			continue
 		}
+		if !GetAutoFreeTags(dest, index) {
+			continue
+		}
 		if !val.CanSet() {
 			continue
 		}
@@ -158,6 +161,7 @@ func TransactionTag(object interface{}, index int) bool {
 }
 
 // GetAutowiredTags get autowired tags from struct
+// default false
 func GetAutowiredTags(object interface{}, index int) bool {
 	objectType := reflect.TypeOf(object)
 	var isAutowiredString string
@@ -166,8 +170,28 @@ func GetAutowiredTags(object interface{}, index int) bool {
 	} else {
 		isAutowiredString = objectType.Elem().Field(index).Tag.Get("autowired")
 	}
+	if isAutowiredString == "" {
+		return false
+	}
 	isAutowired, _ := strconv.ParseBool(isAutowiredString)
 	return isAutowired
+}
+
+// GetAutoFreeTags get autofree tags from struct
+// default true
+func GetAutoFreeTags(object interface{}, index int) bool {
+	objectType := reflect.TypeOf(object)
+	var isAutoFreeString string
+	if objectType.Kind() == reflect.Struct {
+		isAutoFreeString = objectType.Field(index).Tag.Get("autofree")
+	} else {
+		isAutoFreeString = objectType.Elem().Field(index).Tag.Get("autofree")
+	}
+	if isAutoFreeString == "" {
+		return true
+	}
+	isAutoFree, _ := strconv.ParseBool(isAutoFreeString)
+	return isAutoFree
 }
 
 // GetResourceTags get resource tags
