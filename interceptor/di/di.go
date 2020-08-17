@@ -1,7 +1,7 @@
 /**
  * @ Author: Daniel Tan
  * @ Date: 2020-04-05 01:51:55
- * @ LastEditTime: 2020-08-17 13:58:42
+ * @ LastEditTime: 2020-08-17 22:10:37
  * @ LastEditors: Daniel Tan
  * @ Description:
  * @ FilePath: /trinitygo/interceptor/di/di.go
@@ -27,8 +27,10 @@ func New(app application.Application) func(ctx context.Context, req interface{},
 		tContext := app.ContextPool().Acquire(app, runtimeKeyMap, nil)
 		method := strings.Split(info.FullMethod, "/") // /user.UserService/GetUserByID
 		defer func() {
-			//release tcontext obj
-			app.ContextPool().Release(tContext)
+			if tContext.AutoFree() {
+				//release trinity go context obj
+				app.ContextPool().Release(tContext)
+			}
 		}()
 
 		controller, _, toFreeInstance := app.ControllerPool().GetController(method[1], tContext, app, nil)
