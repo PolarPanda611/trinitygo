@@ -27,6 +27,25 @@ func (c *ContextMock) Application() Application {
 	args := c.Called()
 	return args.Get(0).(Application)
 }
+
+// AutoFreeOn set auto free on
+func (c *ContextMock) AutoFreeOn() {
+}
+
+// AutoFreeOff set auto free off
+func (c *ContextMock) AutoFreeOff() {
+}
+
+func (c *ContextMock) AutoFree() bool {
+	args := c.Called()
+	return args.Bool(0)
+}
+func (c *ContextMock) SetIsConfigured() {}
+func (c *ContextMock) IsConfigured() bool {
+	args := c.Called()
+	return args.Bool(0)
+}
+
 func (c *ContextMock) setRuntime(map[string]string) {}
 
 // Runtime runtime mock

@@ -106,7 +106,7 @@ func (s *ControllerPool) ControllerFuncSelfCheck(instancePool *InstancePool, isL
 }
 
 // GetController from pool
-func (s *ControllerPool) GetController(controllerName string, tctx Context, app Application, c *gin.Context) (interface{}, map[reflect.Type]interface{}) {
+func (s *ControllerPool) GetController(controllerName string, tctx Context, app Application, c *gin.Context) (interface{}, map[reflect.Type]interface{}, map[reflect.Type]interface{}) {
 	s.mu.RLock()
 	instanceName, ok := s.instanceMap[controllerName]
 	s.mu.RUnlock()

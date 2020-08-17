@@ -22,6 +22,8 @@ type Context interface {
 	Runtime() map[string]string
 	DB() *gorm.DB
 	DBTx() *gorm.DB
+	AutoFreeOn()
+	AutoFreeOff()
 	SafeCommit()
 	SafeRollback()
 	DBTxIsOpen() bool
@@ -38,6 +40,9 @@ type Context interface {
 	httpResponseCreated(interface{}, error)
 	httpResponseDeleted(interface{}, error)
 	HTTPResponse(interface{}, error)
+	SetIsConfigured()
+	IsConfigured() bool
+	AutoFree() bool
 }
 
 // ContextImpl Context impl
@@ -50,11 +55,40 @@ type ContextImpl struct {
 	c               *gin.Context
 	funcToGetWhoAmI func(app Application, c *gin.Context, db *gorm.DB) (interface{}, error)
 	status          int
+	// if autoFree == true , the tCtx will be clean runtime
+	// if autoFree == false , the runtime will be keep
+	autoFree     bool
+	isConfigured bool
+}
+
+// SetIsConfigured get app
+func (c *ContextImpl) SetIsConfigured() {
+	c.isConfigured = true
+}
+
+// IsConfigured get app
+func (c *ContextImpl) IsConfigured() bool {
+	return c.isConfigured
 }
 
 // Application get app
 func (c *ContextImpl) Application() Application {
 	return c.app
+}
+
+// AutoFree set auto free on
+func (c *ContextImpl) AutoFree() bool {
+	return c.autoFree
+}
+
+// AutoFreeOn set auto free on
+func (c *ContextImpl) AutoFreeOn() {
+	c.autoFree = true
+}
+
+// AutoFreeOff set auto free off
+func (c *ContextImpl) AutoFreeOff() {
+	c.autoFree = false
 }
 
 // Runtime get runtime info
@@ -129,6 +163,8 @@ func (c *ContextImpl) cleanRuntime() {
 	c.db = nil
 	c.status = 0
 	c.dbTxOpen = false
+	c.autoFree = true
+	c.isConfigured = false
 }
 
 // HTTPStatus set http status
@@ -266,15 +302,19 @@ func NewContext(app Application, funcToGetWhoAmI func(app Application, c *gin.Co
 		app:             app,
 		dbTxOpen:        false,
 		funcToGetWhoAmI: funcToGetWhoAmI,
+		autoFree:        true,
+		isConfigured:    false,
 	}
 }
 
 // MockContext used for unittest , don't use in production
 func MockContext(app Application, db *gorm.DB, c *gin.Context, runtime map[string]string) Context {
 	return &ContextImpl{
-		app:     app,
-		db:      db,
-		c:       c,
-		runtime: runtime,
+		app:          app,
+		db:           db,
+		c:            c,
+		runtime:      runtime,
+		autoFree:     true,
+		isConfigured: false,
 	}
 }

@@ -73,14 +73,14 @@ func (s *InstancePool) InstanceDISelfCheck(app Application) {
 }
 
 // GetInstance get service with di
-func (s *InstancePool) GetInstance(instanceType reflect.Type, tctx Context, app Application, c *gin.Context) (interface{}, map[reflect.Type]interface{}) {
+func (s *InstancePool) GetInstance(instanceType reflect.Type, tctx Context, app Application, c *gin.Context) (interface{}, map[reflect.Type]interface{}, map[reflect.Type]interface{}) {
 	pool, ok := s.poolMap[instanceType]
 	if !ok {
 		panic("unknown service name")
 	}
 	service := pool.Get()
-	sharedInstance := DiAllFields(service, tctx, app, c, s.InstanceMapping())
-	return service, sharedInstance
+	sharedInstance, toFreeInstance := DiAllFields(service, tctx, app, c, s.InstanceMapping())
+	return service, sharedInstance, toFreeInstance
 }
 
 // InstanceMapping instance mapping

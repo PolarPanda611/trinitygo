@@ -1,3 +1,13 @@
+/**
+ * @ Author: Daniel Tan
+ * @ Date: 2020-04-05 01:51:55
+ * @ LastEditTime: 2020-08-17 13:58:42
+ * @ LastEditors: Daniel Tan
+ * @ Description:
+ * @ FilePath: /trinitygo/interceptor/di/di.go
+ * @
+ */
+
 package di
 
 import (
@@ -21,9 +31,9 @@ func New(app application.Application) func(ctx context.Context, req interface{},
 			app.ContextPool().Release(tContext)
 		}()
 
-		controller, sharedInstance := app.ControllerPool().GetController(method[1], tContext, app, nil)
+		controller, _, toFreeInstance := app.ControllerPool().GetController(method[1], tContext, app, nil)
 		defer func() {
-			for _, v := range sharedInstance {
+			for _, v := range toFreeInstance {
 				app.InstancePool().Release(v)
 			}
 		}()

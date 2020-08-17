@@ -80,8 +80,9 @@ func DiSelfCheck(destName interface{}, pool *sync.Pool, logger *golog.Logger, in
 }
 
 // DiAllFields di service pool
-func DiAllFields(dest interface{}, tctx Context, app Application, c *gin.Context, instanceMapping map[string]reflect.Type) map[reflect.Type]interface{} {
+func DiAllFields(dest interface{}, tctx Context, app Application, c *gin.Context, instanceMapping map[string]reflect.Type) (map[reflect.Type]interface{}, map[reflect.Type]interface{}) {
 	sharedInstance := make(map[reflect.Type]interface{})
+	toFreeInstance := make(map[reflect.Type]interface{})
 	destVal := reflect.Indirect(reflect.ValueOf(dest))
 	for index := 0; index < destVal.NumField(); index++ {
 		val := destVal.Field(index)
@@ -94,16 +95,26 @@ func DiAllFields(dest interface{}, tctx Context, app Application, c *gin.Context
 			val.Set(reflect.ValueOf(c))
 			break
 		case reflect.TypeOf(tctx):
-			if !tctx.DBTxIsOpen() {
-				enableTx := false
-				if app.Conf().GetAtomicRequest() {
-					enableTx = true
-				}
-				if TransactionTag(dest, index) {
-					enableTx = true
-				}
-				if enableTx {
-					tctx.DBTx()
+			if !tctx.IsConfigured() {
+				if !tctx.DBTxIsOpen() {
+					enableTx := false
+					if app.Conf().GetAtomicRequest() {
+						enableTx = true
+					}
+					if TransactionTag(dest, index) {
+						enableTx = true
+					} else {
+						enableTx = false
+					}
+					if GetAutoFreeTags(dest, index) {
+						tctx.AutoFreeOn()
+					} else {
+						tctx.AutoFreeOff()
+					}
+					if enableTx {
+						tctx.DBTx()
+					}
+					tctx.SetIsConfigured()
 				}
 			}
 			val.Set(reflect.ValueOf(tctx))
@@ -114,16 +125,22 @@ func DiAllFields(dest interface{}, tctx Context, app Application, c *gin.Context
 				continue
 			}
 
-			repo, sharedInstanceMap := app.InstancePool().GetInstance(instanceMapping[objectName], tctx, app, c)
+			repo, sharedInstanceMap, toFreeInstanceMap := app.InstancePool().GetInstance(instanceMapping[objectName], tctx, app, c)
 			for instanceType, instanceValue := range sharedInstanceMap {
 				sharedInstance[instanceType] = instanceValue
 			}
+			for instanceType, instanceValue := range toFreeInstanceMap {
+				toFreeInstance[instanceType] = instanceValue
+			}
 			val.Set(reflect.ValueOf(repo))
 			sharedInstance[val.Type()] = repo
+			if GetAutoFreeTags(dest, index) {
+				toFreeInstance[val.Type()] = repo
+			}
 			break
 		}
 	}
-	return sharedInstance
+	return sharedInstance, toFreeInstance
 }
 
 // DiFree di instance
@@ -151,9 +168,9 @@ func TransactionTag(object interface{}, index int) bool {
 	objectType := reflect.TypeOf(object)
 	var isTransactionString string
 	if objectType.Kind() == reflect.Struct {
-		isTransactionString = reflect.TypeOf(object).Field(index).Tag.Get("autowired")
+		isTransactionString = reflect.TypeOf(object).Field(index).Tag.Get("transaction")
 	} else {
-		isTransactionString = reflect.TypeOf(object).Elem().Field(index).Tag.Get("autowired")
+		isTransactionString = reflect.TypeOf(object).Elem().Field(index).Tag.Get("transaction")
 	}
 	isTransaction, _ := strconv.ParseBool(isTransactionString)
 	return isTransaction
