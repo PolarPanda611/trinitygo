@@ -3,18 +3,15 @@ module github.com/PolarPanda611/trinitygo
 go 1.13
 
 require (
-	github.com/8treenet/freedom v1.6.5 // indirect
 	github.com/BurntSushi/toml v0.3.1
 	github.com/PolarPanda611/bar v0.0.7
 	github.com/bwmarrin/snowflake v0.3.0
-	github.com/casbin/casbin v1.9.1 // indirect
 	github.com/casbin/casbin/v2 v2.4.1
 	github.com/casbin/gorm-adapter/v2 v2.1.0
 	github.com/coreos/etcd v3.3.19+incompatible
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/fatih/color v1.9.0 // indirect
 	github.com/gin-contrib/cors v1.3.0
 	github.com/gin-gonic/gin v1.5.0
 	github.com/golang/protobuf v1.3.3
