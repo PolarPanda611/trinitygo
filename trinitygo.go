@@ -435,7 +435,6 @@ func (app *Application) initModel() {
 		startup.AppendStartupDebuggerInfo(fmt.Sprintf("booting installing model : %v  , ...installed , ", reflect.TypeOf(bootingModel.modelInstance)))
 		if bootingModel.defaultValues != nil {
 			for _, defaultValue := range bootingModel.defaultValues {
-				fmt.Println(defaultValue)
 				defaultValueKind := reflect.TypeOf(defaultValue).Kind()
 				switch defaultValueKind {
 				case reflect.Ptr:
