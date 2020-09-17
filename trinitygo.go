@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"reflect"
@@ -636,6 +637,7 @@ func (app *Application) InitRouter() {
 		}))
 	}
 	app.setProgress(83, _startupLatency, "init gin cors middleware")
+
 	app.router.GET(app.Conf().GetAppBaseURL()+"/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	startup.AppendRequestMapping("GET", app.Conf().GetAppBaseURL()+"/swagger/*any")
 	app.setProgress(85, _startupLatency, "init swagger docs handler")

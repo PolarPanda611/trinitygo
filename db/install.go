@@ -33,7 +33,7 @@ func DefaultInstallGORM(
 ) *gorm.DB {
 	db, err := gorm.Open(dbType, server)
 	if err != nil {
-		log.Fatal("db connect build failed")
+		log.Fatal(fmt.Sprintf("db connect build failed %v", err))
 	}
 	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
 		return fmt.Sprintf("%v%v", tablePrefix, defaultTableName)
@@ -46,7 +46,6 @@ func DefaultInstallGORM(
 	db.Callback().Delete().Replace("gorm:delete", deleteCallback)
 	db.DB().SetMaxIdleConns(maxIdleConn)
 	db.DB().SetMaxOpenConns(maxOpenConn)
-
 	return db
 }
 

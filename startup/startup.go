@@ -13,7 +13,7 @@ package startup
 import "fmt"
 
 var (
-	_startupDebugger     bool = false
+	_startupDebugger     bool = true
 	_startupDebuggerInfo []string
 	_requestMapping      []string
 )
