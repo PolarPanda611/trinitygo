@@ -11,5 +11,4 @@ require (
 	github.com/swaggo/swag v1.5.1
 )
 
-
 // replace github.com/PolarPanda611/trinitygo => /Users/daniel/Documents/workspace/trinitygo

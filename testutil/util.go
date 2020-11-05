@@ -71,8 +71,16 @@ func (p *playTestImpl) Match(args ...interface{}) {
 	}
 	for k, v := range p.actualValue {
 		if args[k] == nil {
-			if !assert.Equal(p.t, args[k], p.originValue[k], "index ", k, "not matched") {
-				p.t.FailNow()
+			if p.originValue[k] != nil {
+				if !reflect.ValueOf(p.originValue[k]).IsNil() {
+					if !assert.Equal(p.t, args[k], p.originValue[k], "index ", k, "not matched") {
+						p.t.FailNow()
+					}
+				}
+			} else {
+				if !assert.Equal(p.t, args[k], p.originValue[k], "index ", k, "not matched") {
+					p.t.FailNow()
+				}
 			}
 		} else {
 			if !assert.Equal(p.t, args[k], v.Interface(), "index ", k, "not matched") {
