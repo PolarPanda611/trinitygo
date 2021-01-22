@@ -124,6 +124,7 @@ func (m *JWTVerifierImpl) Middleware() gin.HandlerFunc {
 				},
 					nil,
 				))
+				c.Abort()
 			} else {
 				c.AbortWithStatusJSON(401, map[string]string{
 					"code":    codes.Internal.String(),
