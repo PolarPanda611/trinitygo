@@ -663,9 +663,6 @@ func (app *Application) InitRouter() {
 		app.initHealthCheck()
 	}
 	app.initPrometheusCheck()
-	for _, v := range app.middlewares {
-		app.router.Use(v)
-	}
 	for _, controllerName := range app.ControllerPool().GetControllerMap() {
 		controllerNameList := strings.Split(controllerName, "@")
 		app.router.Handle(controllerNameList[0], controllerNameList[1], mdi.New(app))
