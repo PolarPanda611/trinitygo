@@ -21,12 +21,12 @@ require (
 	github.com/kataras/golog v0.0.10
 	github.com/lib/pq v1.1.1
 	github.com/mbndr/figlet4go v0.0.0-20190224160619-d6cef5b186ea
+	github.com/prometheus/client_golang v0.9.3
 	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/cobra v1.0.0
 	github.com/stretchr/testify v1.4.0
 	github.com/swaggo/gin-swagger v1.2.0
 	golang.org/x/net v0.0.0-20200114155413-6afb5195e5aa
 	google.golang.org/grpc v1.26.0
-	honnef.co/go/tools v0.0.0-20190523083050-ea95bdfd59fc // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )

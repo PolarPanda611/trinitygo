@@ -25,6 +25,7 @@ import (
 	gormadapter "github.com/casbin/gorm-adapter/v2"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
 
 	"github.com/PolarPanda611/trinitygo/interceptor/logger"
@@ -605,6 +606,12 @@ func (app *Application) initHealthCheck() {
 	startup.AppendRequestMapping("GET", app.Conf().GetAppBaseURL()+_healthCheckPath, "_defaultHealthCheckHandler")
 }
 
+func (app *Application) initPrometheusCheck() {
+	app.router.GET(app.Conf().GetAppBaseURL()+"/metrics", gin.WrapH(promhttp.Handler()))
+	startup.AppendStartupDebuggerInfo(fmt.Sprintf("booting installing Prometheus Checker : %v  -> %v ...installed", app.Conf().GetAppBaseURL()+"/metrics", "promhttp.Handler"))
+	startup.AppendRequestMapping("GET", app.Conf().GetAppBaseURL()+"/metrics", "promhttp.Handler")
+}
+
 // Enforcer get casbin enforcer instance
 func (app *Application) Enforcer() *casbin.Enforcer {
 	if app.enforcer == nil {
@@ -655,6 +662,7 @@ func (app *Application) InitRouter() {
 	if _enableHealthCheckPath {
 		app.initHealthCheck()
 	}
+	app.initPrometheusCheck()
 	for _, v := range app.middlewares {
 		app.router.Use(v)
 	}
