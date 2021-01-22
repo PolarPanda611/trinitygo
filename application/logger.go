@@ -75,6 +75,7 @@ func DefaultLogConfig() *LogConfig {
 	return &LogConfig{
 		ProjectName:    true,
 		ProjectVersion: true,
+		ClientIP:       true,
 		Path:           true,
 		Method:         true,
 		Request:        true,
@@ -192,22 +193,22 @@ func (l *loggerImpl) Middleware() gin.HandlerFunc {
 
 		if l.config.Latency {
 			latency = endTime.Sub(startTime)
-			line += fmt.Sprintf("%4v ", latency)
+			line += fmt.Sprintf("%15v ", latency)
 		}
 
 		if l.config.Path {
 			path = c.Request.URL.RequestURI()
-			line += fmt.Sprintf("%v ", path)
+			line += fmt.Sprintf("%20v ", path)
 		}
 
 		if l.config.Method {
 			method = c.Request.Method
-			line += fmt.Sprintf("%v ", method)
+			line += fmt.Sprintf("%5v ", method)
 		}
 
 		if l.config.ClientIP {
 			clientIP = c.ClientIP()
-			line += fmt.Sprintf("%v ", clientIP)
+			line += fmt.Sprintf("%16v ", clientIP)
 		}
 
 		if l.config.Status {
@@ -228,10 +229,16 @@ func (l *loggerImpl) Middleware() gin.HandlerFunc {
 			for _, e := range c.Errors.Errors() {
 				errLine := line
 				errLine += fmt.Sprintf("%v %v ", "Error", e)
-				l.app.Logger().Info(errLine)
+				l.app.Logger().Error(errLine)
 			}
 		}
+		if status > 500 {
+			l.app.Logger().Error(line)
+		} else if status >= 200 && status < 400 {
+			l.app.Logger().Info(line)
+		} else {
+			l.app.Logger().Warn(line)
+		}
 
-		l.app.Logger().Info(line)
 	}
 }

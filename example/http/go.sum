@@ -22,6 +22,8 @@ github.com/PolarPanda611/trinitygo v0.0.50 h1:KT1GjGpoHXfYiFI9FWpuOSofjuj79pEc3N
 github.com/PolarPanda611/trinitygo v0.0.50/go.mod h1:pfUGuAzMS9ChgRwP/rVlUjndwaJA+4vD45JwEXHVMnA=
 github.com/PolarPanda611/trinitygo v0.1.6 h1:+821FP+A8ihy5iv0KvCZhIUa3zL6zjf8Z3Wh2Yvp5ys=
 github.com/PolarPanda611/trinitygo v0.1.6/go.mod h1:kULXbH/xiCg1d0Z1MofE9H3jiQwzk2KOH35qrzmeaKk=
+github.com/PolarPanda611/trinitygo v0.1.9 h1:m3mhq9dSMk44yiJQ4Z1osehjgnEHjyHE+rbaCWJZtrU=
+github.com/PolarPanda611/trinitygo v0.1.9/go.mod h1:kjZQ1UxOyVhwYN7ap/fymkccc2tiEEBMmlCIn9i6N5g=
 github.com/PuerkitoBio/purell v1.1.0 h1:rmGxhojJlM0tuKtfdvliR84CFHljx9ag64t2xmVkjK4=
 github.com/PuerkitoBio/purell v1.1.0/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 h1:d+Bc7a5rLufV/sSk/8dngufqelfh6jnri85riMAaF/M=
