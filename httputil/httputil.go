@@ -1,3 +1,11 @@
+/*
+ * @Author: Daniel TAN
+ * @Description:
+ * @Date: 2020-09-01 09:15:45
+ * @LastEditTime: 2021-01-22 17:02:48
+ * @LastEditors: Daniel TAN
+ * @FilePath: /trinitygo/httputil/httputil.go
+ */
 package httputil
 
 import "fmt"
@@ -6,10 +14,10 @@ var _ error = ResponseData{}
 
 // ResponseData response data
 type ResponseData struct {
-	Status  int
-	Result  interface{}
-	Err     interface{}
-	Runtime map[string]string
+	Status  int               `json:"status"`
+	Data    interface{}       `json:"data,omitempty"`
+	Err     interface{}       `json:"err,omitempty"`
+	Runtime map[string]string `json:"runtime,omitempty"`
 }
 
 func (r ResponseData) Error() string {

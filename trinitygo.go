@@ -84,7 +84,7 @@ var (
 			}
 			c.JSON(200, httputil.ResponseData{
 				Status: 200,
-				Result: gin.H{
+				Data: gin.H{
 					"APIStatus": "alive",
 					"DBStatus":  "alive",
 					"DBInfo":    app.DB().DB().Stats(),
