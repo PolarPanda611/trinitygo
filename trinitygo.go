@@ -440,7 +440,7 @@ func (app *Application) initModel() {
 				defaultValueKind := reflect.TypeOf(defaultValue).Kind()
 				switch defaultValueKind {
 				case reflect.Ptr:
-					if err := app.db.FirstOrCreate(defaultValue, defaultValue).Error; err != nil {
+					if err := app.db.FirstOrCreate(defaultValue).Error; err != nil {
 						app.logger.Fatalf("booting installing model : %v , set default value %v  , err : %v , ", reflect.TypeOf(bootingModel.modelInstance), defaultValue, err)
 					}
 					break
