@@ -13,7 +13,7 @@ require (
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-contrib/cors v1.3.0
-	github.com/gin-gonic/gin v1.5.0
+	github.com/gin-gonic/gin v1.6.3
 	github.com/golang/protobuf v1.3.3
 	github.com/google/uuid v1.1.1
 	github.com/grpc-ecosystem/go-grpc-middleware v1.2.0
