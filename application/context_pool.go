@@ -35,10 +35,8 @@ func (c *ContextPool) Acquire(app Application, runtime map[string]string, ginCtx
 	ctx.setRuntime(runtime)
 	newDB := app.DB().New()
 	newDB.SetLogger(NewDBLogger(app, runtime))
-	if v, ok := runtime["user_id"]; ok {
-		userIDInt64, _ := strconv.ParseInt(v, 10, 64)
-		newDB = newDB.Set("user_id", userIDInt64)
-	}
+	userIDInt64, _ := strconv.ParseInt(ctx.GinCtx().GetString("user_id"), 10, 64)
+	newDB = newDB.Set("user_id", userIDInt64)
 	ctx.setDB(newDB)
 	return ctx
 }

@@ -95,27 +95,23 @@ func DiAllFields(dest interface{}, tctx Context, app Application, c *gin.Context
 			val.Set(reflect.ValueOf(c))
 			break
 		case reflect.TypeOf(tctx):
-			if !tctx.IsConfigured() {
-				if !tctx.DBTxIsOpen() {
-					enableTx := false
-					if app.Conf().GetAtomicRequest() {
-						enableTx = true
-					}
-					if TransactionTag(dest, index) {
-						enableTx = true
-					} else {
-						enableTx = false
-					}
-					if GetAutoFreeTags(dest, index) {
-						tctx.AutoFreeOn()
-					} else {
-						tctx.AutoFreeOff()
-					}
-					if enableTx {
-						tctx.DBTx()
-					}
-					tctx.SetIsConfigured()
+			if !tctx.DBTxIsOpen() {
+				enableTx := false
+				if app.Conf().GetAtomicRequest() {
+					enableTx = true
 				}
+				if TransactionTag(dest, index) {
+					enableTx = true
+				}
+				if GetAutoFreeTags(dest, index) {
+					tctx.AutoFreeOn()
+				} else {
+					tctx.AutoFreeOff()
+				}
+				if enableTx {
+					tctx.DBTx()
+				}
+
 			}
 			val.Set(reflect.ValueOf(tctx))
 			break
