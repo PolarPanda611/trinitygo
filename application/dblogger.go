@@ -51,7 +51,7 @@ func (l *DBLogger) Print(v ...interface{}) {
 			}
 		}
 		DBRunningTime, _ := v[2].(time.Duration)
-		line += fmt.Sprintf("%v ", DBRunningTime)
+		line += fmt.Sprintf("%15v ", DBRunningTime)
 		// SQL
 		line += fmt.Sprintf("%v ", v[3])
 		// PARAM
