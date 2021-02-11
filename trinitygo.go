@@ -532,6 +532,7 @@ func (app *Application) initSelfCheck() {
 	app.setProgress(60, _startupLatency, "init instance pool")
 }
 func (app *Application) initPool() {
+	app.initInitSQL()
 	app.initModel()
 	app.initControllerPool()
 	app.initInstancePool()
