@@ -66,6 +66,7 @@ var (
 	_bootingControllers    []bootingController
 	_bootingInstances      []bootingInstance
 	_bootingModels         []bootingModel
+	_bootingInitSQL        []string
 	_healthCheckPath       string                                                                              = "/ping"
 	_enableHealthCheckPath bool                                                                                = false
 	_logSelfCheck          bool                                                                                = true
@@ -351,6 +352,14 @@ func (app *Application) IsLogSelfCheck() bool {
 	return app.logSelfCheck
 }
 
+// RegisterInitSQL register init sql
+// @instance should be ptr instance
+// @defaultValues should be ptr instance
+// default value will create the instance and will not update .
+func RegisterInitSQL(sql string) {
+	_bootingInitSQL = append(_bootingInitSQL, sql)
+}
+
 // RegisterModel register model
 // @instance should be ptr instance
 // @defaultValues should be ptr instance
@@ -412,6 +421,27 @@ func RegisterInstance(instance interface{}, tags ...string) {
 		log.Fatal("The instance should be struct or func () interface{}")
 	}
 	_bootingInstances = append(_bootingInstances, newInstance)
+}
+
+// init model and init default value
+func (app *Application) initInitSQL() {
+	startup.AppendStartupDebuggerInfo("booting installing model start")
+	defer app.setProgress(29, _startupLatency, "init model")
+	defer startup.AppendStartupDebuggerInfo("booting installing model end")
+	if len(_bootingInitSQL) == 0 {
+		return
+	}
+	if app.db == nil {
+		return
+	}
+	tx := app.db.Begin()
+	for _, sql := range _bootingInitSQL {
+		if err := tx.Raw(sql).Error; err != nil {
+			app.logger.Fatalf("booting installing init SQL : %v failed , err : %v , ", sql, err)
+			tx.Rollback()
+		}
+	}
+	tx.Commit()
 }
 
 // init model and init default value
