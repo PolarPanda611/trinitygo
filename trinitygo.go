@@ -425,18 +425,19 @@ func RegisterInstance(instance interface{}, tags ...string) {
 
 // init model and init default value
 func (app *Application) initInitSQL() {
-	startup.AppendStartupDebuggerInfo("booting installing model start")
-	defer app.setProgress(29, _startupLatency, "init model")
-	defer startup.AppendStartupDebuggerInfo("booting installing model end")
+	startup.AppendStartupDebuggerInfo("booting installing init sql start")
+	defer app.setProgress(29, _startupLatency, "init init sql")
+	defer startup.AppendStartupDebuggerInfo("booting installing init sql end")
 	if len(_bootingInitSQL) == 0 {
 		return
 	}
 	if app.db == nil {
 		return
 	}
-	tx := app.db.Begin()
+	tx := app.db.New().Begin()
+	tx.SetLogger(app.logger)
 	for _, sql := range _bootingInitSQL {
-		if err := tx.Raw(sql).Error; err != nil {
+		if err := tx.Exec(sql).Error; err != nil {
 			app.logger.Fatalf("booting installing init SQL : %v failed , err : %v , ", sql, err)
 			tx.Rollback()
 		}
