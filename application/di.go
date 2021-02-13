@@ -102,6 +102,8 @@ func DiAllFields(dest interface{}, tctx Context, app Application, c *gin.Context
 				}
 				if TransactionTag(dest, index) {
 					enableTx = true
+				} else {
+					enableTx = false
 				}
 				if GetAutoFreeTags(dest, index) {
 					tctx.AutoFreeOn()
