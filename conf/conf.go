@@ -217,6 +217,13 @@ type DefaultConf struct {
 	ServiceDiscovery ServiceDiscovery `toml:"service_discovery"`
 }
 
+func (s *DefaultConf) GetRedisCacheHost() string     { return s.Cache.Redis.Host }
+func (s *DefaultConf) GetRedisCachePort() int        { return s.Cache.Redis.Port }
+func (s *DefaultConf) GetRedisCachePassword() int    { return s.Cache.Redis.Password }
+func (s *DefaultConf) GetRedisCacheMaxIdle() int     { return s.Cache.Redis.MaxIdle }
+func (s *DefaultConf) GetRedisCacheMaxActive() int   { return s.Cache.Redis.MaxActive }
+func (s *DefaultConf) GetRedisCacheIdleTimeout() int { return s.Cache.Redis.IdleTimeout }
+
 // GetDbMaxIdleConn get db max idle connection
 func (s *DefaultConf) GetDbMaxIdleConn() int { return s.Database.MaxIdleConn }
 
