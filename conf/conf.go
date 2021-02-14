@@ -64,6 +64,12 @@ type Conf interface {
 	GetDBTablePrefix() string
 	GetDbMaxIdleConn() int
 	GetDbMaxOpenConn() int
+	GetRedisCacheHost() string
+	GetRedisCachePort() int
+	GetRedisCachePassword() string
+	GetRedisCacheMaxIdle() int
+	GetRedisCacheMaxActive() int
+	GetRedisCacheIdleTimeout() int
 }
 
 // Project struct
