@@ -219,7 +219,7 @@ type DefaultConf struct {
 
 func (s *DefaultConf) GetRedisCacheHost() string     { return s.Cache.Redis.Host }
 func (s *DefaultConf) GetRedisCachePort() int        { return s.Cache.Redis.Port }
-func (s *DefaultConf) GetRedisCachePassword() int    { return s.Cache.Redis.Password }
+func (s *DefaultConf) GetRedisCachePassword() string { return s.Cache.Redis.Password }
 func (s *DefaultConf) GetRedisCacheMaxIdle() int     { return s.Cache.Redis.MaxIdle }
 func (s *DefaultConf) GetRedisCacheMaxActive() int   { return s.Cache.Redis.MaxActive }
 func (s *DefaultConf) GetRedisCacheIdleTimeout() int { return s.Cache.Redis.IdleTimeout }
