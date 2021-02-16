@@ -113,7 +113,8 @@ func (s *ControllerPool) GetController(controllerName string, tctx Context, app 
 	if !ok {
 		panic(fmt.Sprintf("unknown controller name : %v", controllerName))
 	}
-	return app.InstancePool().GetInstance(instanceName, tctx, app, c)
+	InjectingInstanceMap := make(map[reflect.Type]interface{})
+	return app.InstancePool().GetInstance(instanceName, tctx, app, c, InjectingInstanceMap)
 }
 
 // GetControllerFuncName get controller func name

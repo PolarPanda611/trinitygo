@@ -80,7 +80,7 @@ func DiSelfCheck(destName interface{}, pool *sync.Pool, logger *golog.Logger, in
 }
 
 // DiAllFields di service pool
-func DiAllFields(dest interface{}, tctx Context, app Application, c *gin.Context, instanceMapping map[string]reflect.Type) (map[reflect.Type]interface{}, map[reflect.Type]interface{}) {
+func DiAllFields(dest interface{}, tctx Context, app Application, c *gin.Context, instanceMapping map[string]reflect.Type, injectingMap map[reflect.Type]interface{}) (map[reflect.Type]interface{}, map[reflect.Type]interface{}) {
 	sharedInstance := make(map[reflect.Type]interface{})
 	toFreeInstance := make(map[reflect.Type]interface{})
 	destVal := reflect.Indirect(reflect.ValueOf(dest))
@@ -123,7 +123,7 @@ func DiAllFields(dest interface{}, tctx Context, app Application, c *gin.Context
 				continue
 			}
 
-			repo, sharedInstanceMap, toFreeInstanceMap := app.InstancePool().GetInstance(instanceMapping[objectName], tctx, app, c)
+			repo, sharedInstanceMap, toFreeInstanceMap := app.InstancePool().GetInstance(instanceMapping[objectName], tctx, app, c, injectingMap)
 			for instanceType, instanceValue := range sharedInstanceMap {
 				sharedInstance[instanceType] = instanceValue
 			}
