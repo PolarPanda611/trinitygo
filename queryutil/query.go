@@ -151,6 +151,9 @@ func (q *queryRepositoryImpl) handleDBBackend() {
 	}
 }
 func (q *queryRepositoryImpl) handleFilter(k string, v []string) {
+	if _, ok := q.filterCustomizeFunc[k]; ok {
+		return
+	}
 	if util.StringInSlice(k, q.filterList) {
 		if len(v) != 0 {
 			d := NewDecoder(k, v[0])
