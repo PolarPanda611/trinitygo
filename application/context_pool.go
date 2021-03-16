@@ -1,3 +1,11 @@
+/*
+ * @Author: Daniel TAN
+ * @Description:
+ * @Date: 2021-03-03 15:46:55
+ * @LastEditTime: 2021-03-17 01:47:28
+ * @LastEditors: Daniel TAN
+ * @FilePath: /trinitygo/application/context_pool.go
+ */
 package application
 
 import (
@@ -37,7 +45,7 @@ func (c *ContextPool) Acquire(app Application, runtime map[string]string, ginCtx
 	newDB.SetLogger(NewDBLogger(app, runtime))
 	userIDInt64, _ := strconv.ParseInt(ctx.GinCtx().GetString("user_id"), 10, 64)
 	newDB = newDB.Set("user_id", userIDInt64)
-	ctx.setDB(newDB)
+	ctx.SetDB(newDB)
 	return ctx
 }
 

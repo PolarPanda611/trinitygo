@@ -29,7 +29,7 @@ type Context interface {
 	DBTxIsOpen() bool
 	setGinCTX(c *gin.Context)
 	GinCtx() *gin.Context
-	setDB(*gorm.DB)
+	SetDB(*gorm.DB)
 	cleanRuntime()
 	GetCurrentUser() (interface{}, error)
 	HTTPStatus(code int)
@@ -152,7 +152,7 @@ func (c *ContextImpl) DBTxIsOpen() bool {
 }
 
 // setDB set db
-func (c *ContextImpl) setDB(db *gorm.DB) {
+func (c *ContextImpl) SetDB(db *gorm.DB) {
 	c.db = db
 }
 

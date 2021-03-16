@@ -85,7 +85,7 @@ func (c *ContextMock) GinCtx() *gin.Context {
 	args := c.Called()
 	return args.Get(0).(*gin.Context)
 }
-func (c *ContextMock) setDB(*gorm.DB) {}
+func (c *ContextMock) SetDB(*gorm.DB) {}
 
 func (c *ContextMock) cleanRuntime() {
 	fmt.Println("123")

@@ -2,7 +2,7 @@
  * @Author: Daniel TAN
  * @Description:
  * @Date: 2020-09-01 09:15:45
- * @LastEditTime: 2021-03-03 15:52:45
+ * @LastEditTime: 2021-03-17 01:48:00
  * @LastEditors: Daniel TAN
  * @FilePath: /trinitygo/trinitygo/cmd/version.go
  */
@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	versionNum = "v0.1.33"
+	versionNum = "v0.1.34"
 )
 
 var (
