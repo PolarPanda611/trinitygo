@@ -1,3 +1,11 @@
+/*
+ * @Author: Daniel TAN
+ * @Description:
+ * @Date: 2021-03-03 15:46:55
+ * @LastEditTime: 2021-06-28 17:42:48
+ * @LastEditors: Daniel TAN
+ * @FilePath: /trinitygo/testutil/util.go
+ */
 package testutil
 
 import (
@@ -23,8 +31,13 @@ func Play(t *testing.T, impl interface{}, funcName string, args ...interface{}) 
 
 	var inParam []reflect.Value
 	inParam = append(inParam, reflect.ValueOf(impl))
-	for _, v := range args {
-		inParam = append(inParam, reflect.ValueOf(v))
+	for i, v := range args {
+		if v == nil {
+			inParam = append(inParam, reflect.New(f.Type.In(i+1)).Elem())
+		} else {
+			inParam = append(inParam, reflect.ValueOf(v))
+		}
+
 	}
 	res := f.Func.Call(inParam)
 	var originValue []interface{}
