@@ -1,3 +1,11 @@
+/*
+ * @Author: Daniel TAN
+ * @Description:
+ * @Date: 2021-03-03 15:46:55
+ * @LastEditTime: 2021-06-28 19:22:28
+ * @LastEditors: Daniel TAN
+ * @FilePath: /tcs/Users/01444547/IdeaProjects/trinitygo/testutil/util.go
+ */
 package testutil
 
 import (
@@ -23,8 +31,13 @@ func Play(t *testing.T, impl interface{}, funcName string, args ...interface{}) 
 
 	var inParam []reflect.Value
 	inParam = append(inParam, reflect.ValueOf(impl))
-	for _, v := range args {
-		inParam = append(inParam, reflect.ValueOf(v))
+	for i, v := range args {
+		if v == nil {
+			inParam = append(inParam, reflect.New(f.Type.In(i+1)).Elem())
+		} else {
+			inParam = append(inParam, reflect.ValueOf(v))
+		}
+
 	}
 	res := f.Func.Call(inParam)
 	var originValue []interface{}
@@ -83,8 +96,19 @@ func (p *playTestImpl) Match(args ...interface{}) {
 				}
 			}
 		} else {
-			if !assert.Equal(p.t, args[k], v.Interface(), "index ", k, "not matched") {
-				p.t.FailNow()
+			if err, ok := args[k].(error); ok {
+				if err2, ok2 := v.Interface().(error); ok2 {
+					if !assert.Equal(p.t, err.Error(), err2.Error(), "error not match") {
+						p.t.FailNow()
+					}
+				} else {
+					assert.Fail(p.t, "actual is not error ")
+					p.t.FailNow()
+				}
+			} else {
+				if !assert.Equal(p.t, args[k], v.Interface(), "index ", k, "not matched") {
+					p.t.FailNow()
+				}
 			}
 		}
 	}
