@@ -37,6 +37,7 @@ type Config struct {
 	SuccessCallback    func(c *gin.Context, claim jwt.Claims)
 	MethodWhiteList    []string
 	PathWhiteList      []string
+	SkipValidation     bool
 }
 
 // DefaultConfig default jwt config
@@ -81,12 +82,26 @@ func (m *JWTVerifierImpl) parseUnverifiedToken(token string) (jwt.Claims, error)
 	if err != nil {
 		return nil, err
 	}
+	return m.config.Claims, nil
+}
 
+func (m *JWTVerifierImpl) parseToken(token string) (jwt.Claims, error) {
+	p := new(jwt.Parser)
+	p.SkipClaimsValidation = true
+	tkn, err := p.ParseWithClaims(token, m.config.Claims, func(*jwt.Token) (interface{}, error) {
+		return []byte(m.config.SecretKey), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	if !tkn.Valid {
+		return nil, errors.New("unauthorized")
+	}
 	return m.config.Claims, nil
 }
 
 // checkUnverifiedTokenValid check authorization header token is valid
-func (m *JWTVerifierImpl) checkUnverifiedTokenValid(c *gin.Context) (jwt.Claims, error) {
+func (m *JWTVerifierImpl) checkTokenValid(c *gin.Context) (jwt.Claims, error) {
 	if c.Request.Header.Get(m.config.HeaderName) == "" || len(strings.Fields(c.Request.Header.Get(m.config.HeaderName))) != 2 {
 		return nil, ErrTokenWrongAuthorization
 	}
@@ -95,11 +110,20 @@ func (m *JWTVerifierImpl) checkUnverifiedTokenValid(c *gin.Context) (jwt.Claims,
 	if prefix != m.config.JwtPrefix {
 		return nil, ErrTokenWrongHeaderPrefix
 	}
-	tokenClaims, err := m.parseUnverifiedToken(token)
-	if err != nil {
-		return nil, err
+	if m.config.SkipValidation {
+		tokenClaims, err := m.parseUnverifiedToken(token)
+		if err != nil {
+			return nil, err
+		}
+		return tokenClaims, nil
+	} else {
+		tokenClaims, err := m.parseToken(token)
+		if err != nil {
+			return nil, err
+		}
+		return tokenClaims, nil
 	}
-	return tokenClaims, nil
+
 }
 
 // Middleware jwt middleware
@@ -114,7 +138,7 @@ func (m *JWTVerifierImpl) Middleware() gin.HandlerFunc {
 			return
 		}
 
-		tokenClaims, err := m.checkUnverifiedTokenValid(c)
+		tokenClaims, err := m.checkTokenValid(c)
 		if err != nil {
 
 			if m.app.ResponseFactory() != nil {
