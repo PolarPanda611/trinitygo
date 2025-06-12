@@ -463,7 +463,7 @@ func (app *Application) initModel() {
 			app.logger.Fatalf("booting installing model : %v failed , kind %v ,  should be ptr , ", reflect.TypeOf(bootingModel.modelInstance), instanceKind)
 		}
 		if err := app.db.AutoMigrate(bootingModel.modelInstance).Error; err != nil {
-			app.logger.Fatalf("booting installing model : %v failed , err : %v , ", reflect.TypeOf(bootingModel.modelInstance), err)
+			app.logger.Warnf("booting installing model : %v failed , err : %v , ", reflect.TypeOf(bootingModel.modelInstance), err)
 		}
 		startup.AppendStartupDebuggerInfo(fmt.Sprintf("booting installing model : %v  , ...installed , ", reflect.TypeOf(bootingModel.modelInstance)))
 		if bootingModel.defaultValues != nil {
